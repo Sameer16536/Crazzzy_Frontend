@@ -1,0 +1,572 @@
+/**
+ * Products Database Mock
+ * Structure for product data with images, pricing, and metadata
+ * Replace with real database queries when backend is ready
+ */
+
+export interface Product {
+  id: string
+  name: string
+  categoryId: string
+  price: number
+  originalPrice?: number
+  rating: number
+  reviews: number
+  images: string[] // Multiple images for hover effect
+  description: string
+  specs?: Record<string, string>
+  inStock: boolean
+  soldOut?: boolean
+  featured?: boolean
+}
+
+export const products: Product[] = [
+  // HOT WHEELS CATEGORY
+  {
+    id: 'hw-lamborghini-urus',
+    name: '17 Lamborghini Urus',
+    categoryId: 'hot-wheels',
+    price: 349,
+    rating: 4.7,
+    reviews: 45,
+    images: ['/lib/data/Hotwheels/1.jpg'],
+    description: 'Hot Wheels \'17 Lamborghini Urus in yellow. This particular model is part of the HW Exotics series and was released as number 1/10 in that set. Scale: 1.64',
+    inStock: true,
+
+  },
+  {
+    id: 'hw-mclaren-senna',
+    name: 'McLaren Senna',
+    categoryId: 'hot-wheels',
+    price: 349,
+    rating: 4.6,
+    reviews: 38,
+    images: ['/lib/data/Hotwheels/2.jpg'],
+    description: 'Hot Wheels McLaren Senna, part of the Nightburnerz series (9/10) with the collection number 233/250. Scale: 1.64',
+    inStock: true,
+  },
+  {
+    id: 'hw-harley-davidson-883',
+    name: 'H-D Sportster 883 2003 (Bike)',
+    categoryId: 'hot-wheels',
+    price: 349,
+    rating: 4.8,
+    reviews: 52,
+    images: ['/lib/data/Hotwheels/3.jpg'],
+    description: 'Hot Wheels die-cast motorcycle, specifically the 2003 Harley-Davidson Sportster 883 from the HW Moto series. Scale: 1.64',
+    inStock: true,
+    featured: true,
+  },
+  {
+    id: 'hw-yamaha-r1',
+    name: '04 Yamaha R1 (Bike)',
+    categoryId: 'hot-wheels',
+    price: 349,
+    rating: 4.5,
+    reviews: 31,
+    images: ['/lib/data/Hotwheels/4.jpg'],
+    description: 'Hot Wheels \'04 Yamaha R1 from the HW Moto series. This specific 1:64 scale die-cast motorcycle features a red body with detailed graphics and is often a sought-after piece for collectors.',
+    inStock: true,
+  },
+  {
+    id: 'hw-ferrari-f1',
+    name: 'Scuderia Ferrari HP – Ferrari F1 Car',
+    categoryId: 'hot-wheels',
+    price: 399,
+    rating: 4.9,
+    reviews: 67,
+    images: ['/lib/data/Hotwheels/5.jpg'],
+    description: 'Hot Wheels 1:64 scale die-cast model of the Scuderia Ferrari HP F1 car, based on the SF-24. Features the iconic Ferrari racing red livery with official sponsor logos.',
+    inStock: true,
+  },
+
+  // ANIME FIGURES CATEGORY
+  {
+    id: 'anime-zoro',
+    name: 'Roronoa Zoro Anime Figure',
+    categoryId: 'anime-figures',
+    price: 1299,
+    rating: 4.8,
+    reviews: 89,
+    images: ['/lib/data/Anime Figures/1.jpg'],
+    description: '22 cm tall Roronoa Zoro figure in a powerful battle pose, inspired by One Piece. Features his iconic Three-Sword Style with 3 detailed katanas. Includes 2 interchangeable head sculpts.',
+    inStock: true,
+
+  },
+  {
+    id: 'anime-luffy-captain',
+    name: 'Monkey D Luffy Anime Figure',
+    categoryId: 'anime-figures',
+    price: 1199,
+    rating: 4.7,
+    reviews: 76,
+    images: ['/lib/data/Anime Figures/2.jpg'],
+    description: 'Monkey D. Luffy figure in a dynamic captain pose, inspired by One Piece. Features his iconic outfit with red shirt, blue shorts, and yellow waistband.',
+    inStock: true,
+  },
+  {
+    id: 'anime-spiderman',
+    name: 'Spider Man Figure',
+    categoryId: 'anime-figures',
+    price: 1599,
+    rating: 4.9,
+    reviews: 102,
+    images: ['/lib/data/Anime Figures/3.jpg'],
+    description: 'Spider Man figure featuring the high-tech suit design crafted by Tony Stark, with metallic red and blue color scheme and prominent gold spider accents.',
+    inStock: true,
+  },
+  {
+    id: 'anime-luffy-chibi',
+    name: 'Monkey D Luffy Chibi-Arts Figure',
+    categoryId: 'anime-figures',
+    price: 899,
+    rating: 4.6,
+    reviews: 54,
+    images: ['/lib/data/Anime Figures/4.jpg'],
+    description: 'Monkey D. Luffy Chibi-Arts action figure from the popular anime and manga series One Piece. Highly detailed and collectible.',
+    inStock: true,
+    featured: true,
+  },
+  {
+    id: 'anime-batman',
+    name: 'Batman Dark Knight Figure',
+    categoryId: 'anime-figures',
+    price: 1799,
+    rating: 4.8,
+    reviews: 91,
+    images: ['/lib/data/Anime Figures/5.jpg'],
+    description: 'Batman Dark Knight action figure, approximately 38-40 cm tall. Highly detailed collectible in classic comic book-inspired grey-and-black suit with flowing cape.',
+    inStock: true,
+  },
+
+  // KEYCHAINS CATEGORY
+  {
+    id: 'keychain-deadpool',
+    name: 'Deadpool Keychain',
+    categoryId: 'keychains',
+    price: 149,
+    rating: 4.5,
+    reviews: 38,
+    images: ['/lib/data/Keychains/1.jpg'],
+    description: 'Deadpool 3D keychain features a stylized mini-figure of the Marvel character accompanied by a matching rubber strap and circular mask charm. Made from high-quality silicone rubber.',
+    inStock: true,
+  },
+  {
+    id: 'keychain-sneaker-ball',
+    name: 'Sneaker and Basketball Keychain',
+    categoryId: 'keychains',
+    price: 149,
+    rating: 4.4,
+    reviews: 29,
+    images: ['/lib/data/Keychains/2.jpg'],
+    description: 'This item is a 3D mini sneaker and basketball keychain, specifically themed after the Los Angeles Lakers. Durable and stylish.',
+    inStock: true,
+  },
+  {
+    id: 'keychain-loki',
+    name: 'Loki Crochet Keychain',
+    categoryId: 'keychains',
+    price: 199,
+    rating: 4.7,
+    reviews: 45,
+    images: ['/lib/data/Keychains/3.jpg'],
+    description: 'Amigurumi crochet keychain of the Marvel character Loki, the God of Mischief. Handmade with signature gold helmet, green cape, and safety eyes.',
+    inStock: true,
+
+  },
+  {
+    id: 'keychain-real-madrid',
+    name: 'Real Madrid Keychain',
+    categoryId: 'keychains',
+    price: 129,
+    rating: 4.3,
+    reviews: 22,
+    images: ['/lib/data/Keychains/4.jpg'],
+    description: 'Real Madrid CF keychain featuring a circular metallic crest and rectangular fabric lanyard. Perfect for fans.',
+    inStock: true,
+    featured: true,
+  },
+  {
+    id: 'keychain-luffy',
+    name: 'Monkey D Luffy (One Piece) Keychain',
+    categoryId: 'keychains',
+    price: 149,
+    rating: 4.6,
+    reviews: 41,
+    images: ['/lib/data/Keychains/5.jpg'],
+    description: 'One Piece keychain featuring Luffy in his iconic straw hat and red vest. Perfect for anime fans and collectors.',
+    inStock: true,
+  },
+
+  // PERFUMES CATEGORY
+  {
+    id: 'perfume-ocean-blue',
+    name: 'Ocean Blue 100ml',
+    categoryId: 'perfumes',
+    price: 1499,
+    rating: 4.6,
+    reviews: 67,
+    images: ['/lib/data/Perfumes/1.jpg'],
+    description: 'Ocean Blue Perfume (100ml) brings a fresh, aquatic fragrance with hints of citrus and soft musk. Light yet long-lasting, perfect for everyday elegance.',
+    inStock: true,
+
+  },
+  {
+    id: 'perfume-golden-heart',
+    name: 'Golden Heart 100ml',
+    categoryId: 'perfumes',
+    price: 1299,
+    rating: 4.5,
+    reviews: 52,
+    images: ['/lib/data/Perfumes/2.jpg'],
+    description: 'Golden Heart Perfume (100ml) offers a warm, elegant blend of floral and sweet notes with soft musk. Long-lasting fragrance perfect for any occasion.',
+    inStock: true,
+  },
+  {
+    id: 'perfume-tobacco-elixir',
+    name: 'Tobacco Elixir 100ml',
+    categoryId: 'perfumes',
+    price: 1699,
+    rating: 4.8,
+    reviews: 78,
+    images: ['/lib/data/Perfumes/3.jpg'],
+    description: 'Tobacco Elixir (100ml) blends rich tobacco musk with deep leather notes for a bold, luxurious scent. Warm and long-lasting, exudes confidence.',
+    inStock: true,
+    featured: true
+  },
+  {
+    id: 'perfume-ruby-royale',
+    name: 'Ruby Royale 100ml',
+    categoryId: 'perfumes',
+    price: 1499,
+    rating: 4.7,
+    reviews: 61,
+    images: ['/lib/data/Perfumes/4.jpg'],
+    description: 'Ruby Royale (100ml) blends rich oud with warm amber for a bold, luxurious fragrance. Deep and long-lasting, adds a touch of royal elegance.',
+    inStock: true,
+  },
+  {
+    id: 'perfume-nature-valley',
+    name: 'Nature Valley 100ml',
+    categoryId: 'perfumes',
+    price: 899,
+    rating: 4.4,
+    reviews: 38,
+    images: ['/lib/data/Perfumes/5.jpg'],
+    description: 'Nature Valley (100ml) captures the fresh, green essence of the outdoors with crisp, natural notes. Light and invigorating, brings the spirit of nature.',
+    inStock: true,
+  },
+
+  // TOTE BAGS CATEGORY
+  {
+    id: 'tote-click-camera',
+    name: 'Aesthetic Click Tote Bag',
+    categoryId: 'tote-bags',
+    price: 399,
+    rating: 4.6,
+    reviews: 71,
+    images: ['/lib/data/Tote Bags/1.jpg'],
+    description: 'The camera themed tote bag is a popular aesthetic tote bag, often referred to as a "Click" camera bag. Perfect for carrying essentials in style.',
+    inStock: true,
+
+  },
+  {
+    id: 'tote-bts-taehyung',
+    name: 'BTS Taehyung Tae Tae Tote Bag',
+    categoryId: 'tote-bags',
+    price: 349,
+    rating: 4.7,
+    reviews: 89,
+    images: ['/lib/data/Tote Bags/2.jpg'],
+    description: 'Aesthetic monochrome design of Kim Taehyung, a member of the popular K-pop group BTS. Stylish and durable tote bag.',
+    inStock: true,
+  },
+  {
+    id: 'tote-stranger-things',
+    name: 'Stranger Things Tote Bag',
+    categoryId: 'tote-bags',
+    price: 349,
+    rating: 4.5,
+    reviews: 56,
+    images: ['/lib/data/Tote Bags/3.jpg'],
+    description: 'Aesthetic Tote Bags of Famous Netflix Series Stranger Things. Perfect for fans and collectors.',
+    inStock: true,
+    featured: true,
+  },
+  {
+    id: 'tote-marvel',
+    name: 'Marvel Comics Tote Bag',
+    categoryId: 'tote-bags',
+    price: 349,
+    rating: 4.6,
+    reviews: 62,
+    images: ['/lib/data/Tote Bags/4.jpg'],
+    description: 'A unique Aesthetic Marvel Comics Tote bag perfect for fashion and everyday use. Durable and eye-catching design.',
+    inStock: true,
+  },
+  {
+    id: 'tote-attack-on-titan',
+    name: 'Attack on Titan Tote Bag',
+    categoryId: 'tote-bags',
+    price: 349,
+    rating: 4.8,
+    reviews: 75,
+    images: ['/lib/data/Tote Bags/5.jpg'],
+    description: 'These tote bags feature character art from the popular manga and anime series Attack on Titan (Shingeki no Kyojin).',
+    inStock: true,
+  },
+
+  // DIE CAST CARS AND BIKES CATEGORY
+  {
+    id: 'diecast-dodge-charger',
+    name: '1970 Dodge Charger',
+    categoryId: 'die-cast-cars-and-bikes',
+    price: 799,
+    rating: 4.7,
+    reviews: 43,
+    images: ['/lib/data/Die cast Cars and Bikes/1.jpg'],
+    description: 'This item is a 1:24 scale die-cast replica of Dom\'s 1970 Dodge Charger R/T from the Fast & Furious movie franchise, produced by Jada Toys.',
+    inStock: true,
+    featured: true,
+  },
+  {
+    id: 'diecast-bmw-733i',
+    name: 'BMW 733i (Stranger Things)',
+    categoryId: 'die-cast-cars-and-bikes',
+    price: 649,
+    rating: 4.8,
+    reviews: 58,
+    images: ['/lib/data/Die cast Cars and Bikes/2.jpg'],
+    description: '1:24 Scale 1983 BMW 733i collectible die-cast vehicle from the Pop Culture series, specifically featuring artwork from Stranger Things.',
+    inStock: true,
+  },
+  {
+    id: 'diecast-shelby-cobra',
+    name: 'Shelby Cobra 427 S/C',
+    categoryId: 'die-cast-cars-and-bikes',
+    price: 749,
+    rating: 4.6,
+    reviews: 35,
+    images: ['/lib/data/Die cast Cars and Bikes/3.jpg'],
+    description: '1:24 scale model kit of a 1965 Shelby Cobra 427 S/C, specifically produced by Revell. Highly detailed and collectible.',
+    inStock: true,
+    featured: true,
+  },
+  {
+    id: 'diecast-hummer-h2',
+    name: 'Hummer H2 SUV 2003',
+    categoryId: 'die-cast-cars-and-bikes',
+    price: 849,
+    rating: 4.5,
+    reviews: 29,
+    images: ['/lib/data/Die cast Cars and Bikes/4.jpg'],
+    description: 'Maisto 1:18 scale 2003 Hummer H2 SUV diecast model in yellow. Impressive detail and build quality.',
+    inStock: true,
+  },
+  {
+    id: 'diecast-corvette-stingray',
+    name: 'Chevrolet Corvette Stingray Z51',
+    categoryId: 'die-cast-cars-and-bikes',
+    price: 899,
+    rating: 4.9,
+    reviews: 72,
+    images: ['/lib/data/Die cast Cars and Bikes/5.jpg'],
+    description: 'This collectible item is a 1:18 scale diecast model of a 2014 Chevrolet Corvette Stingray Z51 produced by Maisto. Premium quality.',
+    inStock: true,
+  },
+
+  // WALL POSTERS CATEGORY
+  {
+    id: 'poster-jon-snow',
+    name: 'Jon Snow Battle of Bastards',
+    categoryId: 'wall-posters',
+    price: 180,
+    rating: 4.7,
+    reviews: 41,
+    images: ['/lib/data/Wall posters/1.jpg'],
+    description: 'Epic poster of Jon Snow from the Battle of Bastards. Perfect for Game of Thrones fans.',
+    inStock: true,
+    featured: true,
+  },
+  {
+    id: 'poster-pablo-escobar',
+    name: 'Pablo Escobar Graffiti Design',
+    categoryId: 'wall-posters',
+    price: 180,
+    rating: 4.4,
+    reviews: 28,
+    images: ['/lib/data/Wall posters/2.jpg'],
+    description: 'Unique graffiti design poster featuring Pablo Escobar. Bold and striking artwork for modern spaces.',
+    inStock: true,
+  },
+  {
+    id: 'poster-virat-kohli',
+    name: 'Virat Kohli Indian Jersey',
+    categoryId: 'wall-posters',
+    price: 180,
+    rating: 4.6,
+    reviews: 53,
+    images: ['/lib/data/Wall posters/3.jpg'],
+    description: 'Cricket legend Virat Kohli in his iconic Indian jersey. Perfect for sports enthusiasts.',
+    inStock: true,
+  },
+  {
+    id: 'poster-lewis-hamilton',
+    name: 'Lewis Hamilton Mercedes',
+    categoryId: 'wall-posters',
+    price: 180,
+    rating: 4.8,
+    reviews: 61,
+    images: ['/lib/data/Wall posters/4.jpg'],
+    description: 'Lewis Hamilton in Mercedes F1 gear. Great for motorsports fans and collectors.',
+    inStock: true,
+  },
+  {
+    id: 'poster-roger-federer',
+    name: 'Roger Federer Tennis',
+    categoryId: 'wall-posters',
+    price: 180,
+    rating: 4.9,
+    reviews: 67,
+    images: ['/lib/data/Wall posters/5.jpg'],
+    description: 'Tennis legend Roger Federer in action. Inspirational poster for tennis fans and players.',
+    inStock: true,
+  },
+
+  // CHOCOLATE AND BEVERAGES CATEGORY
+  {
+    id: 'choco-kitkat-4finger',
+    name: 'Kit Kat 4 Finger',
+    categoryId: 'chocolate-and-beverages',
+    price: 149,
+    rating: 4.5,
+    reviews: 92,
+    images: ['/lib/data/Chocolate and Beverages/1.jpg'],
+    description: 'Imported Kitkat 4 fingers. Classic chocolate bar perfect for snacking.',
+    inStock: true,
+  },
+  {
+    id: 'choco-snickers-45g',
+    name: 'Snickers 45GM',
+    categoryId: 'chocolate-and-beverages',
+    price: 99,
+    rating: 4.4,
+    reviews: 76,
+    images: ['/lib/data/Chocolate and Beverages/2.jpg'],
+    description: 'Imported Snickers chocolate bar of 45gm. Packed with peanuts and caramel.',
+    inStock: true,
+    featured: true,
+  },
+  {
+    id: 'beverage-mogu-mogu',
+    name: 'Mogu Mogu 320ml',
+    categoryId: 'chocolate-and-beverages',
+    price: 85,
+    rating: 4.3,
+    reviews: 48,
+    images: ['/lib/data/Chocolate and Beverages/3.jpg'],
+    description: 'Nata De Coco drink Mogu Mogu with exciting new flavours. Refreshing tropical beverage.',
+    inStock: true,
+  },
+  {
+    id: 'choco-mm-peanut',
+    name: 'M&M Peanut',
+    categoryId: 'chocolate-and-beverages',
+    price: 130,
+    rating: 4.6,
+    reviews: 64,
+    images: ['/lib/data/Chocolate and Beverages/4.jpg'],
+    description: 'M&M chocolate coated peanuts. Colorful and delicious candy classic.',
+    inStock: true,
+  },
+  {
+    id: 'beverage-monster-ultra',
+    name: 'Monster Ultra Black',
+    categoryId: 'chocolate-and-beverages',
+    price: 2100,
+    rating: 4.7,
+    reviews: 38,
+    images: ['/lib/data/Chocolate and Beverages/5.jpg'],
+    description: 'Collectible Monster Cans limited editions. Perfect for collectors and energy drink enthusiasts.',
+    inStock: false,
+  },
+
+  // AESTHETIC ITEMS CATEGORY
+  {
+    id: 'aesthetic-wall-clock',
+    name: 'Cars Wall Clock',
+    categoryId: 'aesthetic-items',
+    price: 699,
+    rating: 4.7,
+    reviews: 45,
+    images: ['/lib/data/Asthetic items/1.jpg'],
+    description: 'Unique wall clock with die cast cars. Functional art piece for your space.',
+    inStock: true,
+    featured: true,
+  },
+  {
+    id: 'aesthetic-spiderman-desk',
+    name: 'Spider-Man Desk Mate',
+    categoryId: 'aesthetic-items',
+    price: 399,
+    rating: 4.5,
+    reviews: 31,
+    images: ['/lib/data/Asthetic items/2.jpg'],
+    description: 'Unique spider man printed aesthetic desk mate. Perfect for desk decoration.',
+    inStock: true,
+  },
+  {
+    id: 'aesthetic-cassette-holder',
+    name: 'Cassette Keychain Holder',
+    categoryId: 'aesthetic-items',
+    price: 299,
+    rating: 4.6,
+    reviews: 38,
+    images: ['/lib/data/Asthetic items/3.jpg'],
+    description: 'Vintage Cassette Aesthetic Keychain Holder for home decor. Retro charm meets functionality.',
+    inStock: true,
+  },
+  {
+    id: 'aesthetic-convex-mirror',
+    name: 'Convex Mirror',
+    categoryId: 'aesthetic-items',
+    price: 1699,
+    rating: 4.8,
+    reviews: 67,
+    images: ['/lib/data/Asthetic items/4.jpg'],
+    description: 'Aesthetic Selfie Convex Mirror for Home Decor. Wide angle perspective makes any space look unique.',
+    inStock: true,
+  },
+  {
+    id: 'aesthetic-spiderman-calendar',
+    name: 'Spider-Man Calendar',
+    categoryId: 'aesthetic-items',
+    price: 499,
+    rating: 4.4,
+    reviews: 28,
+    images: ['/lib/data/Asthetic items/5.jpg'],
+    description: 'Aesthetic Spiderman Themed Calendar for desk decor. Stay organized in style.',
+    inStock: true,
+  },
+]
+
+/**
+ * Helper function to get products by category
+ */
+export function getProductsByCategory(categoryId: string): Product[] {
+  return products.filter(p => p.categoryId === categoryId)
+}
+
+/**
+ * Helper function to get featured products
+ */
+export function getFeaturedProducts(): Product[] {
+  return products.filter(p => p.featured).slice(0, 6)
+}
+
+/**
+ * Helper function to get a single product by ID
+ */
+export function getProductById(id: string): Product | undefined {
+  return products.find(p => p.id === id)
+}

@@ -1,0 +1,49 @@
+Page 1
+
+Product: Kit Kat 4 Finger 
+
+Category: Chocolates and Beverages 
+
+Product description: Imported Kitkat 4 fingers. 
+
+MRP: 149
+
+Page 2
+
+Product: Snickers 45GM
+
+Category: Chocolates and Beverages 
+
+Product description: Imported Snickers chocolate bar of 45gm
+
+MRP: 99
+
+Page 3
+
+Product: Mogu Mogu 320ml
+
+Category: chocolate and Beverages 
+
+Product description: Nata De Coco drink Mogu Mogu with exciting new flavours
+
+MRP: 85
+
+Page 4
+
+Product: M&M peanut 
+
+Category: Chocolates and Beverages 
+
+Product description: M&M chocolate coated peanuts 
+
+Mrp: 130
+
+Page 5
+
+Product: Monster Ultra Black
+
+Category: Chocolates and Beverages 
+
+Product description: Collectible Monster Cans limited editions
+
+MRP: 2100

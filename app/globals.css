@@ -1,0 +1,197 @@
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter+Tight:wght@100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  /* Light mode - Premium off-white/paper texture background */
+  --background: #f5f5f0;
+  --foreground: #0a0a0a;
+  --card: #ffffff;
+  --card-foreground: #0a0a0a;
+  --popover: #ffffff;
+  --popover-foreground: #0a0a0a;
+  /* Primary accent - Refined gold/brass for premium feel */
+  --primary: #d4af37;
+  --primary-foreground: #0a0a0a;
+  --secondary: #e8e8e0;
+  --secondary-foreground: #0a0a0a;
+  --muted: #e8e8e0;
+  --muted-foreground: #6b6b6b;
+  --accent: #d4af37;
+  --accent-foreground: #0a0a0a;
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+  --border: #e0e0d8;
+  --input: #f9f9f7;
+  --ring: #d4af37;
+  --radius: 0.625rem;
+  --sidebar: #f5f5f0;
+  --sidebar-foreground: #0a0a0a;
+  --sidebar-primary: #d4af37;
+  --sidebar-primary-foreground: #0a0a0a;
+  --sidebar-accent: #e8e8e0;
+  --sidebar-accent-foreground: #0a0a0a;
+  --sidebar-border: #e0e0d8;
+  --sidebar-ring: #d4af37;
+}
+
+.dark {
+  /* Dark mode - Deep charcoal base (#080808) with refined accents */
+  --background: #080808;
+  --foreground: #f0f0eb;
+  --card: #121212;
+  --card-foreground: #f0f0eb;
+  --popover: #121212;
+  --popover-foreground: #f0f0eb;
+  /* Refined gold/brass accent for dark mode */
+  --primary: #d4af37;
+  --primary-foreground: #080808;
+  --secondary: #1f1f1f;
+  --secondary-foreground: #f0f0eb;
+  --muted: #1f1f1f;
+  --muted-foreground: #a0a0a0;
+  --accent: #d4af37;
+  --accent-foreground: #080808;
+  --destructive: #ef4444;
+  --destructive-foreground: #f0f0eb;
+  --border: #2a2a2a;
+  --input: #0f0f0f;
+  --ring: #d4af37;
+  --sidebar: #080808;
+  --sidebar-foreground: #f0f0eb;
+  --sidebar-primary: #d4af37;
+  --sidebar-primary-foreground: #080808;
+  --sidebar-accent: #1f1f1f;
+  --sidebar-accent-foreground: #f0f0eb;
+  --sidebar-border: #2a2a2a;
+  --sidebar-ring: #d4af37;
+}
+
+@theme inline {
+  --font-sans: 'Syne', 'Inter Tight', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Courier New', monospace;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+/* Smooth Scrolling behavior */
+html {
+  scroll-behavior: auto;
+  scroll-padding-top: 80px;
+}
+
+/* Film Grain Overlay - animated for that cinematic look */
+@keyframes filmGrain {
+  0%   { transform: translate(0, 0); }
+  10%  { transform: translate(-2%, -3%); }
+  20%  { transform: translate(3%, 2%); }
+  30%  { transform: translate(-1%, 4%); }
+  40%  { transform: translate(4%, -1%); }
+  50%  { transform: translate(-3%, 3%); }
+  60%  { transform: translate(2%, -4%); }
+  70%  { transform: translate(-4%, 1%); }
+  80%  { transform: translate(1%, -2%); }
+  90%  { transform: translate(3%, 4%); }
+  100% { transform: translate(0, 0); }
+}
+
+html::before {
+  content: '';
+  position: fixed;
+  top: -5%;
+  left: -5%;
+  width: 110%;
+  height: 110%;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+  background-size: 256px 256px;
+  background-repeat: repeat;
+  opacity: 0.04;
+  pointer-events: none;
+  z-index: 9999;
+  animation: filmGrain 0.5s steps(1) infinite;
+}
+
+/* JetBrains Mono utility for prices and technical details */
+.font-price {
+  font-family: 'JetBrains Mono', monospace;
+  font-feature-settings: 'tnum' on, 'lnum' on;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-sans);
+    /* Smooth dark/light mode transition — no jarring flashes */
+    transition: background-color 0.5s ease, color 0.3s ease;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Syne', 'Inter Tight', sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  code, pre {
+    font-family: var(--font-mono);
+  }
+}
+
+/* ── Hero portal grain — scoped to hero so it's richer than the global grain ── */
+.hero-grain {
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n2'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n2)' opacity='1'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+  background-repeat: repeat;
+  opacity: 0.05;
+  pointer-events: none;
+  mix-blend-mode: overlay;
+  will-change: transform;
+  z-index: 20;
+}
+
+/* ── will-change helper to force GPU layers on animated elements ── */
+.gpu-layer {
+  will-change: transform;
+  transform: translateZ(0);
+}
+

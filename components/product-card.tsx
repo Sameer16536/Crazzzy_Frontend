@@ -19,6 +19,8 @@ import { useAppDispatch } from '@/lib/store/hooks'
 import { addToCart } from '@/lib/store/slices/cart-slice'
 import { motion, useMotionValue, useTransform } from 'framer-motion'
 import { useMagneticButton } from '@/hooks/use-animations'
+import { useCatalog } from '@/lib/catalog/catalog-context'
+import { toast } from 'sonner'
 
 interface ProductCardProps {
   product: {
@@ -64,6 +66,9 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
   const dispatch = useAppDispatch()
   const buttonRef = useRef<HTMLDivElement>(null)
   const { ref: magneticRef, x: magneticX, y: magneticY } = useMagneticButton(0.25)
+  const { wishlistIds, toggleWishlist } = useCatalog()
+  
+  const isWishlisted = wishlistIds.has(String(product.id))
 
   return (
     <Link href={`/product/${product.id}`}>
@@ -131,13 +136,22 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
 
           {/* Wishlist Button */}
           <button
-            className="absolute bottom-4 right-4 z-20 p-3 bg-white/20 hover:bg-white/40 rounded-full backdrop-blur-sm transition-all cursor-interactive"
+            className={cn(
+              "absolute bottom-4 right-4 z-20 p-3 rounded-full backdrop-blur-sm transition-all cursor-interactive border",
+              isWishlisted 
+                ? "bg-primary border-primary text-primary-foreground" 
+                : "bg-white/20 border-white/10 text-black hover:bg-white/40"
+            )}
             onClick={(e) => {
               e.preventDefault()
               e.stopPropagation()
+              toggleWishlist(String(product.id))
             }}
           >
-            <Heart size={18} className="text-black" />
+            <Heart 
+              size={18} 
+              className={cn("transition-transform duration-300", isWishlisted && "fill-current scale-110")} 
+            />
           </button>
         </div>
 

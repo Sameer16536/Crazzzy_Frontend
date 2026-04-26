@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState, useMemo, useCallback } from 'react'
 import { api } from '@/lib/api-client'
+import { toast } from 'sonner'
 
 /** 
  * Represents a product category with support for hierarchical structures (Parent-Child).
@@ -40,9 +41,11 @@ interface CatalogContextType {
     categories: CatalogCategory[]
     products: CatalogProduct[]
   } | null
+  wishlistIds: Set<string>
   isLoading: boolean
   error: string | null
   refresh: () => Promise<void>
+  toggleWishlist: (productId: string) => Promise<void>
 }
 
 const CatalogContext = createContext<CatalogContextType | undefined>(undefined)
@@ -62,12 +65,12 @@ const API_BASE = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api'
  */
 function resolveImageUrl(url: string | null | undefined): string {
   if (!url) return '/placeholder.jpg'
-  
+
   // If it's already an absolute URL (like Cloudinary), return it
   if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
     return url
   }
-  
+
   // Otherwise, treat as a relative path from our backend
   const base = API_BASE.endsWith('/') ? API_BASE.slice(0, -1) : API_BASE
   const path = url.startsWith('/') ? url : `/${url}`
@@ -105,13 +108,50 @@ const CATEGORY_DESIGN_DATA: Record<string, { color: string, description: string,
  */
 export function CatalogProvider({ children }: { children: React.ReactNode }) {
   const [data, setData] = useState<CatalogContextType['data']>(null)
+  const [wishlistIds, setWishlistIds] = useState<Set<string>>(new Set())
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  const fetchWishlist = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('accessToken')
+      if (!token) return
+
+      const res = await api.get<any>('/users/wishlist')
+      const items = res?.data || []
+      setWishlistIds(new Set(items.map((p: any) => String(p.id))))
+    } catch (e) {
+      console.error('Failed to fetch wishlist:', e)
+    }
+  }, [])
+
+  const toggleWishlist = useCallback(async (productId: string) => {
+    try {
+      const token = localStorage.getItem('accessToken')
+      if (!token) {
+        toast.error('Please login to use wishlist')
+        return
+      }
+
+      await api.post(`/users/wishlist/${productId}`, {})
+
+      setWishlistIds(prev => {
+        const next = new Set(prev)
+        if (next.has(productId)) next.delete(productId)
+        else next.add(productId)
+        return next
+      })
+
+      toast.success('Wishlist updated')
+    } catch (e: any) {
+      toast.error(e.message || 'Failed to update wishlist')
+    }
+  }, [])
 
   const fetchCatalog = async () => {
     try {
       setIsLoading(true)
-      
+
       // Fetch both categories and initial products in parallel
       const [categoriesData, productsData] = await Promise.all([
         api.get<any>('/categories'),
@@ -119,15 +159,15 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
       ])
 
       const rawCategories = categoriesData.data || []
-      
+
       // Transform backend categories into our CatalogCategory format
       const categories: CatalogCategory[] = rawCategories.map((c: any) => {
         // Find design tokens (color/desc) based on the root ancestor's slug
         // This ensures sub-categories (like 'Anime Posters') share the 'Wall Posters' branding.
         const designSlug = c.parentId ? rawCategories.find((pc: any) => pc.id === c.parentId)?.slug : c.slug
-        const design = CATEGORY_DESIGN_DATA[designSlug || ''] || { 
-          color: '#d4af37', 
-          description: c.description || 'Explore our curated collection' 
+        const design = CATEGORY_DESIGN_DATA[designSlug || ''] || {
+          color: '#d4af37',
+          description: c.description || 'Explore our curated collection'
         }
 
         return {
@@ -135,7 +175,7 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
           name: c.name,
           slug: c.slug,
           // Use imageOverride if provided, otherwise use backend imageUrl
-          image: resolveImageUrl(design.imageOverride || c.imageUrl), 
+          image: resolveImageUrl(design.imageOverride || c.imageUrl),
           description: design.description,
           color: design.color,
           parentId: c.parentId ? String(c.parentId) : null,
@@ -153,7 +193,7 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
         rating: parseFloat(p.ratingAvg || 0),
         reviews: p.reviewCount || 0,
         // Support multiple images with fallback to main imageUrl
-        images: p.images?.length > 0 
+        images: p.images?.length > 0
           ? p.images.map((img: any) => resolveImageUrl(img.imageUrl))
           : [resolveImageUrl(p.imageUrl)],
         description: p.description || '',
@@ -175,14 +215,17 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     fetchCatalog()
-  }, [])
+    fetchWishlist()
+  }, [fetchWishlist])
 
   const value = useMemo(() => ({
     data,
+    wishlistIds,
     isLoading,
     error,
-    refresh: fetchCatalog
-  }), [data, isLoading, error])
+    refresh: fetchCatalog,
+    toggleWishlist
+  }), [data, wishlistIds, isLoading, error, toggleWishlist])
 
   return (
     <CatalogContext.Provider value={value}>
@@ -225,10 +268,10 @@ export function useCatalog() {
     return map
   }, [context.data])
 
-  return { 
-    ...context, 
-    rootCategories, 
-    getSubcategories, 
-    byCategory 
+  return {
+    ...context,
+    rootCategories,
+    getSubcategories,
+    byCategory
   }
 }

@@ -7,6 +7,18 @@ class ApiError extends Error {
   }
 }
 
+let isRefreshing = false;
+let refreshSubscribers: ((token: string) => void)[] = [];
+
+function subscribeTokenRefresh(cb: (token: string) => void) {
+  refreshSubscribers.push(cb);
+}
+
+function onRerfreshed(token: string) {
+  refreshSubscribers.map((cb) => cb(token));
+  refreshSubscribers = [];
+}
+
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
 
@@ -20,6 +32,46 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     ...options,
     headers,
   });
+
+  // Handle 401 Unauthorized (Token Expired)
+  if (response.status === 401 && typeof window !== 'undefined') {
+    const refreshToken = localStorage.getItem('refreshToken');
+    
+    if (refreshToken && !isRefreshing) {
+      isRefreshing = true;
+      try {
+        const refreshRes = await fetch(`${API_URL}/auth/refresh`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refreshToken }),
+        });
+
+        if (refreshRes.ok) {
+          const refreshData = await refreshRes.json();
+          localStorage.setItem('accessToken', refreshData.accessToken);
+          localStorage.setItem('refreshToken', refreshData.refreshToken);
+          isRefreshing = false;
+          onRerfreshed(refreshData.accessToken);
+          
+          // Retry original request
+          return request<T>(endpoint, options);
+        }
+      } catch (e) {
+        isRefreshing = false;
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        // Let the AuthProvider or the page handle the redirect by throwing
+        throw new ApiError(401, 'Session expired. Please log in again.');
+      }
+    } else if (isRefreshing) {
+      // Wait for refresh to complete then retry
+      return new Promise<T>((resolve) => {
+        subscribeTokenRefresh((newToken) => {
+          resolve(request<T>(endpoint, options));
+        });
+      });
+    }
+  }
 
   const data = await response.json().catch(() => ({}));
 

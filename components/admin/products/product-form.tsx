@@ -1,12 +1,11 @@
 'use client'
 
-import { useState, useEffect, FormEvent } from 'react'
-import { Card } from '@/components/ui/card'
+import { useState, useEffect, FormEvent, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
-import { AlertCircle, Package, Layers, Info, Upload, X, Check, Loader2 } from 'lucide-react'
+import { AlertCircle, Package, Layers, Info, Upload, X, Loader2 } from 'lucide-react'
 import { api } from '@/lib/api-client'
 import { toast } from 'sonner'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import Image from 'next/image'
 
 interface Category {
@@ -26,6 +25,10 @@ interface FormData {
   originalPrice: string
   stock: string
   images: string[]
+  tags: string
+  isFeatured: boolean
+  isDealOfTheDay: boolean
+  isActive: boolean
 }
 
 export function ProductForm({ productId }: { productId?: string }) {
@@ -42,47 +45,58 @@ export function ProductForm({ productId }: { productId?: string }) {
     originalPrice: '',
     stock: '',
     images: [],
+    tags: '',
+    isFeatured: false,
+    isDealOfTheDay: false,
+    isActive: true,
   })
 
-  useEffect(() => {
-    const init = async () => {
-      try {
-        setLoading(true)
-        const catRes = await api.get<any>('/categories')
-        const allCats = Array.isArray(catRes?.data) ? catRes.data : (Array.isArray(catRes) ? catRes : [])
-        
-        // Organize categories into hierarchy
-        const mainCategories = allCats.filter((c: any) => !c.parentId)
-        const categoriesWithSubs = mainCategories.map((main: any) => ({
-          ...main,
-          subcategories: allCats.filter((c: any) => c.parentId === main.id)
-        }))
-        
-        setCategories(categoriesWithSubs)
+  const fetchInitialData = useCallback(async () => {
+    try {
+      setLoading(true)
+      
+      // 1. Fetch Categories
+      const catRes = await api.get<any>('/categories')
+      const allCats = Array.isArray(catRes?.data) ? catRes.data : (Array.isArray(catRes) ? catRes : [])
+      
+      const mainCategories = allCats.filter((c: any) => !c.parentId)
+      const categoriesWithSubs = mainCategories.map((main: any) => ({
+        ...main,
+        subcategories: allCats.filter((c: any) => c.parentId === main.id)
+      }))
+      setCategories(categoriesWithSubs)
 
-        if (productId) {
-          const prodRes = await api.get<any>(`/products/${productId}`)
-          const product = prodRes?.data || prodRes
-          
-          setFormData({
-            title: product.title || '',
-            description: product.description || '',
-            sku: product.sku || '',
-            categoryId: String(product.categoryId || ''),
-            price: String(product.price || ''),
-            originalPrice: String(product.originalPrice || ''),
-            stock: String(product.stock || ''),
-            images: Array.isArray(product.images) ? product.images.map((img: any) => img.imageUrl) : (product.imageUrl ? [product.imageUrl] : []),
-          })
-        }
-      } catch (error) {
-        toast.error('Failed to initialize system parameters')
-      } finally {
-        setLoading(false)
+      // 2. Fetch Product if in Edit Mode
+      if (productId) {
+        const prodRes = await api.get<any>(`/admin/products/${productId}`)
+        const product = prodRes?.data || prodRes
+        
+        setFormData({
+          title: product.title || '',
+          description: product.description || '',
+          sku: product.sku || '',
+          categoryId: String(product.categoryId || ''),
+          price: String(product.price || ''),
+          originalPrice: String(product.originalPrice || ''),
+          stock: String(product.stock || ''),
+          images: Array.isArray(product.images) ? product.images.map((img: any) => img.imageUrl) : (product.imageUrl ? [product.imageUrl] : []),
+          tags: Array.isArray(product.tags) ? product.tags.map((t: any) => t.name).join(', ') : '',
+          isFeatured: !!product.isFeatured,
+          isDealOfTheDay: !!product.isDealOfTheDay,
+          isActive: product.isActive !== false,
+        })
       }
+    } catch (error) {
+      console.error('Error initializing form:', error)
+      toast.error('Failed to initialize product data')
+    } finally {
+      setLoading(false)
     }
-    init()
   }, [productId])
+
+  useEffect(() => {
+    fetchInitialData()
+  }, [fetchInitialData])
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -90,21 +104,26 @@ export function ProductForm({ productId }: { productId?: string }) {
     try {
       if (productId) {
         await api.patch(`/admin/products/${productId}`, formData)
-        toast.success('Artifact recalibrated successfully')
+        toast.success('Product updated successfully')
       } else {
         await api.post('/admin/products', formData)
-        toast.success('New artifact deployed to registry')
+        toast.success('Product created successfully')
       }
     } catch (error: any) {
-      toast.error(error.message || 'Mission failure: could not save artifact')
+      toast.error(error.message || 'Failed to save product')
     } finally {
       setSubmitting(false)
     }
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
+    const { name, value, type } = e.target
+    if (type === 'checkbox') {
+      const checked = (e.target as HTMLInputElement).checked
+      setFormData(prev => ({ ...prev, [name]: checked }))
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }))
+    }
   }
 
   if (loading) {
@@ -116,70 +135,81 @@ export function ProductForm({ productId }: { productId?: string }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-8 pb-20">
       {/* Main Stats */}
       <div className="lg:col-span-2 space-y-8">
-        <div className="bg-zinc-900/30 border border-white/5 p-8 space-y-8">
+        <div className="bg-card border border-border p-8 space-y-8 rounded-xl shadow-sm">
           <div className="flex items-center gap-4 border-b border-border pb-6">
-             <div className="w-10 h-10 bg-primary/10 border border-primary/20 flex items-center justify-center">
+             <div className="w-10 h-10 bg-primary/10 border border-primary/20 flex items-center justify-center rounded-lg">
                 <Info size={20} className="text-primary" />
              </div>
              <div>
-                <h2 className="text-sm font-black uppercase tracking-widest text-white">Primary Designation</h2>
-                <p className="text-[10px] text-white/20 uppercase tracking-[0.2em]">Core artifact identity and specs</p>
+                <h2 className="text-sm font-black uppercase tracking-widest text-foreground">Basic Information</h2>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-[0.2em]">Product name, description and category</p>
              </div>
           </div>
 
           <div className="space-y-6">
             <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40 pl-1">Identification</label>
+              <label className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground pl-1">Product Title</label>
               <input
                 name="title"
                 value={formData.title}
                 onChange={handleInputChange}
                 required
-                placeholder="ARTIFACT NAME"
-                className="w-full bg-background border border-border px-6 py-4 text-xs font-black uppercase tracking-widest focus:border-primary/40 transition-all outline-none text-foreground placeholder:text-muted-foreground/30"
+                placeholder="e.g. Anime Wall Poster"
+                className="w-full bg-background border border-border px-6 py-4 text-xs font-bold uppercase tracking-widest focus:border-primary/40 transition-all outline-none rounded-lg text-foreground"
               />
             </div>
 
             <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40 pl-1">Intelligence Data</label>
+              <label className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground pl-1">Description</label>
               <textarea
                 name="description"
                 value={formData.description}
                 onChange={handleInputChange}
                 rows={5}
-                placeholder="DETAILED ARTIFACT RECONNAISSANCE..."
-                className="w-full bg-background border border-border px-6 py-4 text-xs font-bold uppercase tracking-widest focus:border-primary/40 transition-all outline-none resize-none text-foreground placeholder:text-muted-foreground/30"
+                placeholder="Tell your customers about this product..."
+                className="w-full bg-background border border-border px-6 py-4 text-xs font-medium focus:border-primary/40 transition-all outline-none resize-none rounded-lg text-foreground"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground pl-1">Tags (Comma separated)</label>
+              <input
+                name="tags"
+                value={formData.tags}
+                onChange={handleInputChange}
+                placeholder="anime, posters, decoration"
+                className="w-full bg-background border border-border px-6 py-4 text-xs font-bold uppercase tracking-widest focus:border-primary/40 transition-all outline-none rounded-lg text-foreground"
               />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground pl-1">Registry SKU</label>
+                <label className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground pl-1">SKU (Unique ID)</label>
                 <input
                   name="sku"
                   value={formData.sku}
                   onChange={handleInputChange}
                   required
-                  placeholder="X-999-UNIT"
-                  className="w-full bg-background border border-border px-6 py-4 text-xs font-mono font-bold uppercase tracking-widest focus:border-primary/40 transition-all outline-none text-foreground placeholder:text-muted-foreground/30"
+                  placeholder="SKU-001"
+                  className="w-full bg-background border border-border px-6 py-4 text-xs font-mono font-bold focus:border-primary/40 transition-all outline-none rounded-lg text-foreground"
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground pl-1">Sector Class</label>
+                <label className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground pl-1">Category</label>
                 <select
                   name="categoryId"
                   value={formData.categoryId}
                   onChange={handleInputChange}
                   required
-                  className="w-full bg-background border border-border px-6 py-4 text-xs font-black uppercase tracking-widest focus:border-primary/40 transition-all outline-none appearance-none text-foreground"
+                  className="w-full bg-background border border-border px-6 py-4 text-xs font-black uppercase tracking-widest focus:border-primary/40 transition-all outline-none appearance-none rounded-lg text-foreground"
                 >
-                  <option value="">Select Sector</option>
+                  <option value="">Select a category</option>
                   {categories.map(main => (
-                    <optgroup key={main.id} label={main.name.toUpperCase()} className="bg-background text-foreground font-black">
-                      <option value={main.id}>{main.name} (MAIN)</option>
+                    <optgroup key={main.id} label={main.name.toUpperCase()} className="bg-background text-foreground">
+                      <option value={main.id}>{main.name} (Parent)</option>
                       {main.subcategories?.map(sub => (
                         <option key={sub.id} value={sub.id}>
                           └─ {sub.name}
@@ -194,108 +224,170 @@ export function ProductForm({ productId }: { productId?: string }) {
         </div>
 
         {/* Financials & Inventory */}
-        <div className="bg-zinc-900/30 border border-white/5 p-8 space-y-8">
+        <div className="bg-card border border-border p-8 space-y-8 rounded-xl shadow-sm">
            <div className="flex items-center gap-4 border-b border-border pb-6">
-             <div className="w-10 h-10 bg-primary/10 border border-primary/20 flex items-center justify-center">
+             <div className="w-10 h-10 bg-primary/10 border border-primary/20 flex items-center justify-center rounded-lg">
                 <Package size={20} className="text-primary" />
              </div>
              <div>
-                <h2 className="text-sm font-black uppercase tracking-widest text-white">Resource Allocation</h2>
-                <p className="text-[10px] text-white/20 uppercase tracking-[0.2em]">Credits and supply levels</p>
+                <h2 className="text-sm font-black uppercase tracking-widest text-foreground">Pricing & Inventory</h2>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-[0.2em]">Manage your margins and stock</p>
              </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40 pl-1">Base Value</label>
+              <label className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground pl-1">Sale Price</label>
               <div className="relative">
-                <span className="absolute left-6 top-1/2 -translate-y-1/2 text-primary font-mono font-bold">₹</span>
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-primary font-mono font-bold">₹</span>
                 <input
                   name="price"
                   type="number"
                   value={formData.price}
                   onChange={handleInputChange}
                   required
-                  className="w-full bg-background border border-border pl-12 pr-6 py-4 text-xs font-mono font-bold focus:border-primary/40 transition-all outline-none text-foreground"
+                  className="w-full bg-background border border-border pl-10 pr-6 py-4 text-xs font-mono font-bold focus:border-primary/40 transition-all outline-none rounded-lg text-foreground"
                 />
               </div>
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40 pl-1">Original Value</label>
+              <label className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground pl-1">Regular Price</label>
               <div className="relative">
-                <span className="absolute left-6 top-1/2 -translate-y-1/2 text-white/20 font-mono font-bold">₹</span>
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-mono font-bold">₹</span>
                 <input
                   name="originalPrice"
                   type="number"
                   value={formData.originalPrice}
                   onChange={handleInputChange}
-                  className="w-full bg-background border border-border pl-12 pr-6 py-4 text-xs font-mono font-bold focus:border-primary/40 transition-all outline-none text-foreground"
+                  className="w-full bg-background border border-border pl-10 pr-6 py-4 text-xs font-mono font-bold focus:border-primary/40 transition-all outline-none rounded-lg text-foreground"
                 />
               </div>
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40 pl-1">Supply Count</label>
+              <label className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground pl-1">Stock Level</label>
               <input
                 name="stock"
                 type="number"
                 value={formData.stock}
                 onChange={handleInputChange}
                 required
-                className="w-full bg-background border border-border px-6 py-4 text-xs font-mono font-bold focus:border-primary/40 transition-all outline-none text-foreground"
+                className="w-full bg-background border border-border px-6 py-4 text-xs font-mono font-bold focus:border-primary/40 transition-all outline-none rounded-lg text-foreground"
               />
             </div>
           </div>
         </div>
+
+        {/* Visibility & Status */}
+        <div className="bg-card border border-border p-8 space-y-8 rounded-xl shadow-sm">
+           <div className="flex items-center gap-4 border-b border-border pb-6">
+             <div className="w-10 h-10 bg-primary/10 border border-primary/20 flex items-center justify-center rounded-lg">
+                <Layers size={20} className="text-primary" />
+             </div>
+             <div>
+                <h2 className="text-sm font-black uppercase tracking-widest text-foreground">Visibility & Marketing</h2>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-[0.2em]">Control how the product appears</p>
+             </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <label className="flex items-center gap-4 p-4 bg-background border border-border rounded-xl cursor-pointer hover:border-primary/20 transition-all group">
+              <input
+                type="checkbox"
+                name="isActive"
+                checked={formData.isActive}
+                onChange={handleInputChange}
+                className="w-4 h-4 accent-primary"
+              />
+              <div className="flex flex-col">
+                <span className="text-[10px] font-black uppercase tracking-widest text-foreground group-hover:text-primary transition-colors">Published</span>
+                <span className="text-[8px] text-muted-foreground uppercase tracking-widest">Available to buy</span>
+              </div>
+            </label>
+
+            <label className="flex items-center gap-4 p-4 bg-background border border-border rounded-xl cursor-pointer hover:border-primary/20 transition-all group">
+              <input
+                type="checkbox"
+                name="isFeatured"
+                checked={formData.isFeatured}
+                onChange={handleInputChange}
+                className="w-4 h-4 accent-primary"
+              />
+              <div className="flex flex-col">
+                <span className="text-[10px] font-black uppercase tracking-widest text-foreground group-hover:text-primary transition-colors">Featured</span>
+                <span className="text-[8px] text-muted-foreground uppercase tracking-widest">Home page spotlight</span>
+              </div>
+            </label>
+
+            <label className="flex items-center gap-4 p-4 bg-background border border-border rounded-xl cursor-pointer hover:border-primary/20 transition-all group">
+              <input
+                type="checkbox"
+                name="isDealOfTheDay"
+                checked={formData.isDealOfTheDay}
+                onChange={handleInputChange}
+                className="w-4 h-4 accent-primary"
+              />
+              <div className="flex flex-col">
+                <span className="text-[10px] font-black uppercase tracking-widest text-foreground group-hover:text-primary transition-colors">Deal</span>
+                <span className="text-[8px] text-muted-foreground uppercase tracking-widest">Show as limited deal</span>
+              </div>
+            </label>
+          </div>
+        </div>
       </div>
 
-      {/* Sidebar: Visuals */}
+      {/* Sidebar: Visuals & Actions */}
       <div className="space-y-8">
-        <div className="bg-zinc-900/30 border border-white/5 p-8 space-y-6">
+        <div className="bg-card border border-border p-8 space-y-6 rounded-xl shadow-sm sticky top-28">
           <div className="flex items-center gap-4 border-b border-border pb-6">
-             <div className="w-10 h-10 bg-primary/10 border border-primary/20 flex items-center justify-center">
+             <div className="w-10 h-10 bg-primary/10 border border-primary/20 flex items-center justify-center rounded-lg">
                 <Upload size={20} className="text-primary" />
              </div>
              <div>
-                <h2 className="text-sm font-black uppercase tracking-widest text-white">Visual Uplink</h2>
-                <p className="text-[10px] text-white/20 uppercase tracking-[0.2em]">Artifact visual verification</p>
+                <h2 className="text-sm font-black uppercase tracking-widest text-foreground">Media Uplink</h2>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-[0.2em]">Product imagery</p>
              </div>
           </div>
 
-          <div className="aspect-square border-2 border-dashed border-border bg-muted/20 flex flex-col items-center justify-center group hover:border-primary/20 transition-all cursor-pointer">
+          <div className="aspect-square border-2 border-dashed border-border bg-muted/20 rounded-xl flex flex-col items-center justify-center group hover:border-primary/20 transition-all cursor-pointer">
             <Upload className="text-muted-foreground/20 group-hover:text-primary transition-colors mb-4" size={32} />
-            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/30 group-hover:text-foreground transition-colors">Initialize Upload</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/30 group-hover:text-foreground transition-colors text-center px-4">
+              Upload visuals coming soon
+            </p>
           </div>
 
-          <div className="grid grid-cols-4 gap-2">
+          <div className="grid grid-cols-3 gap-2">
             {formData.images.map((img, i) => (
-              <div key={i} className="aspect-square bg-white border border-black/5 relative overflow-hidden group p-2">
+              <div key={i} className="aspect-square bg-white border border-border rounded-lg relative overflow-hidden group p-2">
                 <Image src={img} alt="preview" fill className="object-contain" />
-                <button className="absolute inset-0 bg-red-500/80 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                <button 
+                  type="button"
+                  className="absolute inset-0 bg-red-500/80 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
+                >
                   <X size={14} className="text-white" />
                 </button>
               </div>
             ))}
           </div>
-        </div>
 
-        <button 
-          type="submit"
-          disabled={submitting}
-          className="w-full bg-primary py-6 text-primary-foreground font-black uppercase tracking-[0.4em] hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 disabled:scale-100"
-        >
-          {submitting ? (
-            <div className="flex items-center justify-center gap-3">
-               <Loader2 className="animate-spin" size={20} />
-               Processing...
-            </div>
-          ) : productId ? 'Recalibrate Artifact' : 'Deploy Artifact'}
-        </button>
+          <button 
+            type="submit"
+            disabled={submitting}
+            className="w-full bg-primary py-6 text-primary-foreground font-black uppercase tracking-[0.4em] rounded-xl hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 disabled:scale-100 shadow-lg shadow-primary/20"
+          >
+            {submitting ? (
+              <div className="flex items-center justify-center gap-3">
+                 <Loader2 className="animate-spin" size={20} />
+                 Saving...
+              </div>
+            ) : productId ? 'Recalibrate' : 'Deploy'}
+          </button>
 
-        <div className="bg-primary/5 border border-primary/10 p-6 flex gap-4">
-           <AlertCircle className="text-primary shrink-0" size={20} />
-           <p className="text-[10px] font-bold text-primary/60 uppercase tracking-widest leading-relaxed">
-             Ensure all identification codes and financial data are verified before deployment to the public registry.
-           </p>
+          <div className="bg-primary/5 border border-primary/10 p-6 rounded-xl flex gap-4">
+             <AlertCircle className="text-primary shrink-0" size={20} />
+             <p className="text-[10px] font-bold text-primary/60 uppercase tracking-widest leading-relaxed">
+               Verified changes will be pushed to the global registry immediately.
+             </p>
+          </div>
         </div>
       </div>
     </form>

@@ -6,7 +6,9 @@ import { useEffect } from 'react'
 import { Navbar } from '@/components/navbar'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { ShoppingBag, Star, Truck, Shield, User, LogOut, Package, Settings, ChevronRight } from 'lucide-react'
+import { ShoppingBag, Star, Truck, Shield, User, LogOut, Package, Settings, ChevronRight, Heart } from 'lucide-react'
+import { useCatalog } from '@/lib/catalog/catalog-context'
+import { ProductCard } from '@/components/product-card'
 
 /** Store value propositions shown in the left branding panel */
 const STORE_VALUES = [
@@ -18,7 +20,10 @@ const STORE_VALUES = [
 
 export default function AccountPage() {
   const { user, loading, logout } = useAuth()
+  const { data, wishlistIds } = useCatalog()
   const router = useRouter()
+  
+  const wishlistedProducts = data?.products.filter(p => wishlistIds.has(String(p.id))) || []
 
   /** If user is NOT signed in, send them to login */
   useEffect(() => {
@@ -188,6 +193,38 @@ export default function AccountPage() {
                   <p className="text-sm text-primary font-bold uppercase tracking-widest">{user.role}</p>
                 </div>
               </div>
+            </div>
+
+            {/* Wishlist Section */}
+            <div className="space-y-8 pt-12 border-t border-border">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Heart className="text-primary fill-current" size={18} />
+                  <h3 className="text-xs font-black text-foreground uppercase tracking-[0.3em]">My Wishlist</h3>
+                </div>
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest bg-muted px-2 py-1">
+                  {wishlistedProducts.length} Items
+                </span>
+              </div>
+
+              {wishlistedProducts.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  {wishlistedProducts.map(product => (
+                    <ProductCard key={product.id} product={product} />
+                  ))}
+                </div>
+              ) : (
+                <div className="bg-muted/30 border border-dashed border-border p-12 text-center rounded-none">
+                  <Heart className="mx-auto text-muted-foreground/20 mb-4" size={32} />
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-4">Your wishlist is empty</p>
+                  <Link 
+                    href="/shop" 
+                    className="inline-block bg-primary text-primary-foreground px-6 py-3 text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all"
+                  >
+                    Start Exploring
+                  </Link>
+                </div>
+              )}
             </div>
 
             {/* Mobile Logout */}

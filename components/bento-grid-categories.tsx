@@ -11,7 +11,7 @@
  */
 
 'use client'
-
+import { useMemo } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { useCatalog } from '@/lib/catalog/use-catalog'
@@ -29,11 +29,11 @@ interface AreaConfig {
 
 const AREA_MAP: AreaConfig[] = [
   { area: 'tall', aspectRatio: '1 / 2' },
-  { area: 'sm1',  aspectRatio: '1 / 1' },
-  { area: 'sm2',  aspectRatio: '1 / 1' },
+  { area: 'sm1', aspectRatio: '1 / 1' },
+  { area: 'sm2', aspectRatio: '1 / 1' },
   { area: 'wide', aspectRatio: '2 / 1' },
-  { area: 'sm3',  aspectRatio: '1 / 1' },
-  { area: 'sm4',  aspectRatio: '1 / 1' },
+  { area: 'sm3', aspectRatio: '1 / 1' },
+  { area: 'sm4', aspectRatio: '1 / 1' },
 ]
 
 const GRID_STYLE: React.CSSProperties = {
@@ -60,10 +60,10 @@ const containerVariants = {
 }
 
 const cardVariants = {
-  hidden:  { opacity: 0, y: 32, scale: 0.96 },
+  hidden: { opacity: 0, y: 32, scale: 0.96 },
   visible: {
     opacity: 1, y: 0, scale: 1,
-    transition: { duration: 0.55, ease: [0.16, 1, 0.3, 1] as [number,number,number,number] },
+    transition: { duration: 0.55, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] },
   },
 }
 
@@ -92,7 +92,7 @@ function CardInner({ href, category, useContain = false, sizes = '25vw' }: CardI
   return (
     <Link href={href} className="absolute inset-0 z-20 block" aria-label={`Shop ${category.name}`}>
       {/* Background Image */}
-      <div className="absolute inset-0" style={useContain ? { backgroundColor: '#0d0d12' } : undefined}>
+      <div className={`absolute inset-0 transition-colors duration-500 ${useContain ? 'p-8 bg-white border border-black/5' : ''}`}>
         {category.image ? (
           <Image
             src={category.image}
@@ -119,7 +119,7 @@ function CardInner({ href, category, useContain = false, sizes = '25vw' }: CardI
       {/* Dark gradient scrim */}
       <div className={['absolute inset-0',
         useContain ? 'bg-gradient-to-t from-black/80 via-black/40 to-black/20'
-                   : 'bg-gradient-to-t from-black/75 via-black/20 to-black/5',
+          : 'bg-gradient-to-t from-black/75 via-black/20 to-black/5',
       ].join(' ')} />
 
       {/* Always-visible name pill */}
@@ -158,7 +158,42 @@ function SkeletonCard({ area, aspectRatio }: AreaConfig) {
 }
 
 export function BentoGridCategories() {
-  const { rootCategories: categories, isLoading } = useCatalog()
+  const { rootCategories: categories, isLoading, byCategory, getSubcategories } = useCatalog()
+
+  // Pre-calculate random images for categories that don't have one
+  const categoryImages = useMemo(() => {
+    if (!categories || categories.length === 0) return {}
+    
+    const imageMap: Record<string, string> = {}
+    
+    categories.forEach(cat => {
+      // If category has a branding image, use it
+      if (cat.image && !cat.image.includes('placeholder')) {
+        imageMap[cat.id] = cat.image
+        return
+      }
+
+      // Otherwise, gather all products in this category and its sub-categories
+      const subs = getSubcategories(cat.id)
+      const allCategoryIds = [cat.id, ...subs.map(s => s.id)]
+      
+      const pool: string[] = []
+      allCategoryIds.forEach(id => {
+        const products = byCategory.get(id) || []
+        products.forEach(p => {
+          if (p.images?.[0]) pool.push(p.images[0])
+        })
+      })
+
+      if (pool.length > 0) {
+        // Pick a random image from the top 10 products for variety but quality
+        const randomIndex = Math.floor(Math.random() * Math.min(pool.length, 10))
+        imageMap[cat.id] = pool[randomIndex]
+      }
+    })
+
+    return imageMap
+  }, [categories, byCategory, getSubcategories])
 
   if (isLoading) {
     return (
@@ -192,6 +227,8 @@ export function BentoGridCategories() {
       >
         {bentoCategories.map((category, idx) => {
           const cfg = AREA_MAP[idx]
+          const displayImage = categoryImages[category.id] || category.image
+
           return (
             <motion.div
               key={category.id}
@@ -202,8 +239,9 @@ export function BentoGridCategories() {
               <div style={{ aspectRatio: cfg.aspectRatio }} className="relative w-full h-full">
                 <CardInner
                   href={`/shop?category=${category.slug}`}
-                  category={category}
+                  category={{ ...category, image: displayImage }}
                   sizes="(max-width: 1024px) 33vw, 20vw"
+                  useContain={true} // Force contain for product images
                 />
               </div>
             </motion.div>
@@ -221,26 +259,31 @@ export function BentoGridCategories() {
           whileInView="visible"
           viewport={{ once: true, margin: '-60px' }}
         >
-          {breakCategories.map((category) => (
-            <motion.div
-              key={category.id}
-              style={{ willChange: 'transform' }}
-              variants={cardVariants}
-              className="group relative overflow-hidden rounded-2xl cursor-pointer"
-            >
-              <div className="relative w-full" style={{ aspectRatio: '4 / 3' }}>
-                <CardInner
-                  href={`/shop?category=${category.slug}`}
-                  category={category}
-                  sizes="33vw"
-                />
-                <div
-                  className="absolute top-0 inset-x-0 h-[2px] z-30 pointer-events-none"
-                  style={{ background: `linear-gradient(90deg, transparent, ${category.color}80, transparent)` }}
-                />
-              </div>
-            </motion.div>
-          ))}
+          {breakCategories.map((category) => {
+            const displayImage = categoryImages[category.id] || category.image
+            
+            return (
+              <motion.div
+                key={category.id}
+                style={{ willChange: 'transform' }}
+                variants={cardVariants}
+                className="group relative overflow-hidden rounded-2xl cursor-pointer"
+              >
+                <div className="relative w-full" style={{ aspectRatio: '4 / 3' }}>
+                  <CardInner
+                    href={`/shop?category=${category.slug}`}
+                    category={{ ...category, image: displayImage }}
+                    sizes="33vw"
+                    useContain={true}
+                  />
+                  <div
+                    className="absolute top-0 inset-x-0 h-[2px] z-30 pointer-events-none"
+                    style={{ background: `linear-gradient(90deg, transparent, ${category.color}80, transparent)` }}
+                  />
+                </div>
+              </motion.div>
+            )
+          })}
         </motion.div>
       )}
 
@@ -253,20 +296,25 @@ export function BentoGridCategories() {
         whileInView="visible"
         viewport={{ once: true, margin: '-60px' }}
       >
-        {categories.map((category) => (
-          <motion.div
-            key={category.id}
-            style={{ willChange: 'transform' }}
-            variants={cardVariants}
-            className="group relative overflow-hidden rounded-2xl cursor-pointer aspect-square"
-          >
-            <CardInner
-              href={`/shop?category=${category.slug}`}
-              category={category}
-              sizes="50vw"
-            />
-          </motion.div>
-        ))}
+        {categories.map((category) => {
+          const displayImage = categoryImages[category.id] || category.image
+
+          return (
+            <motion.div
+              key={category.id}
+              style={{ willChange: 'transform' }}
+              variants={cardVariants}
+              className="group relative overflow-hidden rounded-2xl cursor-pointer aspect-square"
+            >
+              <CardInner
+                href={`/shop?category=${category.slug}`}
+                category={{ ...category, image: displayImage }}
+                sizes="50vw"
+                useContain={true}
+              />
+            </motion.div>
+          )
+        })}
       </motion.div>
     </div>
   )

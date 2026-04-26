@@ -115,8 +115,8 @@ export function ProductsTable() {
                 >
                   <td className="p-6">
                     <div className="flex items-center gap-4">
-                      <div className="relative w-12 h-12 bg-black border border-white/10 overflow-hidden shrink-0">
-                        <Image src={p.imageUrl || '/placeholder.jpg'} alt={p.title} fill className="object-cover group-hover:scale-110 transition-transform duration-500" />
+                      <div className="relative w-12 h-12 bg-white border border-black/5 shrink-0 p-2">
+                        <Image src={p.imageUrl || '/placeholder.jpg'} alt={p.title} fill className="object-contain transition-transform duration-500" />
                       </div>
                       <div className="min-w-0">
                         <p className="text-sm font-black uppercase tracking-tight truncate">{p.title}</p>

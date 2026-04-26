@@ -117,16 +117,16 @@ export default function ProductPage() {
           <div className="lg:col-span-7 space-y-6">
             <motion.div 
               layoutId={`product-image-${product.id}`}
-              className="relative aspect-square bg-zinc-900 border border-white/5 overflow-hidden group"
+              className="relative aspect-square bg-white border border-black/5 overflow-hidden group p-10"
             >
               <Image
                 src={product.images?.[selectedImage] || "/placeholder.jpg"}
                 alt={product.name}
                 fill
-                className="object-cover transition-transform duration-1000 group-hover:scale-105"
+                className="object-contain transition-transform duration-1000"
                 priority
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/5 via-transparent to-transparent pointer-events-none" />
               
               {!product.inStock && (
                 <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center">
@@ -142,11 +142,11 @@ export default function ProductPage() {
                   key={idx}
                   onClick={() => setSelectedImage(idx)}
                   className={`
-                    relative flex-shrink-0 w-24 aspect-square border-2 transition-all duration-300
-                    ${selectedImage === idx ? 'border-primary opacity-100' : 'border-white/5 opacity-50 hover:opacity-100'}
+                    relative flex-shrink-0 w-24 aspect-square border-2 transition-all duration-300 p-4 bg-white
+                    ${selectedImage === idx ? 'border-primary opacity-100' : 'border-black/5 opacity-50 hover:opacity-100'}
                   `}
                 >
-                  <Image src={img} alt="" fill className="object-cover" />
+                  <Image src={img} alt="" fill className="object-contain" />
                 </button>
               ))}
             </div>

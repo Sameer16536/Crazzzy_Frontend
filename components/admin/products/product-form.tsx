@@ -268,8 +268,8 @@ export function ProductForm({ productId }: { productId?: string }) {
 
           <div className="grid grid-cols-4 gap-2">
             {formData.images.map((img, i) => (
-              <div key={i} className="aspect-square bg-black border border-white/10 relative overflow-hidden group">
-                <Image src={img} alt="preview" fill className="object-cover" />
+              <div key={i} className="aspect-square bg-white border border-black/5 relative overflow-hidden group p-2">
+                <Image src={img} alt="preview" fill className="object-contain" />
                 <button className="absolute inset-0 bg-red-500/80 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
                   <X size={14} className="text-white" />
                 </button>

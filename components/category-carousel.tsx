@@ -52,13 +52,13 @@ export function CategoryCarousel() {
                       transition={{ type: 'spring', stiffness: 320, damping: 26 }}
                       className="group"
                     >
-                      <div className="relative w-full aspect-square rounded-xl overflow-hidden mb-3 bg-card border border-border/30">
+                      <div className="relative w-full aspect-square rounded-xl overflow-hidden mb-3 bg-white border border-black/5 p-6">
                         {image ? (
                           <Image
                             src={image}
                             alt={name}
                             fill
-                            className="object-cover transition-transform duration-500 scale-100 group-hover:scale-125"
+                            className="object-contain transition-transform duration-500"
                           />
                         ) : (
                           <div

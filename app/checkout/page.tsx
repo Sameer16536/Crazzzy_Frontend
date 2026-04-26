@@ -431,8 +431,8 @@ export default function CheckoutPage() {
               <div className="space-y-4 max-h-60 overflow-y-auto">
                 {items.map((item) => (
                   <div key={item.productId} className="flex gap-4">
-                    <div className="relative w-16 h-16 bg-black border border-white/5 shrink-0">
-                      <Image src={item.image || '/placeholder.jpg'} alt={item.name} fill className="object-cover" />
+                    <div className="relative w-16 h-16 bg-white border border-black/5 shrink-0 p-3">
+                      <Image src={item.image || '/placeholder.jpg'} alt={item.name} fill className="object-contain" />
                       <span className="absolute -top-2 -right-2 bg-primary text-black w-5 h-5 flex items-center justify-center text-[10px] font-bold rounded-full border-2 border-black shadow-lg">
                         {item.quantity}
                       </span>

@@ -76,12 +76,12 @@ export function DealOfTheDay() {
             {/* Pulse Glow Behind Image */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[80%] rounded-full opacity-30 blur-[80px] bg-primary animate-pulse pointer-events-none" style={{ animationDuration: '4s' }} />
             
-            <div className="relative w-full max-w-md aspect-square rounded-2xl overflow-hidden border border-white/10 bg-black/40 backdrop-blur-sm group">
+            <div className="relative w-full max-w-md aspect-square rounded-2xl overflow-hidden border border-black/5 bg-white group p-12 shadow-2xl">
               <Image 
                 src={product.images[0] || "/placeholder.jpg"} 
                 alt={product.name}
                 fill
-                className="object-cover transition-transform duration-700 group-hover:scale-105"
+                className="object-contain transition-transform duration-700"
                 sizes="(max-width: 768px) 100vw, 50vw"
                 priority
               />

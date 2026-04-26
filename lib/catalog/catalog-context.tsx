@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useContext, useEffect, useState, useMemo } from 'react'
+import React, { createContext, useContext, useEffect, useState, useMemo, useCallback } from 'react'
 import { api } from '@/lib/api-client'
 
 /** 
@@ -210,9 +210,9 @@ export function useCatalog() {
     return context.data?.categories.filter(c => !c.parentId) ?? []
   }, [context.data])
 
-  const getSubcategories = (parentId: string) => {
+  const getSubcategories = useCallback((parentId: string) => {
     return context.data?.categories.filter(c => c.parentId === parentId) ?? []
-  }
+  }, [context.data])
 
   // Optimize product lookups by grouping them by category in a Map
   const byCategory = useMemo(() => {

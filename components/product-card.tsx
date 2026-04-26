@@ -84,7 +84,7 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
           {/* Main Image */}
           {product.images?.[0] ? (
             <motion.div
-              className="absolute inset-0"
+              className="absolute inset-0 p-6 bg-white"
               animate={{
                 opacity: isImageHovered && product.images[1] ? 0 : 1,
               }}
@@ -94,7 +94,7 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
                 src={product.images[0]}
                 alt={product.name}
                 fill
-                className="object-cover group-hover:scale-110 transition-transform duration-700"
+                className="object-contain transition-transform duration-700"
                 quality={75}
                 priority={priority}
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
@@ -109,7 +109,7 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
           {/* Secondary Image - Cross-fade on hover */}
           {product.images?.[1] && (
             <motion.div
-              className="absolute inset-0"
+              className="absolute inset-0 p-6 bg-white"
               animate={{
                 opacity: isImageHovered ? 1 : 0,
               }}
@@ -119,7 +119,7 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
                 src={product.images[1]}
                 alt={`${product.name} alternate`}
                 fill
-                className="object-cover group-hover:scale-110 transition-transform duration-700"
+                className="object-contain transition-transform duration-700"
                 quality={75}
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
               />

@@ -126,12 +126,12 @@ export default function OrderDetailsPage() {
               <div className="space-y-4">
                 {order.items.map((item: any) => (
                   <div key={item.id} className="flex gap-6 p-6 bg-zinc-900/30 border border-white/5 group hover:border-white/10 transition-colors">
-                    <div className="relative w-24 h-24 bg-black border border-white/5 shrink-0 overflow-hidden">
+                    <div className="relative w-24 h-24 bg-white border border-black/5 shrink-0 p-4">
                       <Image 
                         src={item.product?.imageUrl || '/placeholder.jpg'} 
                         alt={item.product?.title || 'Product'} 
                         fill 
-                        className="object-cover group-hover:scale-110 transition-transform duration-500" 
+                        className="object-contain" 
                       />
                     </div>
                     <div className="flex-1 flex flex-col justify-between py-1">

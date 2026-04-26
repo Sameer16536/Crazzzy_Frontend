@@ -57,9 +57,9 @@ export default function CartPage() {
               items.map((item) => (
                 <Card key={item.productId} className="p-4 sm:p-5">
                   <div className="flex gap-4">
-                    <div className="relative size-20 sm:size-24 rounded-lg overflow-hidden bg-muted border border-border/30">
+                    <div className="relative size-20 sm:size-24 rounded-lg overflow-hidden bg-white border border-black/5 p-4">
                       {item.image ? (
-                        <Image src={item.image} alt={item.name} fill className="object-cover" />
+                        <Image src={item.image} alt={item.name} fill className="object-contain" />
                       ) : (
                         <div className="absolute inset-0 grid place-items-center text-xs text-muted-foreground">
                           Image

@@ -1,20 +1,13 @@
 /**
  * Bento Grid Categories — v4
  *
- * Shows ALL 9 categories:
+ * Shows ONLY Root Categories (the 9 main ones):
  *  - First 6: asymmetric CSS grid-template-areas (4-col desktop)
- *  - Last 3: "break row" — a full-width 3-col strip with a distinct
- *    glassmorphism aesthetic so it feels intentional, not like overflow
+ *  - Last 3: "break row" — a full-width 3-col strip
  *
  * Glassmorphism cards:
  *  - bg: rgba(255,255,255,0.03)
  *  - backdrop-filter: blur(20px)
- *  - border: 1px solid rgba(255,255,255,0.10)
- *
- * Staggered entrance: container variants → staggerChildren: 0.09s
- * GPU-accelerated: will-change: transform on every card
- *
- * Perfume (white studio bg) fix: object-contain + dark fill bg
  */
 
 'use client'
@@ -23,7 +16,7 @@ import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { useCatalog } from '@/lib/catalog/use-catalog'
 import Image from 'next/image'
-import { ArrowUpRight, Layers } from 'lucide-react'
+import { ArrowUpRight } from 'lucide-react'
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -43,11 +36,6 @@ const AREA_MAP: AreaConfig[] = [
   { area: 'sm4',  aspectRatio: '1 / 1' },
 ]
 
-/**
- * Desktop 4-col grid-template-areas.
- * `display` is intentionally omitted — Tailwind `hidden md:grid` controls it
- * so the inline style doesn't override `display: none` from `hidden`.
- */
 const GRID_STYLE: React.CSSProperties = {
   gridTemplateColumns: 'repeat(4, 1fr)',
   gridTemplateRows: 'auto',
@@ -59,7 +47,6 @@ const GRID_STYLE: React.CSSProperties = {
   gap: '12px',
 }
 
-/** Mobile 2-col style. `display` omitted — Tailwind `md:hidden` controls it. */
 const GRID_STYLE_MOBILE: React.CSSProperties = {
   gridTemplateColumns: 'repeat(2, 1fr)',
   gap: '10px',
@@ -79,12 +66,6 @@ const cardVariants = {
     transition: { duration: 0.55, ease: [0.16, 1, 0.3, 1] as [number,number,number,number] },
   },
 }
-
-// ─── Constants ───────────────────────────────────────────────────────────────
-
-const CONTAIN_CATEGORIES = new Set(['perfumes'])
-
-// ─── Glassmorphism panel style ────────────────────────────────────────────────
 
 const glassPanel: React.CSSProperties = {
   background: 'rgba(255,255,255,0.03)',
@@ -133,7 +114,7 @@ function CardInner({ href, category, useContain = false, sizes = '25vw' }: CardI
       </div>
 
       {/* Glass sheen overlay */}
-      <div className="absolute inset-0" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 'inherit' }} />
+      <div className="absolute inset-0 shadow-inner" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 'inherit' }} />
 
       {/* Dark gradient scrim */}
       <div className={['absolute inset-0',
@@ -143,14 +124,12 @@ function CardInner({ href, category, useContain = false, sizes = '25vw' }: CardI
 
       {/* Always-visible name pill */}
       <div className="absolute bottom-4 left-4 z-10 transition-all duration-300 group-hover:opacity-0 group-hover:translate-y-2">
-        <span
-          className="text-[10px] sm:text-xs font-bold text-white tracking-wider uppercase drop-shadow-md"
-        >
+        <span className="text-[10px] sm:text-xs font-bold text-white tracking-wider uppercase drop-shadow-md">
           {category.name}
         </span>
       </div>
 
-      {/* Hover detail panel (glassmorphism) */}
+      {/* Hover detail panel */}
       <div className="absolute inset-x-0 bottom-0 z-10 translate-y-full group-hover:translate-y-0 transition-transform duration-[400ms] ease-out">
         <div className="mx-2.5 mb-2.5 p-3 sm:p-4 rounded-xl" style={glassPanel}>
           <div className="flex items-start justify-between gap-2">
@@ -174,49 +153,35 @@ function CardInner({ href, category, useContain = false, sizes = '25vw' }: CardI
   )
 }
 
-// ─── Skeleton ────────────────────────────────────────────────────────────────
-
 function SkeletonCard({ area, aspectRatio }: AreaConfig) {
-  return <div style={{ gridArea: area, aspectRatio }} className="rounded-2xl bg-muted/30 animate-pulse" />
+  return <div style={{ gridArea: area, aspectRatio }} className="rounded-2xl bg-zinc-900 animate-pulse" />
 }
 
-// ─── Main Component ──────────────────────────────────────────────────────────
-
 export function BentoGridCategories() {
-  const { data, isLoading } = useCatalog()
-  const categories = data?.categories ?? []
+  const { rootCategories: categories, isLoading } = useCatalog()
 
   if (isLoading) {
     return (
       <div className="space-y-3">
-        {/* Desktop skeleton */}
         <div style={GRID_STYLE} className="hidden md:grid w-full">
           {AREA_MAP.map((cfg) => <SkeletonCard key={cfg.area} {...cfg} />)}
         </div>
-        {/* Break-row skeleton */}
-        <div className="hidden md:grid grid-cols-3 gap-3 w-full">
-          {[0, 1, 2].map((i) => <div key={i} className="rounded-2xl bg-muted/30 animate-pulse aspect-[4/3]" />)}
-        </div>
-        {/* Mobile skeleton */}
         <div style={GRID_STYLE_MOBILE} className="md:hidden w-full">
-          {Array.from({ length: 9 }).map((_, i) => (
-            <div key={i} className="rounded-2xl bg-muted/30 animate-pulse aspect-square" />
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="rounded-2xl bg-zinc-900 animate-pulse aspect-square" />
           ))}
         </div>
       </div>
     )
   }
 
-  // Split: first 6 go into the bento, rest (3) go into the break-row
+  // Display only root categories in the Bento grid
   const bentoCategories = categories.slice(0, 6)
   const breakCategories = categories.slice(6)
 
   return (
     <div className="space-y-3">
-
-      {/* ══════════════════════════════════════════════════════
-          DESKTOP BENTO (md+) — asymmetric 4-col grid
-          ══════════════════════════════════════════════════════ */}
+      {/* DESKTOP BENTO */}
       <motion.div
         style={GRID_STYLE}
         className="hidden md:grid w-full"
@@ -236,9 +201,8 @@ export function BentoGridCategories() {
             >
               <div style={{ aspectRatio: cfg.aspectRatio }} className="relative w-full h-full">
                 <CardInner
-                  href={`/shop/${category.slug}`}
+                  href={`/shop?category=${category.slug}`}
                   category={category}
-                  useContain={CONTAIN_CATEGORIES.has(category.id)}
                   sizes="(max-width: 1024px) 33vw, 20vw"
                 />
               </div>
@@ -247,11 +211,7 @@ export function BentoGridCategories() {
         })}
       </motion.div>
 
-      {/* ══════════════════════════════════════════════════════
-          DESKTOP BREAK ROW — remaining categories (3)
-          A visual "break" from the bento: full-width 3-col
-          strip with a slightly different card treatment.
-          ══════════════════════════════════════════════════════ */}
+      {/* DESKTOP BREAK ROW */}
       {breakCategories.length > 0 && (
         <motion.div
           className="hidden md:grid w-full"
@@ -268,18 +228,12 @@ export function BentoGridCategories() {
               variants={cardVariants}
               className="group relative overflow-hidden rounded-2xl cursor-pointer"
             >
-              {/* Taller aspect ratio for the break row items */}
-              <div
-                className="relative w-full"
-                style={{ aspectRatio: '4 / 3' }}
-              >
+              <div className="relative w-full" style={{ aspectRatio: '4 / 3' }}>
                 <CardInner
-                  href={`/shop/${category.slug}`}
+                  href={`/shop?category=${category.slug}`}
                   category={category}
-                  useContain={CONTAIN_CATEGORIES.has(category.id)}
                   sizes="33vw"
                 />
-                {/* Gold top-border accent — signals this is a distinct row */}
                 <div
                   className="absolute top-0 inset-x-0 h-[2px] z-30 pointer-events-none"
                   style={{ background: `linear-gradient(90deg, transparent, ${category.color}80, transparent)` }}
@@ -290,9 +244,7 @@ export function BentoGridCategories() {
         </motion.div>
       )}
 
-      {/* ══════════════════════════════════════════════════════
-          MOBILE — simple 2-col grid, all 9 categories
-          ══════════════════════════════════════════════════════ */}
+      {/* MOBILE GRID */}
       <motion.div
         style={GRID_STYLE_MOBILE}
         className="md:hidden w-full"
@@ -309,15 +261,13 @@ export function BentoGridCategories() {
             className="group relative overflow-hidden rounded-2xl cursor-pointer aspect-square"
           >
             <CardInner
-              href={`/shop/${category.slug}`}
+              href={`/shop?category=${category.slug}`}
               category={category}
-              useContain={CONTAIN_CATEGORIES.has(category.id)}
               sizes="50vw"
             />
           </motion.div>
         ))}
       </motion.div>
-
     </div>
   )
 }

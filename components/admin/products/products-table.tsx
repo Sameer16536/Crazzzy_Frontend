@@ -1,195 +1,188 @@
-/**
- * ProductsTable Component
- * 
- * Displays products in a responsive table format
- * Features:
- * - Product image thumbnail
- * - Name, SKU, category
- * - Price and stock status
- * - Edit and delete actions
- * - Status indicators
- * 
- * In production: Connect to real product database
- */
+'use client'
 
-import { Card } from '@/components/ui/card'
-import { ProductActions } from './product-actions'
-import { StockBadge } from './stock-badge'
-
-interface Product {
-  id: string
-  name: string
-  sku: string
-  price: string
-  stock: number
-  category: string
-  status: 'active' | 'inactive' | 'draft'
-  image: string
-}
+import { useEffect, useState } from 'react'
+import { api } from '@/lib/api-client'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Package, Search, Filter, Plus, Edit2, Trash2, MoreHorizontal, Eye, Loader2 } from 'lucide-react'
+import Image from 'next/image'
+import Link from 'next/link'
+import { toast } from 'sonner'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 
 export function ProductsTable() {
-  // Sample product data - replace with real API data
-  const products: Product[] = [
-    {
-      id: '1',
-      name: 'Premium Wireless Headphones',
-      sku: 'WH-1000XM4',
-      price: '$349.99',
-      stock: 45,
-      category: 'Electronics',
-      status: 'active',
-      image: '🎧',
-    },
-    {
-      id: '2',
-      name: 'Classic T-Shirt',
-      sku: 'TSH-001-BLK',
-      price: '$29.99',
-      stock: 128,
-      category: 'Clothing',
-      status: 'active',
-      image: '👕',
-    },
-    {
-      id: '3',
-      name: 'Coffee Maker Pro',
-      sku: 'CMK-2024-PRO',
-      price: '$199.99',
-      stock: 5,
-      category: 'Home & Kitchen',
-      status: 'active',
-      image: '☕',
-    },
-    {
-      id: '4',
-      name: 'Programming Guide',
-      sku: 'BK-PROG-001',
-      price: '$49.99',
-      stock: 0,
-      category: 'Books',
-      status: 'inactive',
-      image: '📚',
-    },
-    {
-      id: '5',
-      name: 'Smart Watch Ultra',
-      sku: 'SW-ULTRA-2024',
-      price: '$299.99',
-      stock: 23,
-      category: 'Electronics',
-      status: 'active',
-      image: '⌚',
-    },
-  ]
+  const [products, setProducts] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [searchQuery, setSearchQuery] = useState('')
+
+  useEffect(() => {
+    fetchProducts()
+  }, [])
+
+  const fetchProducts = async () => {
+    try {
+      setLoading(true)
+      const res = await api.get<any>('/products')
+      // Backend returns: { success: true, data: [...] }
+      const list = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : [])
+      setProducts(list)
+    } catch (error) {
+      console.error('Failed to fetch products', error)
+      toast.error('Failed to sync with local registry')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleDelete = async (id: number) => {
+    if (!confirm('Are you sure you want to decommission this artifact?')) return
+    try {
+      await api.delete(`/admin/products/${id}`)
+      toast.success('Artifact decommissioned')
+      fetchProducts()
+    } catch (error: any) {
+      toast.error(error.message || 'Decommission failed')
+    }
+  }
+
+  const filteredProducts = Array.isArray(products) ? products.filter(p => 
+    (p.title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (p.description || '').toLowerCase().includes(searchQuery.toLowerCase())
+  ) : []
 
   return (
-    <Card className="p-6">
-      {/* Responsive table container */}
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b border-border">
-              <th className="text-left py-4 px-4 text-sm font-semibold text-foreground">
-                Product
-              </th>
-              <th className="text-left py-4 px-4 text-sm font-semibold text-foreground">
-                SKU
-              </th>
-              <th className="text-left py-4 px-4 text-sm font-semibold text-foreground">
-                Price
-              </th>
-              <th className="text-left py-4 px-4 text-sm font-semibold text-foreground">
-                Stock
-              </th>
-              <th className="text-left py-4 px-4 text-sm font-semibold text-foreground">
-                Category
-              </th>
-              <th className="text-left py-4 px-4 text-sm font-semibold text-foreground">
-                Status
-              </th>
-              <th className="text-left py-4 px-4 text-sm font-semibold text-foreground">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {products.map((product) => (
-              <tr
-                key={product.id}
-                className="border-b border-border hover:bg-muted/50 transition-colors"
-              >
-                {/* Product name and image */}
-                <td className="py-4 px-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center text-lg">
-                      {product.image}
-                    </div>
-                    <div className="text-sm font-medium text-foreground">
-                      {product.name}
-                    </div>
-                  </div>
-                </td>
-
-                {/* SKU */}
-                <td className="py-4 px-4 text-sm text-muted-foreground font-mono">
-                  {product.sku}
-                </td>
-
-                {/* Price */}
-                <td className="py-4 px-4 text-sm font-semibold text-foreground">
-                  {product.price}
-                </td>
-
-                {/* Stock level with color indicator */}
-                <td className="py-4 px-4">
-                  <StockBadge stock={product.stock} />
-                </td>
-
-                {/* Category */}
-                <td className="py-4 px-4 text-sm text-foreground">
-                  {product.category}
-                </td>
-
-                {/* Status indicator */}
-                <td className="py-4 px-4">
-                  <span
-                    className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
-                      product.status === 'active'
-                        ? 'bg-green-100/50 text-green-700'
-                        : product.status === 'inactive'
-                        ? 'bg-gray-100/50 text-gray-700'
-                        : 'bg-yellow-100/50 text-yellow-700'
-                    }`}
-                  >
-                    {product.status.charAt(0).toUpperCase() +
-                      product.status.slice(1)}
-                  </span>
-                </td>
-
-                {/* Action buttons: Edit, Delete */}
-                <td className="py-4 px-4">
-                  <ProductActions productId={product.id} />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Pagination info */}
-      <div className="mt-6 flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">
-          Showing 5 of 127 products
-        </p>
-        <div className="flex space-x-2">
-          <button className="px-4 py-2 rounded-lg border border-border hover:bg-muted transition-colors">
-            Previous
-          </button>
-          <button className="px-4 py-2 rounded-lg border border-border hover:bg-muted transition-colors">
-            Next
-          </button>
+    <div className="space-y-8">
+      {/* Table Toolbar */}
+      <div className="flex flex-col md:flex-row justify-between gap-6">
+        <div className="relative group flex-1 max-w-md">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-primary transition-colors" size={18} />
+          <input
+            type="text"
+            placeholder="Search Artifact Registry..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full bg-zinc-900 border border-white/5 px-12 py-4 text-[10px] font-black uppercase tracking-[0.2em] focus:outline-none focus:border-primary/30 transition-all"
+          />
+        </div>
+        <div className="flex items-center gap-4">
+           <button className="px-6 py-4 bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-white/10 transition-all">
+             <Filter size={14} />
+             Filter
+           </button>
+           <Link 
+             href="/admin/products/new"
+             className="px-6 py-4 bg-primary text-black text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:scale-105 transition-transform"
+           >
+             <Plus size={14} />
+             Deploy New
+           </Link>
         </div>
       </div>
-    </Card>
+
+      {/* Table */}
+      <div className="bg-zinc-900/30 border border-white/5 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b border-white/5 bg-zinc-950/50">
+                <th className="p-6 text-[10px] font-black uppercase tracking-[0.3em] text-white/40">Artifact</th>
+                <th className="p-6 text-[10px] font-black uppercase tracking-[0.3em] text-white/40">Status</th>
+                <th className="p-6 text-[10px] font-black uppercase tracking-[0.3em] text-white/40">Stock</th>
+                <th className="p-6 text-[10px] font-black uppercase tracking-[0.3em] text-white/40">Value</th>
+                <th className="p-6 text-[10px] font-black uppercase tracking-[0.3em] text-white/40 text-right">Control</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td colSpan={5} className="p-20 text-center">
+                    <Loader2 className="animate-spin text-primary mx-auto" size={32} />
+                  </td>
+                </tr>
+              ) : filteredProducts.map((p, i) => (
+                <motion.tr
+                  key={p.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.05 }}
+                  className="border-b border-white/5 hover:bg-white/[0.02] transition-colors group"
+                >
+                  <td className="p-6">
+                    <div className="flex items-center gap-4">
+                      <div className="relative w-12 h-12 bg-black border border-white/10 overflow-hidden shrink-0">
+                        <Image src={p.imageUrl || '/placeholder.jpg'} alt={p.title} fill className="object-cover group-hover:scale-110 transition-transform duration-500" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-black uppercase tracking-tight truncate">{p.title}</p>
+                        <p className="text-[10px] text-white/20 uppercase tracking-widest">{p.category?.name || 'Uncategorized'}</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="p-6">
+                    <div className="flex items-center gap-2">
+                       <div className={`w-1.5 h-1.5 rounded-full ${p.isActive ? 'bg-green-500' : 'bg-red-500'}`} />
+                       <span className={`text-[10px] font-black uppercase tracking-widest ${p.isActive ? 'text-green-500' : 'text-red-500'}`}>
+                         {p.isActive ? 'Active' : 'Offline'}
+                       </span>
+                    </div>
+                  </td>
+                  <td className="p-6">
+                    <p className={`text-xs font-mono font-bold ${p.stock <= 5 ? 'text-red-500' : 'text-white/60'}`}>
+                      {p.stock} Units
+                    </p>
+                  </td>
+                  <td className="p-6">
+                    <p className="text-sm font-black font-mono">₹{parseFloat(p.price).toLocaleString('en-IN')}</p>
+                  </td>
+                  <td className="p-6 text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button className="p-2 text-white/20 hover:text-white hover:bg-white/5 transition-all">
+                          <MoreHorizontal size={18} />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="bg-zinc-950 border-white/10">
+                        <DropdownMenuItem asChild>
+                          <Link href={`/product/${p.slug}`} target="_blank" className="flex items-center gap-3 px-4 py-3 cursor-pointer focus:bg-white/5 focus:text-primary">
+                            <Eye size={16} />
+                            <span className="font-bold text-[10px] uppercase tracking-widest">View Live</span>
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link href={`/admin/products/edit/${p.id}`} className="flex items-center gap-3 px-4 py-3 cursor-pointer focus:bg-white/5 focus:text-primary">
+                            <Edit2 size={16} />
+                            <span className="font-bold text-[10px] uppercase tracking-widest">Recalibrate</span>
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator className="bg-white/5" />
+                        <DropdownMenuItem 
+                          onClick={() => handleDelete(p.id)}
+                          className="flex items-center gap-3 px-4 py-3 cursor-pointer focus:bg-red-500/10 focus:text-red-500"
+                        >
+                          <Trash2 size={16} />
+                          <span className="font-bold text-[10px] uppercase tracking-widest">Decommission</span>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </td>
+                </motion.tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        
+        {!loading && filteredProducts.length === 0 && (
+          <div className="py-20 text-center text-white/20">
+            <p className="text-[10px] font-black uppercase tracking-[0.3em]">No artifacts found in this sector.</p>
+          </div>
+        )}
+      </div>
+    </div>
   )
 }

@@ -10,38 +10,58 @@ import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 
 /**
- * Default admin credentials
- * TODO: Replace with database authentication
- */
-const ADMIN_CREDENTIALS = {
-  email: 'admin@crazzzy.com',
-  password: 'admin@123', // In production, use bcrypt hash
-}
-
-/**
  * Admin Login Action
- * Validates credentials and creates secure session cookie
+ * Calls the real backend API, validates role, and creates secure session cookie
  */
 export async function adminLogin(formData: FormData) {
   const email = formData.get('email')?.toString() || ''
   const password = formData.get('password')?.toString() || ''
 
-  // Validate credentials
-  if (email !== ADMIN_CREDENTIALS.email || password !== ADMIN_CREDENTIALS.password) {
-    return { error: 'Invalid email or password' }
+  try {
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
+    
+    const response = await fetch(`${API_URL}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return { error: data.message || 'Invalid email or password' }
+    }
+
+    // Check if user is actually an ADMIN
+    if (data.user?.role !== 'ADMIN') {
+      return { error: 'Access denied. Administrator privileges required.' }
+    }
+
+    // Create session cookie for the Middleware (proxy.ts)
+    const cookieStore = await cookies()
+    cookieStore.set('admin-session', JSON.stringify({ 
+      id: data.user.id,
+      email: data.user.email, 
+      role: data.user.role,
+      accessToken: data.accessToken,
+      loggedInAt: new Date().toISOString() 
+    }), {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+      path: '/',
+    })
+
+    // Return the tokens so the client-side useAuth can also be updated
+    return { 
+      success: true, 
+      accessToken: data.accessToken, 
+      refreshToken: data.refreshToken 
+    }
+  } catch (err) {
+    return { error: 'Failed to connect to authentication server' }
   }
-
-  // Create session cookie
-  const cookieStore = await cookies()
-  cookieStore.set('admin-session', JSON.stringify({ email, loggedInAt: new Date().toISOString() }), {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    maxAge: 60 * 60 * 24 * 7, // 7 days
-    path: '/',
-  })
-
-  redirect('/admin')
 }
 
 /**

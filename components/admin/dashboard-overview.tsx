@@ -1,125 +1,115 @@
-/**
- * DashboardOverview Component
- * 
- * Displays key metrics and KPIs
- * Cards show:
- * - Total Revenue
- * - Total Orders
- * - Total Customers
- * - Conversion Rate
- * 
- * Each card is interactive with trend indicators
- * Data should be connected to real backend in production
- */
+'use client'
 
-import { Card } from '@/components/ui/card'
-import { TrendIcon } from './trend-icon'
-
-interface MetricCard {
-  label: string
-  value: string
-  change: number
-  icon: string
-  trend: 'up' | 'down'
-}
+import { useEffect, useState } from 'react'
+import { api } from '@/lib/api-client'
+import { motion } from 'framer-motion'
+import { DollarSign, ShoppingCart, Users, TrendingUp, TrendingDown, Activity, Loader2 } from 'lucide-react'
 
 export function DashboardOverview() {
-  // Sample metrics data - replace with real data in production
-  const metrics: MetricCard[] = [
+  const [stats, setStats] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function fetchStats() {
+      try {
+        setLoading(true)
+        const res = await api.get<any>('/admin/stats')
+        setStats(res?.data || res)
+      } catch (error) {
+        console.error('Failed to fetch admin stats', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchStats()
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="animate-spin text-primary" size={32} />
+      </div>
+    )
+  }
+
+  const metrics = [
     {
       label: 'Total Revenue',
-      value: '$45,231.89',
-      change: 20.1,
-      icon: '💰',
-      trend: 'up',
+      value: `₹${parseFloat(stats?.totalRevenue || 0).toLocaleString('en-IN')}`,
+      change: stats?.revenueChange || 0,
+      icon: DollarSign,
+      color: 'text-green-500',
     },
     {
-      label: 'Total Orders',
-      value: '2,543',
-      change: 15.3,
-      icon: '📦',
-      trend: 'up',
+      label: 'Orders',
+      value: stats?.totalOrders || 0,
+      change: stats?.ordersChange || 0,
+      icon: ShoppingCart,
+      color: 'text-blue-500',
     },
     {
-      label: 'Total Customers',
-      value: '1,234',
-      change: -4.3,
-      icon: '👥',
-      trend: 'down',
+      label: 'Customers',
+      value: stats?.totalUsers || 0,
+      change: stats?.usersChange || 0,
+      icon: Users,
+      color: 'text-purple-500',
     },
     {
-      label: 'Conversion Rate',
-      value: '3.24%',
-      change: 10.5,
-      icon: '📈',
-      trend: 'up',
+      label: 'Avg Order Value',
+      value: `₹${parseFloat(stats?.avgOrderValue || 0).toLocaleString('en-IN')}`,
+      change: stats?.avgValueChange || 0,
+      icon: Activity,
+      color: 'text-primary',
     },
   ]
 
   return (
-    <div className="space-y-4">
-      {/* Section title */}
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
-        <p className="text-muted-foreground mt-1">
-          Welcome back! Here&apos;s what&apos;s happening with your store today.
-        </p>
+    <div className="space-y-10">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-px bg-primary" />
+            <span className="text-primary text-[10px] font-mono tracking-[0.3em] uppercase">Intelligence</span>
+          </div>
+          <h1 className="text-4xl font-black uppercase tracking-tighter leading-none">COMMAND OVERVIEW</h1>
+        </div>
+        <div className="flex items-center gap-4 bg-zinc-900/50 border border-white/5 px-6 py-4">
+           <div className="flex flex-col">
+             <span className="text-[8px] text-white/40 uppercase tracking-widest mb-1">System Status</span>
+             <div className="flex items-center gap-2">
+               <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+               <span className="text-[10px] font-black uppercase tracking-widest text-green-500">All Systems Operational</span>
+             </div>
+           </div>
+        </div>
       </div>
 
-      {/* Metrics grid - responsive layout */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {metrics.map((metric) => (
-          <MetricCard key={metric.label} metric={metric} />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {metrics.map((m, i) => (
+          <motion.div
+            key={m.label}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.1 }}
+            className="bg-zinc-900/30 border border-white/5 p-8 space-y-6 relative group overflow-hidden"
+          >
+            <div className="flex justify-between items-start">
+               <div className="p-3 bg-white/5 border border-white/5 text-white/40 group-hover:text-white transition-colors">
+                 <m.icon size={20} />
+               </div>
+               <div className={`flex items-center gap-1 text-[10px] font-black ${m.change >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                 {m.change >= 0 ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
+                 {Math.abs(m.change)}%
+               </div>
+            </div>
+            <div className="space-y-1">
+              <p className="text-3xl font-black font-mono">{m.value}</p>
+              <p className="text-[10px] text-white/30 uppercase tracking-[0.2em]">{m.label}</p>
+            </div>
+            <div className="absolute bottom-0 left-0 w-full h-1 bg-primary scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left" />
+          </motion.div>
         ))}
       </div>
     </div>
-  )
-}
-
-/**
- * Individual metric card component
- * 
- * Props:
- * - metric: MetricCard object with label, value, change, icon, trend
- * 
- * Features:
- * - Icon display
- * - Trend indicator (up/down arrow with color)
- * - Hover effect for interactivity
- */
-function MetricCard({ metric }: { metric: MetricCard }) {
-  return (
-    <Card className="p-6 hover:shadow-lg transition-shadow duration-200 cursor-pointer group">
-      {/* Card header with icon */}
-      <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <p className="text-sm text-muted-foreground font-medium">
-            {metric.label}
-          </p>
-          <p className="text-2xl font-bold text-foreground mt-2">
-            {metric.value}
-          </p>
-        </div>
-
-        {/* Icon badge - can be customized per metric */}
-        <div className="text-3xl opacity-60 group-hover:opacity-100 transition-opacity">
-          {metric.icon}
-        </div>
-      </div>
-
-      {/* Trend indicator with percentage change */}
-      <div className="flex items-center space-x-2 mt-4">
-        <TrendIcon trend={metric.trend} />
-        <span
-          className={`text-sm font-semibold ${
-            metric.trend === 'up' ? 'text-emerald-600' : 'text-red-600'
-          }`}
-        >
-          {metric.trend === 'up' ? '+' : '-'}
-          {Math.abs(metric.change)}%
-        </span>
-        <span className="text-sm text-muted-foreground">vs last month</span>
-      </div>
-    </Card>
   )
 }

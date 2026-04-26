@@ -1,89 +1,105 @@
-/**
- * AdminHeader Component
- * 
- * Top navigation bar for admin dashboard
- * Features:
- * - Mobile hamburger menu toggle
- * - Theme mode switcher (light/dark) with smooth animation
- * - Search functionality with keyboard shortcut hint
- * - User profile avatar (integrate with Clerk UserButton)
- * - Sticky positioning with backdrop blur for modern aesthetic
- * 
- * Design: Inspired by modern crazzzy platforms with glass morphism effects
- */
-
 'use client'
 
-import { Menu, Search, ChevronDown, LogOut } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { adminLogout } from '@/app/actions/auth'
+import { Menu, Search, ChevronDown, LogOut, Bell, Settings, User as UserIcon } from 'lucide-react'
 import { ThemeToggle } from '@/components/theme-toggle'
+import { useAuth } from '@/lib/auth/auth-context'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 
 interface AdminHeaderProps {
   onMobileMenuToggle: () => void
 }
 
 export function AdminHeader({ onMobileMenuToggle }: AdminHeaderProps) {
+  const { user, logout } = useAuth()
+
   return (
-    <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-border/50">
-      <div className="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
-        {/* Left section: Mobile menu and search */}
-        <div className="flex items-center space-x-4 flex-1">
-          {/* Mobile hamburger menu button with animation */}
+    <header className="h-24 sticky top-0 z-40 bg-black/80 backdrop-blur-xl border-b border-white/5 px-8">
+      <div className="h-full flex items-center justify-between gap-8">
+        
+        {/* Left: Search & Mobile Toggle */}
+        <div className="flex items-center gap-6 flex-1">
           <button
             onClick={onMobileMenuToggle}
-            className="md:hidden p-2 hover:bg-muted rounded-lg transition-all duration-200 hover:shadow-sm"
-            aria-label="Toggle sidebar"
+            className="md:hidden p-3 bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
           >
-            <Menu size={20} className="text-foreground" />
+            <Menu size={20} className="text-white" />
           </button>
 
-          {/* Search bar - expandable on desktop with modern styling */}
-          <div className="hidden sm:flex items-center flex-1 max-w-sm bg-muted/50 border border-border/50 rounded-lg px-4 py-2 focus-within:ring-2 focus-within:ring-primary/50 focus-within:bg-muted transition-all duration-200">
-            <Search size={18} className="text-muted-foreground" />
+          <div className="hidden md:flex items-center flex-1 max-w-xl relative group">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-primary transition-colors" size={18} />
             <input
               type="text"
-              placeholder="Search products, orders..."
-              className="flex-1 ml-2 bg-transparent outline-none text-foreground placeholder-muted-foreground text-sm"
+              placeholder="Search Cockpit (⌘K)"
+              className="w-full bg-zinc-900 border border-white/5 px-12 py-4 text-[10px] font-black uppercase tracking-[0.2em] focus:outline-none focus:border-primary/30 transition-all placeholder:text-white/10"
             />
-            <span className="text-xs text-muted-foreground ml-2 hidden lg:inline">⌘K</span>
           </div>
         </div>
 
-        {/* Right section: Theme toggle and user menu */}
-        <div className="flex items-center space-x-3">
-          <ThemeToggle />
-
-          {/* User profile dropdown */}
-          <div className="relative group">
-            <button
-              className="flex items-center space-x-2 px-2 py-1 hover:bg-muted rounded-lg transition-colors duration-200"
-              aria-label="User profile menu"
-            >
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-primary-foreground font-semibold hover:shadow-lg transition-shadow duration-200">
-                A
-              </div>
-              <ChevronDown 
-                size={16} 
-                className="text-muted-foreground group-hover:text-foreground transition-colors hidden sm:block"
-              />
-            </button>
-
-            {/* Dropdown menu */}
-            <div className="absolute right-0 mt-2 w-48 bg-card rounded-lg border border-border/30 shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 py-2 z-50">
-              <div className="px-4 py-2 border-b border-border/30">
-                <p className="text-sm font-semibold text-foreground">Admin User</p>
-                <p className="text-xs text-muted-foreground">admin@crazzzy.com</p>
-              </div>
-              <button
-                onClick={() => adminLogout()}
-                className="w-full flex items-center gap-2 px-4 py-2 text-sm text-destructive hover:bg-destructive/10 transition-colors"
-              >
-                <LogOut size={16} />
-                Logout
-              </button>
-            </div>
+        {/* Right: Actions */}
+        <div className="flex items-center gap-4">
+          <div className="hidden sm:block">
+            <ThemeToggle />
           </div>
+          
+          <button className="p-3 bg-white/5 border border-white/10 hover:bg-white/10 transition-colors text-white/40 hover:text-white relative">
+            <Bell size={20} />
+            <span className="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full" />
+          </button>
+
+          <div className="h-10 w-px bg-white/5 mx-2 hidden sm:block" />
+
+          {/* User Profile */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex items-center gap-3 pl-2 pr-4 py-2 bg-white/5 border border-white/10 hover:bg-white/10 transition-colors group">
+                <Avatar className="w-10 h-10 border border-white/10">
+                  <AvatarImage src={user?.imageUrl} />
+                  <AvatarFallback className="bg-primary text-black font-black uppercase">
+                    {user?.name?.[0] || 'A'}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="hidden lg:block text-left">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-white leading-none mb-1">{user?.name}</p>
+                  <p className="text-[8px] font-mono text-primary uppercase tracking-[0.2em]">COMMANDER</p>
+                </div>
+                <ChevronDown size={14} className="text-white/20 group-hover:text-primary transition-colors" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56 mt-4 bg-zinc-950 border-white/10 backdrop-blur-xl">
+              <DropdownMenuLabel className="font-black text-[10px] uppercase tracking-widest text-white/40 px-4 py-3">Operations</DropdownMenuLabel>
+              <DropdownMenuSeparator className="bg-white/5" />
+              <DropdownMenuItem className="focus:bg-white/5 focus:text-primary cursor-pointer px-4 py-3">
+                <div className="flex items-center gap-3">
+                   <UserIcon size={16} />
+                   <span className="font-bold text-[10px] uppercase tracking-widest">My Profile</span>
+                </div>
+              </DropdownMenuItem>
+              <DropdownMenuItem className="focus:bg-white/5 focus:text-primary cursor-pointer px-4 py-3">
+                <div className="flex items-center gap-3">
+                   <Settings size={16} />
+                   <span className="font-bold text-[10px] uppercase tracking-widest">Preferences</span>
+                </div>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator className="bg-white/5" />
+              <DropdownMenuItem 
+                onClick={logout}
+                className="focus:bg-red-500/10 focus:text-red-500 cursor-pointer px-4 py-3"
+              >
+                <div className="flex items-center gap-3">
+                   <LogOut size={16} />
+                   <span className="font-bold text-[10px] uppercase tracking-widest">Terminate Session</span>
+                </div>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </header>

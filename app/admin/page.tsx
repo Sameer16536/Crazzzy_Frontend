@@ -14,8 +14,6 @@ import { AdminLayout } from '@/components/admin/layout'
 import { DashboardOverview } from '@/components/admin/dashboard-overview'
 import { RecentOrders } from '@/components/admin/recent-orders'
 import { QuickActions } from '@/components/admin/quick-actions'
-import { AnalyticsChart } from '@/components/admin/analytics-chart'
-import { FeaturedProducts } from '@/components/admin/featured-products'
 
 export const metadata = {
   title: 'Admin Dashboard | crazzzy',
@@ -30,15 +28,9 @@ export default function AdminPage() {
         {/* Top-level metrics and KPIs */}
         <DashboardOverview />
         
-        {/* Featured products showcase - visual highlight section */}
-        <FeaturedProducts />
-        
         {/* Quick action buttons for common tasks */}
         <QuickActions />
 
-        {/* Revenue trend analytics chart */}
-        <AnalyticsChart />
-        
         {/* Recent orders table with live updates */}
         <RecentOrders />
       </div>

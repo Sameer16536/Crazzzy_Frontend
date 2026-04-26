@@ -22,9 +22,8 @@ function formatTime(ms: number) {
 export function DealOfTheDay() {
   const { data } = useCatalog()
   
-  // Find a product or use a fallback
-  // We'll look for a specific product, or just use the first 'featured' bike or car to look premium
-  const product = data?.products?.find(p => p.id === 'hw-harley-davidson-883') || data?.products?.[0]
+  // Find a product with dealOfTheDay flag
+  const product = data?.products?.find(p => p.dealOfTheDay) || data?.products?.[0]
   
   // Magnetic CTA
   const { ref: magneticRef, x: magneticX, y: magneticY } = useMagneticButton(0.3)

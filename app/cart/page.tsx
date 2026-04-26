@@ -118,36 +118,45 @@ export default function CartPage() {
           {/* Summary */}
           <div className="lg:col-span-1">
             <Card className="p-5 sticky top-24">
-              <h2 className="text-lg font-bold text-foreground">Order summary</h2>
-              <div className="mt-4 space-y-3 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Subtotal</span>
-                  <span className="text-foreground font-semibold tabular-nums">{formatINR(subtotal)}</span>
+              <h2 className="text-xl font-black uppercase tracking-tight text-white mb-6">Order summary</h2>
+              <div className="space-y-4 text-xs">
+                <div className="flex justify-between text-white/40">
+                  <span className="uppercase tracking-widest">Subtotal</span>
+                  <span className="font-mono text-white">₹{subtotal.toLocaleString('en-IN')}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Shipping</span>
-                  <span className="text-foreground font-semibold tabular-nums">
-                    {shipping === 0 ? 'Free' : formatINR(shipping)}
+                <div className="flex justify-between text-white/40">
+                  <span className="uppercase tracking-widest">Shipping</span>
+                  <span className="font-mono text-white">
+                    {shipping === 0 ? 'FREE' : `₹${shipping}`}
                   </span>
                 </div>
-                <Separator />
-                <div className="flex justify-between text-base">
-                  <span className="text-foreground font-bold">Total</span>
-                  <span className="text-foreground font-bold tabular-nums">{formatINR(total)}</span>
+                <Separator className="bg-white/5" />
+                <div className="flex justify-between text-lg font-black pt-2">
+                  <span className="uppercase tracking-tighter text-white">Total</span>
+                  <span className="text-primary font-mono">₹{total.toLocaleString('en-IN')}</span>
                 </div>
               </div>
 
-              <div className="mt-6 space-y-3">
-                <Button className="w-full" disabled={items.length === 0}>
-                  Checkout
-                </Button>
-                <Button variant="outline" className="w-full" asChild>
-                  <Link href="/shop">Continue shopping</Link>
-                </Button>
+              <div className="mt-8 space-y-4">
+                <Link
+                  href="/checkout"
+                  className={`
+                    w-full py-5 bg-primary hover:bg-primary/90 text-black font-black uppercase tracking-[0.2em] text-sm transition-all active:scale-[0.98] flex items-center justify-center gap-3
+                    ${items.length === 0 ? 'opacity-30 pointer-events-none grayscale' : ''}
+                  `}
+                >
+                  Proceed to Checkout
+                </Link>
+                <Link 
+                  href="/shop" 
+                  className="w-full py-4 border border-white/10 hover:border-white/30 text-white/40 hover:text-white font-black uppercase tracking-[0.2em] text-[10px] transition-all flex items-center justify-center"
+                >
+                  Continue Shopping
+                </Link>
               </div>
 
-              <p className="text-xs text-muted-foreground mt-4">
-                This is a frontend demo checkout. Payment APIs will be wired once the backend is ready.
+              <p className="text-[10px] text-white/20 mt-6 leading-relaxed font-light italic">
+                * Free shipping on orders above ₹1,999. Items are held for 15 minutes once checkout is initiated.
               </p>
             </Card>
           </div>

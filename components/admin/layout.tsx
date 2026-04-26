@@ -1,53 +1,54 @@
-/**
- * AdminLayout Component
- * 
- * Main layout wrapper for all admin pages
- * Features:
- * - Responsive sidebar navigation
- * - Top navigation bar with theme toggle
- * - Mobile-friendly hamburger menu
- * - Consistent spacing and styling
- * 
- * Usage: Wrap admin pages with <AdminLayout>{children}</AdminLayout>
- */
-
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { AdminHeader } from './header'
 import { AdminSidebar } from './sidebar'
+import { useAuth } from '@/lib/auth/auth-context'
+import { useRouter } from 'next/navigation'
+import { Loader2 } from 'lucide-react'
 
 interface AdminLayoutProps {
   children: React.ReactNode
 }
 
 export function AdminLayout({ children }: AdminLayoutProps) {
-  // Mobile sidebar state
+  const { user, loading, checkAdmin } = useAuth()
+  const router = useRouter()
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
+  useEffect(() => {
+    if (!loading) {
+      if (!user) {
+        router.push('/admin-login?redirect=/admin')
+      } else if (!checkAdmin()) {
+        router.push('/account/dashboard')
+      }
+    }
+  }, [user, loading, checkAdmin, router])
+
+  if (loading || !user || !checkAdmin()) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <Loader2 className="animate-spin text-primary" size={40} />
+      </div>
+    )
+  }
+
   return (
-    <div className="flex min-h-screen bg-background">
-      {/* 
-        Sidebar Navigation
-        - Desktop: Always visible
-        - Mobile: Toggleable via hamburger menu
-      */}
+    <div className="flex min-h-screen bg-[#080808] text-white selection:bg-primary selection:text-black">
+      {/* Sidebar Navigation */}
       <AdminSidebar open={sidebarOpen} onOpenChange={setSidebarOpen} />
 
       {/* Main content area */}
-      <div className="flex-1 flex flex-col">
-        {/* 
-          Header with theme toggle and mobile menu
-          - Logo/branding
-          - Search bar
-          - Theme switcher
-          - Mobile menu toggle
-        */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Header */}
         <AdminHeader onMobileMenuToggle={() => setSidebarOpen(!sidebarOpen)} />
 
-        {/* Page content area with consistent padding */}
-        <main className="flex-1 overflow-auto p-4 sm:p-6 lg:p-8">
-          {children}
+        {/* Page content area */}
+        <main className="flex-1 overflow-auto p-4 sm:p-6 lg:p-10">
+          <div className="max-w-7xl mx-auto">
+            {children}
+          </div>
         </main>
       </div>
     </div>

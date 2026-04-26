@@ -15,9 +15,11 @@ import { useRouter } from 'next/navigation'
 import { adminLogin } from '@/app/actions/auth'
 import { Lock, Mail, LogIn } from 'lucide-react'
 import Link from 'next/link'
+import { useAuth } from '@/lib/auth/auth-context'
 
 export default function AdminLoginPage() {
   const router = useRouter()
+  const { login: setAuthTokens } = useAuth()
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [email, setEmail] = useState('')
@@ -35,8 +37,14 @@ export default function AdminLoginPage() {
       if (result?.error) {
         setError(result.error)
         setIsLoading(false)
+        return
       }
-      // If successful, adminLogin redirects to /admin
+
+      if (result?.success && result.accessToken) {
+        // Sync the client-side auth state
+        setAuthTokens(result.accessToken, result.refreshToken || '')
+        router.push('/admin')
+      }
     } catch (err) {
       setError('An error occurred. Please try again.')
       setIsLoading(false)
@@ -129,19 +137,6 @@ export default function AdminLoginPage() {
               )}
             </button>
           </form>
-
-          {/* Demo Credentials */}
-          <div className="bg-muted/50 border border-border/30 rounded-lg p-4 space-y-2">
-            <p className="text-xs font-semibold text-foreground uppercase tracking-wide">Demo Credentials</p>
-            <div className="space-y-1 text-xs text-muted-foreground font-mono">
-              <p>
-                <span className="text-foreground">Email:</span> admin@crazzzy.com
-              </p>
-              <p>
-                <span className="text-foreground">Password:</span> admin@123
-              </p>
-            </div>
-          </div>
 
           {/* Back to Home */}
           <div className="text-center">

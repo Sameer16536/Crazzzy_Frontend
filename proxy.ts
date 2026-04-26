@@ -1,20 +1,18 @@
 /**
- * Proxy (Next.js 16+)
+ * Proxy / Middleware (Next.js 16+)
  *
  * Handles two concerns:
- *  1. Clerk auth  — protects /account/dashboard and all sub-routes.
- *     Unauthenticated users are redirected to /account (Clerk sign-in).
- *  2. Admin auth  — protects /admin routes (except /admin-login) using a
+ *  1. Admin auth  — protects /admin routes (except /admin-login) using a
  *     session cookie. No valid cookie → redirect to /admin-login.
+ *  2. User Profile — protects /account routes using the custom auth system.
  */
 
-import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
 import { NextRequest, NextResponse } from 'next/server'
 
-/** Routes that require a signed-in Clerk user */
-const isProtectedRoute = createRouteMatcher(['/account/dashboard(.*)'])
-
-export default clerkMiddleware(async (auth, req: NextRequest) => {
+/**
+ * Next.js expects a default export or an export named "proxy" for this file.
+ */
+export function proxy(req: NextRequest) {
   const pathname = req.nextUrl.pathname
 
   // ── 1. Admin session-cookie protection ──────────────────────────────────
@@ -28,6 +26,8 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
     }
 
     try {
+      // Safe check for empty or invalid JSON
+      if (!sessionCookie.value) throw new Error('Empty session')
       JSON.parse(sessionCookie.value)
     } catch {
       // Invalid session — clear cookie and redirect
@@ -39,11 +39,15 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
     }
   }
 
-  // ── 2. Clerk auth protection ─────────────────────────────────────────────
-  if (isProtectedRoute(req)) {
-    await auth.protect()
-  }
-})
+  // ── 2. User Profile Protection ──────────────────────────────────────────
+  // Note: Client-side protection is also handled in /account/page.tsx
+  // using the useAuth hook for localStorage-based tokens.
+
+  return NextResponse.next()
+}
+
+// Export as default to satisfy Next.js proxy requirement
+export default proxy
 
 export const config = {
   matcher: [

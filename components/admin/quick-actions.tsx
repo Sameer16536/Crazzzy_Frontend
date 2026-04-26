@@ -1,116 +1,71 @@
-/**
- * QuickActions Component
- * 
- * Displays action cards for common admin tasks
- * Each card links to a specific admin section or action
- * 
- * Actions:
- * - Add New Product
- * - View All Orders
- * - Manage Customers
- * - View Analytics
- */
+'use client'
 
 import Link from 'next/link'
-import { Card } from '@/components/ui/card'
-import { ArrowRight } from 'lucide-react'
-
-interface ActionCard {
-  title: string
-  description: string
-  icon: string
-  href: string
-  color: string
-}
+import { Plus, Package, Users, BarChart3, ChevronRight } from 'lucide-react'
+import { motion } from 'framer-motion'
 
 export function QuickActions() {
-  // Quick action cards - customizable per use case
-  const actions: ActionCard[] = [
+  const actions = [
     {
-      title: 'Add New Product',
+      title: 'Deploy Artifact',
       description: 'Upload and list a new product',
-      icon: '➕',
+      icon: Plus,
       href: '/admin/products/new',
-      color: 'from-blue-500 to-cyan-500',
+      color: 'text-primary',
     },
     {
-      title: 'View All Orders',
-      description: 'Check pending and recent orders',
-      icon: '📦',
+      title: 'Registry Control',
+      description: 'Manage all store orders',
+      icon: Package,
       href: '/admin/orders',
-      color: 'from-purple-500 to-pink-500',
+      color: 'text-blue-500',
     },
     {
-      title: 'Manage Customers',
-      description: 'Review customer profiles and activity',
-      icon: '👥',
+      title: 'Agent Database',
+      description: 'User profiles and activity',
+      icon: Users,
       href: '/admin/customers',
-      color: 'from-orange-500 to-red-500',
+      color: 'text-purple-500',
     },
     {
-      title: 'View Analytics',
-      description: 'Check sales and traffic metrics',
-      icon: '📊',
+      title: 'System Intel',
+      description: 'Deep analytics and traffic',
+      icon: BarChart3,
       href: '/admin/analytics',
-      color: 'from-green-500 to-emerald-500',
+      color: 'text-green-500',
     },
   ]
 
   return (
-    <div>
-      <h2 className="text-lg font-semibold text-foreground mb-4">
-        Quick Actions
-      </h2>
-
-      {/* Actions grid - responsive layout */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {actions.map((action) => (
-          <QuickActionCard key={action.title} action={action} />
+    <div className="space-y-6">
+      <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-white/20">Rapid Response</h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {actions.map((action, i) => (
+          <motion.div
+            key={action.title}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: i * 0.05 }}
+          >
+            <Link 
+              href={action.href}
+              className="group block bg-zinc-900/30 border border-white/5 p-8 space-y-6 hover:border-white/20 transition-all relative overflow-hidden"
+            >
+              <div className={action.color}>
+                 <action.icon size={24} />
+              </div>
+              <div className="space-y-2">
+                <h3 className="font-black text-sm uppercase tracking-widest group-hover:text-primary transition-colors">{action.title}</h3>
+                <p className="text-[10px] text-white/30 uppercase tracking-widest">{action.description}</p>
+              </div>
+              <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0">
+                Execute <ChevronRight size={14} />
+              </div>
+              <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 -rotate-45 translate-x-12 -translate-y-12 group-hover:bg-primary/5 transition-colors" />
+            </Link>
+          </motion.div>
         ))}
       </div>
     </div>
-  )
-}
-
-/**
- * Individual action card component
- * 
- * Features:
- * - Icon and title
- * - Description text
- * - Hover gradient effect
- * - Arrow indicator
- * - Link to admin section
- */
-function QuickActionCard({ action }: { action: ActionCard }) {
-  return (
-    <Link href={action.href}>
-      <Card className="p-6 hover:shadow-lg transition-all duration-200 cursor-pointer group h-full">
-        {/* Card content wrapper with gradient background on hover */}
-        <div className="relative overflow-hidden rounded-lg p-4 mb-4 bg-gradient-to-br opacity-90 group-hover:opacity-100 transition-opacity"
-          style={{
-            backgroundImage: `linear-gradient(to bottom right, var(--color-primary), var(--color-accent))`,
-          }}
-        >
-          <div className="text-3xl">{action.icon}</div>
-        </div>
-
-        {/* Card title */}
-        <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
-          {action.title}
-        </h3>
-
-        {/* Card description */}
-        <p className="text-sm text-muted-foreground mt-2">
-          {action.description}
-        </p>
-
-        {/* Arrow indicator - appears on hover */}
-        <div className="flex items-center mt-4 text-primary opacity-0 group-hover:opacity-100 transition-all duration-200 group-hover:translate-x-1">
-          <span className="text-sm font-medium">Go</span>
-          <ArrowRight size={16} className="ml-2" />
-        </div>
-      </Card>
-    </Link>
   )
 }

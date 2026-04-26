@@ -29,8 +29,8 @@ import { DealOfTheDay } from '@/components/deal-of-the-day'
 // ─── Local video sources (both loop; switch every 10 s) ─────────────────────
 
 const HERO_VIDEOS = [
-  '/14160348_3840_2160_25fps.mp4',   // 4K cinematic
-  '/3116506-hd_1920_1080_25fps.mp4', // 1080p dramatic
+  'https://res.cloudinary.com/dirjsc8qf/video/upload/v1777052147/14160348_3840_2160_25fps_jtarm7.mp4',
+  'https://res.cloudinary.com/dirjsc8qf/video/upload/v1777052120/3116506-hd_1920_1080_25fps_iaej0f.mp4',
 ] as const
 
 /**
@@ -247,7 +247,7 @@ function CinematicPortal({ activeIdx, fading }: { activeIdx: number; fading: boo
 export default function Home() {
   const { data } = useCatalog()
   const products = data?.products ?? []
-  const featuredProducts = products.filter((p) => p.featured).slice(0, 4)
+  const featuredProducts = products.filter((p) => p.featured).slice(0, 8)
   const heroRef = useRef<HTMLElement>(null)
 
   // Video cycle — background and portal share the same timing

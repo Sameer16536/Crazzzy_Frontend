@@ -1,361 +1,303 @@
-/**
- * ProductForm Component
- * 
- * Comprehensive form for adding/editing products
- * Fields:
- * - Basic Info: Name, Description, SKU
- * - Pricing: Regular price, Sale price
- * - Stock: Quantity and reorder level
- * - Details: Category, Brand, Dimensions
- * - Images: Upload and manage product images
- * 
- * Validation: All fields required for submission
- * Submission: Connects to backend API endpoint
- */
-
 'use client'
 
-import { useState, FormEvent } from 'react'
+import { useState, useEffect, FormEvent } from 'react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { AlertCircle } from 'lucide-react'
-import { categories } from '@/lib/data/categories'
+import { AlertCircle, Package, Layers, Info, Upload, X, Check, Loader2 } from 'lucide-react'
+import { api } from '@/lib/api-client'
+import { toast } from 'sonner'
+import { motion, AnimatePresence } from 'framer-motion'
+import Image from 'next/image'
 
-interface FormData {
+interface Category {
+  id: number
   name: string
-  description: string
-  sku: string
-  category: string
-  price: string
-  salePrice: string
-  stock: string
-  reorderLevel: string
+  slug: string
+  parentId?: number | null
+  subcategories?: Category[]
 }
 
-export function ProductForm() {
-  // Form state management
+interface FormData {
+  title: string
+  description: string
+  sku: string
+  categoryId: string
+  price: string
+  originalPrice: string
+  stock: string
+  images: string[]
+}
+
+export function ProductForm({ productId }: { productId?: string }) {
+  const [categories, setCategories] = useState<Category[]>([])
+  const [loading, setLoading] = useState(true)
+  const [submitting, setSubmitting] = useState(false)
+  
   const [formData, setFormData] = useState<FormData>({
-    name: '',
+    title: '',
     description: '',
     sku: '',
-    category: '',
+    categoryId: '',
     price: '',
-    salePrice: '',
+    originalPrice: '',
     stock: '',
-    reorderLevel: '',
+    images: [],
   })
 
-  // Form submission and validation state
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [errors, setErrors] = useState<Partial<FormData>>({})
+  useEffect(() => {
+    const init = async () => {
+      try {
+        setLoading(true)
+        const catRes = await api.get<any>('/categories')
+        const allCats = Array.isArray(catRes?.data) ? catRes.data : (Array.isArray(catRes) ? catRes : [])
+        
+        // Organize categories into hierarchy
+        const mainCategories = allCats.filter((c: any) => !c.parentId)
+        const categoriesWithSubs = mainCategories.map((main: any) => ({
+          ...main,
+          subcategories: allCats.filter((c: any) => c.parentId === main.id)
+        }))
+        
+        setCategories(categoriesWithSubs)
 
-  /**
-   * Validate form data before submission
-   * Returns true if all required fields are filled
-   */
-  const validateForm = (): boolean => {
-    const newErrors: Partial<FormData> = {}
+        if (productId) {
+          const prodRes = await api.get<any>(`/products/${productId}`)
+          const product = prodRes?.data || prodRes
+          
+          setFormData({
+            title: product.title || '',
+            description: product.description || '',
+            sku: product.sku || '',
+            categoryId: String(product.categoryId || ''),
+            price: String(product.price || ''),
+            originalPrice: String(product.originalPrice || ''),
+            stock: String(product.stock || ''),
+            images: Array.isArray(product.images) ? product.images.map((img: any) => img.imageUrl) : (product.imageUrl ? [product.imageUrl] : []),
+          })
+        }
+      } catch (error) {
+        toast.error('Failed to initialize system parameters')
+      } finally {
+        setLoading(false)
+      }
+    }
+    init()
+  }, [productId])
 
-    if (!formData.name) newErrors.name = 'Product name is required'
-    if (!formData.sku) newErrors.sku = 'SKU is required'
-    if (!formData.category) newErrors.category = 'Category is required'
-    if (!formData.price) newErrors.price = 'Price is required'
-    if (!formData.stock) newErrors.stock = 'Stock quantity is required'
-
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
-
-  /**
-   * Handle form submission
-   * In production: Send data to backend API
-   */
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
-
-    if (!validateForm()) return
-
-    setIsSubmitting(true)
-
+    setSubmitting(true)
     try {
-      // Simulate API call
-      console.log('Submitting product:', formData)
-
-      // In production, replace with actual API call:
-      // const response = await fetch('/api/admin/products', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(formData),
-      // })
-
-      // Show success message and redirect
-      alert('Product created successfully!')
-      // router.push('/admin/products')
-    } catch (error) {
-      console.error('Error creating product:', error)
-      alert('Failed to create product. Please try again.')
+      if (productId) {
+        await api.patch(`/admin/products/${productId}`, formData)
+        toast.success('Artifact recalibrated successfully')
+      } else {
+        await api.post('/admin/products', formData)
+        toast.success('New artifact deployed to registry')
+      }
+    } catch (error: any) {
+      toast.error(error.message || 'Mission failure: could not save artifact')
     } finally {
-      setIsSubmitting(false)
+      setSubmitting(false)
     }
   }
 
-  /**
-   * Handle input change events
-   */
-  const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
-  ) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }))
-    // Clear error for this field when user starts typing
-    if (errors[name as keyof FormData]) {
-      setErrors((prev) => ({
-        ...prev,
-        [name]: undefined,
-      }))
-    }
+    setFormData(prev => ({ ...prev, [name]: value }))
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="animate-spin text-primary" size={32} />
+      </div>
+    )
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      {/* Main form column - 2/3 width */}
-      <div className="lg:col-span-2 space-y-6">
-        {/* Basic Information Section */}
-        <Card className="p-6">
-          <h2 className="text-lg font-semibold text-foreground mb-4">
-            Basic Information
-          </h2>
+    <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      {/* Main Stats */}
+      <div className="lg:col-span-2 space-y-8">
+        <div className="bg-zinc-900/30 border border-white/5 p-8 space-y-8">
+          <div className="flex items-center gap-4 border-b border-white/5 pb-6">
+             <div className="w-10 h-10 bg-primary/10 border border-primary/20 flex items-center justify-center">
+                <Info size={20} className="text-primary" />
+             </div>
+             <div>
+                <h2 className="text-sm font-black uppercase tracking-widest text-white">Primary Designation</h2>
+                <p className="text-[10px] text-white/20 uppercase tracking-[0.2em]">Core artifact identity and specs</p>
+             </div>
+          </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Product Name */}
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-2">
-                Product Name *
-              </label>
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40 pl-1">Identification</label>
               <input
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                placeholder="Enter product name"
-                className="w-full px-4 py-2 border border-border rounded-lg bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                name="title"
+                value={formData.title}
+                onChange={handleInputChange}
+                required
+                placeholder="ARTIFACT NAME"
+                className="w-full bg-black border border-white/5 px-6 py-4 text-xs font-black uppercase tracking-widest focus:border-primary/40 transition-all outline-none"
               />
-              {errors.name && (
-                <p className="text-sm text-destructive mt-1">{errors.name}</p>
-              )}
             </div>
 
-            {/* Description */}
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-2">
-                Description
-              </label>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40 pl-1">Intelligence Data</label>
               <textarea
                 name="description"
                 value={formData.description}
-                onChange={handleChange}
-                placeholder="Enter product description"
-                rows={4}
-                className="w-full px-4 py-2 border border-border rounded-lg bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                onChange={handleInputChange}
+                rows={5}
+                placeholder="DETAILED ARTIFACT RECONNAISSANCE..."
+                className="w-full bg-black border border-white/5 px-6 py-4 text-xs font-bold uppercase tracking-widest focus:border-primary/40 transition-all outline-none resize-none"
               />
             </div>
 
-            {/* SKU and Category */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-2">
-                  SKU *
-                </label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40 pl-1">Registry SKU</label>
                 <input
-                  type="text"
                   name="sku"
                   value={formData.sku}
-                  onChange={handleChange}
-                  placeholder="e.g., PROD-001"
-                  className="w-full px-4 py-2 border border-border rounded-lg bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  onChange={handleInputChange}
+                  required
+                  placeholder="X-999-UNIT"
+                  className="w-full bg-black border border-white/5 px-6 py-4 text-xs font-mono font-bold uppercase tracking-widest focus:border-primary/40 transition-all outline-none"
                 />
-                {errors.sku && (
-                  <p className="text-sm text-destructive mt-1">{errors.sku}</p>
-                )}
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-2">
-                  Category *
-                </label>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40 pl-1">Sector Class</label>
                 <select
-                    name="category"
-                    value={formData.category}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                  >
-                    <option value="">Select a category</option>
-                    {categories.map((category) => (
-                      <option key={category.id} value={category.id}>
-                        {category.name}
-                      </option>
-                    ))}
-                  </select>
-                  {errors.category && (
-                    <p className="text-sm text-destructive mt-1">
-                      {errors.category}
-                    </p>
-                  )}
-                </div>
+                  name="categoryId"
+                  value={formData.categoryId}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full bg-black border border-white/5 px-6 py-4 text-xs font-black uppercase tracking-widest focus:border-primary/40 transition-all outline-none appearance-none"
+                >
+                  <option value="">Select Sector</option>
+                  {categories.map(main => (
+                    <optgroup key={main.id} label={main.name.toUpperCase()} className="bg-zinc-900 text-white font-black">
+                      <option value={main.id}>{main.name} (MAIN)</option>
+                      {main.subcategories?.map(sub => (
+                        <option key={sub.id} value={sub.id}>
+                          └─ {sub.name}
+                        </option>
+                      ))}
+                    </optgroup>
+                  ))}
+                </select>
               </div>
-
-              {/* Cost Section */}
-              <div className="pt-4 border-t border-border">
-                <h3 className="font-medium text-foreground mb-4">Pricing</h3>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">
-                      Cost *
-                    </label>
-                    <input
-                      type="number"
-                      name="price"
-                      value={formData.price}
-                      onChange={handleChange}
-                      placeholder="0.00"
-                      step="0.01"
-                      className="w-full px-4 py-2 border border-border rounded-lg bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
-                    {errors.price && (
-                      <p className="text-sm text-destructive mt-1">
-                        {errors.price}
-                      </p>
-                    )}
-                  </div>
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">
-                    Sale Price (Optional)
-                  </label>
-                  <input
-                    type="number"
-                    name="salePrice"
-                    value={formData.salePrice}
-                    onChange={handleChange}
-                    placeholder="0.00"
-                    step="0.01"
-                    className="w-full px-4 py-2 border border-border rounded-lg bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Stock Management Section */}
-            <div className="pt-4 border-t border-border">
-              <h3 className="font-medium text-foreground mb-4">Stock</h3>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">
-                    Quantity in Stock *
-                  </label>
-                  <input
-                    type="number"
-                    name="stock"
-                    value={formData.stock}
-                    onChange={handleChange}
-                    placeholder="0"
-                    className="w-full px-4 py-2 border border-border rounded-lg bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                  {errors.stock && (
-                    <p className="text-sm text-destructive mt-1">
-                      {errors.stock}
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">
-                    Reorder Level
-                  </label>
-                  <input
-                    type="number"
-                    name="reorderLevel"
-                    value={formData.reorderLevel}
-                    onChange={handleChange}
-                    placeholder="10"
-                    className="w-full px-4 py-2 border border-border rounded-lg bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Form Actions */}
-            <div className="pt-6 flex gap-3 justify-end border-t border-border">
-              <button
-                type="button"
-                className="px-6 py-2 rounded-lg border border-border hover:bg-muted transition-colors text-foreground"
-              >
-                Cancel
-              </button>
-              <Button
-                type="submit"
-                disabled={isSubmitting}
-                className="px-6 bg-primary hover:bg-primary/90 text-primary-foreground"
-              >
-                {isSubmitting ? 'Creating...' : 'Create Product'}
-              </Button>
-            </div>
-            </form>
-        </Card>
-      </div>
-
-      {/* Sidebar - 1/3 width */}
-      <div className="space-y-6">
-        {/* Image Upload Card */}
-        <Card className="p-6">
-          <h3 className="font-semibold text-foreground mb-4">Product Image</h3>
-
-          {/* Image upload area */}
-          <div className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-primary transition-colors cursor-pointer">
-            <div className="text-4xl mb-2">📸</div>
-            <p className="text-sm text-muted-foreground">
-              Click to upload or drag and drop
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">
-              PNG, JPG up to 10MB
-            </p>
-          </div>
-        </Card>
-
-        {/* SEO & Organization Card */}
-        <Card className="p-6">
-          <h3 className="font-semibold text-foreground mb-4">Help & Info</h3>
-
-          <div className="space-y-3 text-sm">
-            <div className="flex space-x-2">
-              <AlertCircle size={16} className="text-blue-500 flex-shrink-0" />
-              <p className="text-muted-foreground">
-                Use descriptive product names for better search visibility
-              </p>
-            </div>
-
-            <div className="flex space-x-2">
-              <AlertCircle size={16} className="text-blue-500 flex-shrink-0" />
-              <p className="text-muted-foreground">
-                SKU must be unique for inventory tracking
-              </p>
-            </div>
-
-            <div className="flex space-x-2">
-              <AlertCircle size={16} className="text-blue-500 flex-shrink-0" />
-              <p className="text-muted-foreground">
-                Set reorder level to get alerts when stock is low
-              </p>
             </div>
           </div>
-        </Card>
+        </div>
+
+        {/* Financials & Inventory */}
+        <div className="bg-zinc-900/30 border border-white/5 p-8 space-y-8">
+           <div className="flex items-center gap-4 border-b border-white/5 pb-6">
+             <div className="w-10 h-10 bg-primary/10 border border-primary/20 flex items-center justify-center">
+                <Package size={20} className="text-primary" />
+             </div>
+             <div>
+                <h2 className="text-sm font-black uppercase tracking-widest text-white">Resource Allocation</h2>
+                <p className="text-[10px] text-white/20 uppercase tracking-[0.2em]">Credits and supply levels</p>
+             </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40 pl-1">Base Value</label>
+              <div className="relative">
+                <span className="absolute left-6 top-1/2 -translate-y-1/2 text-primary font-mono font-bold">₹</span>
+                <input
+                  name="price"
+                  type="number"
+                  value={formData.price}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full bg-black border border-white/5 pl-12 pr-6 py-4 text-xs font-mono font-bold focus:border-primary/40 transition-all outline-none"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40 pl-1">Original Value</label>
+              <div className="relative">
+                <span className="absolute left-6 top-1/2 -translate-y-1/2 text-white/20 font-mono font-bold">₹</span>
+                <input
+                  name="originalPrice"
+                  type="number"
+                  value={formData.originalPrice}
+                  onChange={handleInputChange}
+                  className="w-full bg-black border border-white/5 pl-12 pr-6 py-4 text-xs font-mono font-bold focus:border-primary/40 transition-all outline-none"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40 pl-1">Supply Count</label>
+              <input
+                name="stock"
+                type="number"
+                value={formData.stock}
+                onChange={handleInputChange}
+                required
+                className="w-full bg-black border border-white/5 px-6 py-4 text-xs font-mono font-bold focus:border-primary/40 transition-all outline-none"
+              />
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
+
+      {/* Sidebar: Visuals */}
+      <div className="space-y-8">
+        <div className="bg-zinc-900/30 border border-white/5 p-8 space-y-6">
+          <div className="flex items-center gap-4 border-b border-white/5 pb-6">
+             <div className="w-10 h-10 bg-primary/10 border border-primary/20 flex items-center justify-center">
+                <Upload size={20} className="text-primary" />
+             </div>
+             <div>
+                <h2 className="text-sm font-black uppercase tracking-widest text-white">Visual Uplink</h2>
+                <p className="text-[10px] text-white/20 uppercase tracking-[0.2em]">Artifact visual verification</p>
+             </div>
+          </div>
+
+          <div className="aspect-square border-2 border-dashed border-white/5 bg-black flex flex-col items-center justify-center group hover:border-primary/20 transition-all cursor-pointer">
+            <Upload className="text-white/10 group-hover:text-primary transition-colors mb-4" size={32} />
+            <p className="text-[10px] font-black uppercase tracking-widest text-white/20 group-hover:text-white transition-colors">Initialize Upload</p>
+          </div>
+
+          <div className="grid grid-cols-4 gap-2">
+            {formData.images.map((img, i) => (
+              <div key={i} className="aspect-square bg-black border border-white/10 relative overflow-hidden group">
+                <Image src={img} alt="preview" fill className="object-cover" />
+                <button className="absolute inset-0 bg-red-500/80 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                  <X size={14} className="text-white" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <button 
+          type="submit"
+          disabled={submitting}
+          className="w-full bg-primary py-6 text-black font-black uppercase tracking-[0.4em] hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 disabled:scale-100"
+        >
+          {submitting ? (
+            <div className="flex items-center justify-center gap-3">
+               <Loader2 className="animate-spin" size={20} />
+               Processing...
+            </div>
+          ) : productId ? 'Recalibrate Artifact' : 'Deploy Artifact'}
+        </button>
+
+        <div className="bg-primary/5 border border-primary/10 p-6 flex gap-4">
+           <AlertCircle className="text-primary shrink-0" size={20} />
+           <p className="text-[10px] font-bold text-primary/60 uppercase tracking-widest leading-relaxed">
+             Ensure all identification codes and financial data are verified before deployment to the public registry.
+           </p>
+        </div>
+      </div>
+    </form>
   )
 }

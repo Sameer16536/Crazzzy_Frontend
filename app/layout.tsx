@@ -2,7 +2,6 @@ import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { Providers } from '@/components/providers'
-import { ClerkProvider } from '@clerk/nextjs'
 import './globals.css'
 import { cookies } from 'next/headers'
 
@@ -41,30 +40,13 @@ export default async function RootLayout({
   const theme = cookieStore.get('theme')?.value === 'light' ? 'light' : 'dark'
 
   return (
-    <ClerkProvider
-      appearance={{
-        variables: {
-          colorPrimary: '#d4af37',
-          colorBackground: '#0c0c0c',
-          colorInputBackground: '#181818',
-          colorInputText: '#f0f0eb',
-          colorText: '#f0f0eb',
-          colorTextSecondary: '#888888',
-          colorNeutral: '#2a2a2a',
-          borderRadius: '0px',
-          fontFamily: '"Syne", "Inter Tight", sans-serif',
-          fontSize: '14px',
-        },
-      }}
-    >
-      <html lang="en" suppressHydrationWarning className={theme === 'dark' ? 'dark' : undefined}>
-        <body className="font-sans antialiased">
-          <Providers>
-            {children}
-          </Providers>
-          {process.env.NODE_ENV === 'production' && <Analytics />}
-        </body>
-      </html>
-    </ClerkProvider>
+    <html lang="en" suppressHydrationWarning className={theme === 'dark' ? 'dark' : undefined}>
+      <body className="font-sans antialiased">
+        <Providers>
+          {children}
+        </Providers>
+        {process.env.NODE_ENV === 'production' && <Analytics />}
+      </body>
+    </html>
   )
 }

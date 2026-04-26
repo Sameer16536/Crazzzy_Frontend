@@ -5,6 +5,8 @@ import { useRef } from 'react'
 import { makeStore, type AppStore } from '@/lib/store/store'
 import { CustomCursor } from '@/components/custom-cursor'
 import { LenisProvider } from '@/components/lenis-provider'
+import { AuthProvider } from '@/lib/auth/auth-context'
+import { CatalogProvider } from '@/lib/catalog/use-catalog'
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const storeRef = useRef<AppStore | null>(null)
@@ -13,8 +15,12 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <ReduxProvider store={storeRef.current}>
       <LenisProvider>
-        <CustomCursor />
-        {children}
+        <AuthProvider>
+          <CatalogProvider>
+            <CustomCursor />
+            {children}
+          </CatalogProvider>
+        </AuthProvider>
       </LenisProvider>
     </ReduxProvider>
   )

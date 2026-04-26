@@ -60,10 +60,17 @@ export default function ProductPage() {
 
   if (loading || catalogLoading) {
     return (
-      <div className="min-h-screen bg-black">
+      <div className="min-h-screen bg-background">
         <Navbar />
         <div className="pt-32 max-w-7xl mx-auto px-4 text-center">
-          <Loader loading />
+          <div className="flex flex-col items-center gap-4 py-20">
+            <motion.div 
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+              className="w-12 h-12 border-2 border-primary border-t-transparent rounded-full"
+            />
+            <p className="text-[10px] uppercase tracking-[0.4em] text-primary font-black animate-pulse">Loading Universe...</p>
+          </div>
         </div>
       </div>
     )
@@ -71,12 +78,12 @@ export default function ProductPage() {
 
   if (!product) {
     return (
-      <div className="min-h-screen bg-black text-white">
+      <div className="min-h-screen bg-background text-foreground">
         <Navbar />
         <div className="pt-32 max-w-7xl mx-auto px-4 text-center space-y-6">
-          <h1 className="text-4xl font-black uppercase tracking-tighter">Product not found</h1>
-          <p className="text-white/50">The universe you're looking for doesn't exist yet.</p>
-          <Link href="/shop" className="inline-block bg-primary text-black px-8 py-3 font-bold uppercase tracking-widest text-sm hover:opacity-80 transition-opacity">
+          <h1 className="text-4xl font-black uppercase tracking-tighter text-foreground">Product not found</h1>
+          <p className="text-muted-foreground/60">The universe you're looking for doesn't exist yet.</p>
+          <Link href="/shop" className="inline-block bg-primary text-primary-foreground px-8 py-3 font-bold uppercase tracking-widest text-sm hover:opacity-80 transition-opacity">
             Back to Shop
           </Link>
         </div>
@@ -88,7 +95,6 @@ export default function ProductPage() {
     .filter((p) => p.categoryId === product.categoryId && p.id !== product.id)
     .slice(0, 4)
 
-  // Group variants by name
   const variantsByName = product.variants?.reduce((acc: any, v: any) => {
     if (!acc[v.name]) acc[v.name] = []
     acc[v.name].push(v)
@@ -96,29 +102,25 @@ export default function ProductPage() {
   }, {})
 
   return (
-    <div className="min-h-screen bg-black text-white selection:bg-primary selection:text-black">
+    <div className="min-h-screen bg-background text-foreground selection:bg-primary selection:text-primary-foreground" style={{ isolation: 'isolate' }}>
       <Navbar />
       
-      {/* Breadcrumbs */}
-      <div className="pt-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] text-white/40 mb-8">
+      {/* Breadcrumbs — z-index ensures they are above any ghost animations */}
+      <div className="relative z-10 pt-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-8">
           <Link href="/" className="hover:text-primary transition-colors">Home</Link>
           <ChevronRight size={10} />
           <Link href="/shop" className="hover:text-primary transition-colors">Shop</Link>
           <ChevronRight size={10} />
-          <span className="text-white/80">{product.name}</span>
-        </div>
+          <span className="text-foreground">{product.name}</span>
+        </nav>
       </div>
 
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
           
-          {/* Left Column: Image Gallery (lg:7) */}
           <div className="lg:col-span-7 space-y-6">
-            <motion.div 
-              layoutId={`product-image-${product.id}`}
-              className="relative aspect-square bg-white border border-black/5 overflow-hidden group p-10"
-            >
+            <div className="relative aspect-square bg-muted/30 border border-border overflow-hidden group p-10">
               <Image
                 src={product.images?.[selectedImage] || "/placeholder.jpg"}
                 alt={product.name}
@@ -129,21 +131,20 @@ export default function ProductPage() {
               <div className="absolute inset-0 bg-gradient-to-t from-black/5 via-transparent to-transparent pointer-events-none" />
               
               {!product.inStock && (
-                <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center">
-                  <span className="text-white font-black text-4xl uppercase tracking-[0.2em] border-2 border-white px-8 py-4">Sold Out</span>
+                <div className="absolute inset-0 bg-background/60 backdrop-blur-sm flex items-center justify-center">
+                  <span className="text-foreground font-black text-4xl uppercase tracking-[0.2em] border-2 border-foreground px-8 py-4">Sold Out</span>
                 </div>
               )}
-            </motion.div>
+            </div>
 
-            {/* Thumbnails */}
             <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
               {product.images?.map((img: string, idx: number) => (
                 <button
                   key={idx}
                   onClick={() => setSelectedImage(idx)}
                   className={`
-                    relative flex-shrink-0 w-24 aspect-square border-2 transition-all duration-300 p-4 bg-white
-                    ${selectedImage === idx ? 'border-primary opacity-100' : 'border-black/5 opacity-50 hover:opacity-100'}
+                    relative flex-shrink-0 bg-muted/30 border transition-all duration-300 overflow-hidden w-24 h-24 p-3
+                    ${selectedImage === idx ? 'border-primary opacity-100' : 'border-border opacity-50 hover:opacity-100 hover:border-primary/40'}
                   `}
                 >
                   <Image src={img} alt="" fill className="object-contain" />
@@ -152,7 +153,6 @@ export default function ProductPage() {
             </div>
           </div>
 
-          {/* Right Column: Details (lg:5) */}
           <div className="lg:col-span-5 space-y-10">
             <div className="space-y-4">
               <div className="flex items-center gap-3">
@@ -166,37 +166,36 @@ export default function ProductPage() {
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-1 text-primary">
                   {[...Array(5)].map((_, i) => (
-                    <Star key={i} size={14} className={i < Math.floor(product.rating) ? 'fill-primary' : 'text-white/20'} />
+                    <Star key={i} size={14} className={i < Math.floor(product.rating) ? 'fill-primary' : 'text-muted-foreground/20'} />
                   ))}
                 </div>
-                <span className="text-[10px] uppercase tracking-widest text-white/40 font-bold">
+                <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">
                   {product.rating} Rating / {product.reviews} Reviews
                 </span>
               </div>
             </div>
 
-            <div className="space-y-4 border-y border-white/5 py-8">
+            <div className="bg-muted/30 border border-border p-8 sm:p-12 space-y-10">
               <div className="flex items-baseline gap-4">
-                <span className="text-5xl font-black text-white">
+                <span className="text-5xl font-black text-foreground">
                   ₹{product.price.toLocaleString('en-IN')}
                 </span>
                 {product.originalPrice && (
-                  <span className="text-2xl text-white/30 line-through font-light">
+                  <span className="text-2xl text-muted-foreground line-through font-light">
                     ₹{product.originalPrice.toLocaleString('en-IN')}
                   </span>
                 )}
               </div>
-              <p className="text-xs text-white/40 font-light tracking-wide italic">
+              <p className="text-xs text-muted-foreground font-light tracking-wide italic">
                 * Prices inclusive of all taxes. Worldwide shipping available.
               </p>
             </div>
 
-            {/* Variant Selectors */}
             {variantsByName && Object.keys(variantsByName).length > 0 && (
               <div className="space-y-8">
                 {Object.entries(variantsByName).map(([name, items]: [string, any]) => (
                   <div key={name} className="space-y-4">
-                    <label className="text-[10px] uppercase tracking-[0.3em] text-white/60 font-black">
+                    <label className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground font-black">
                       Select {name}
                     </label>
                     <div className="flex flex-wrap gap-3">
@@ -207,8 +206,8 @@ export default function ProductPage() {
                           className={`
                             px-6 py-3 text-xs font-bold border transition-all duration-300 uppercase tracking-widest
                             ${selectedVariants[name] === item.value 
-                              ? 'bg-primary text-black border-primary scale-105' 
-                              : 'bg-transparent text-white border-white/10 hover:border-white/30'}
+                              ? 'bg-primary text-primary-foreground border-primary scale-105' 
+                              : 'bg-transparent text-foreground border-border hover:border-foreground/30'}
                           `}
                         >
                           {item.value}
@@ -220,21 +219,20 @@ export default function ProductPage() {
               </div>
             )}
 
-            {/* CTA Section */}
             <div className="space-y-4 pt-4">
               {product.inStock && (
                 <div className="flex items-center gap-6 mb-8">
-                  <div className="flex items-center border border-white/10 bg-zinc-900 overflow-hidden">
+                  <div className="flex items-center border border-border bg-muted overflow-hidden">
                     <button 
                       onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                      className="px-5 py-4 hover:bg-white/5 transition-colors text-white/50"
+                      className="px-5 py-4 hover:bg-muted/80 transition-colors text-muted-foreground"
                     >
                       −
                     </button>
                     <span className="w-12 text-center font-black text-sm">{quantity}</span>
                     <button 
                       onClick={() => setQuantity(quantity + 1)}
-                      className="px-5 py-4 hover:bg-white/5 transition-colors text-white/50"
+                      className="px-5 py-4 hover:bg-muted/80 transition-colors text-muted-foreground"
                     >
                       +
                     </button>
@@ -262,7 +260,7 @@ export default function ProductPage() {
                     )
                     toast.success('Added to cart')
                   }}
-                  className="flex-1 bg-primary hover:bg-primary/90 text-black font-black py-5 uppercase tracking-[0.2em] text-sm transition-all active:scale-[0.98] flex items-center justify-center gap-3 disabled:opacity-30 disabled:grayscale"
+                  className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-black py-5 uppercase tracking-[0.2em] text-sm transition-all active:scale-[0.98] flex items-center justify-center gap-3 disabled:opacity-30 disabled:grayscale"
                 >
                   <ShoppingCart size={18} />
                   {product.inStock ? 'Add to Cart' : 'Out of Stock'}
@@ -271,7 +269,7 @@ export default function ProductPage() {
                   onClick={() => setIsWishlisted(!isWishlisted)}
                   className={`
                     p-5 border transition-all duration-300
-                    ${isWishlisted ? 'border-primary bg-primary/10 text-primary' : 'border-white/10 text-white/40 hover:text-white hover:border-white/30'}
+                    ${isWishlisted ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground hover:text-foreground hover:border-foreground/30'}
                   `}
                 >
                   <Heart size={20} className={isWishlisted ? 'fill-current' : ''} />
@@ -279,20 +277,19 @@ export default function ProductPage() {
               </div>
             </div>
 
-            {/* Trust Badges */}
-            <div className="pt-10 grid grid-cols-2 gap-8 border-t border-white/5">
+            <div className="pt-10 grid grid-cols-2 gap-8 border-t border-border">
               <div className="flex gap-4 items-start">
                 <ShieldCheck className="text-primary shrink-0" size={20} />
                 <div className="space-y-1">
                   <p className="text-[10px] font-black uppercase tracking-widest">Secure Checkout</p>
-                  <p className="text-[10px] text-white/30 leading-relaxed font-light">Razorpay verified safe transactions.</p>
+                  <p className="text-[10px] text-muted-foreground leading-relaxed font-light">Razorpay verified safe transactions.</p>
                 </div>
               </div>
               <div className="flex gap-4 items-start">
                 <Share2 className="text-primary shrink-0" size={20} />
                 <div className="space-y-1">
                   <p className="text-[10px] font-black uppercase tracking-widest">Global Delivery</p>
-                  <p className="text-[10px] text-white/30 leading-relaxed font-light">Doorstep delivery across the universe.</p>
+                  <p className="text-[10px] text-muted-foreground leading-relaxed font-light">Doorstep delivery across the universe.</p>
                 </div>
               </div>
             </div>
@@ -300,9 +297,8 @@ export default function ProductPage() {
         </div>
       </section>
 
-      {/* Similar Items */}
       {similar.length > 0 && (
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 border-t border-white/5">
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 border-t border-border">
           <div className="flex items-end justify-between mb-12">
             <div className="space-y-2">
               <div className="flex items-center gap-3">
@@ -311,7 +307,7 @@ export default function ProductPage() {
               </div>
               <h2 className="text-3xl font-black uppercase tracking-tighter">You May Also Like</h2>
             </div>
-            <Link href="/shop" className="text-[10px] uppercase tracking-widest font-bold text-white/40 hover:text-primary transition-colors">
+            <Link href="/shop" className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground hover:text-foreground transition-colors">
               Explore All →
             </Link>
           </div>
@@ -323,8 +319,7 @@ export default function ProductPage() {
         </section>
       )}
 
-      {/* Reviews Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 bg-zinc-900/30">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 bg-muted/20">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-8 mb-16">
           <div className="space-y-4">
             <div className="flex items-center gap-3">
@@ -336,24 +331,17 @@ export default function ProductPage() {
                <div className="flex items-center gap-1 text-primary text-xl font-black">
                  {product.rating} <Star size={20} className="fill-primary" />
                </div>
-               <span className="text-white/30 text-xs uppercase tracking-widest">Based on {reviews.length} experiences</span>
+               <span className="text-muted-foreground text-xs uppercase tracking-widest">Based on {reviews.length} experiences</span>
             </div>
           </div>
-          <button className="bg-white/5 hover:bg-white/10 text-white border border-white/10 px-8 py-4 font-black uppercase tracking-widest text-[10px] transition-all">
+          <button className="bg-background hover:bg-muted text-foreground border border-border px-8 py-4 font-black uppercase tracking-widest text-[10px] transition-all">
             Write a Review
           </button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {reviews.length > 0 ? reviews.map((r, i) => (
-            <motion.div 
-              key={r.id} 
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
-              className="bg-black border border-white/5 p-8 space-y-6 relative group overflow-hidden"
-            >
+              <div key={r.id} className="bg-background border border-border p-8 space-y-6 relative group overflow-hidden">
               <div className="flex justify-between items-start relative z-10">
                 <div className="space-y-1">
                   <div className="flex items-center gap-3">
@@ -364,44 +352,26 @@ export default function ProductPage() {
                       </span>
                     )}
                   </div>
-                  <p className="text-[10px] text-white/30 uppercase tracking-widest">{new Date(r.createdAt).toLocaleDateString()}</p>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-widest">{new Date(r.createdAt).toLocaleDateString()}</p>
                 </div>
                 <div className="flex gap-0.5 text-primary">
                   {[...Array(5)].map((_, i) => (
-                    <Star key={i} size={12} className={i < r.rating ? 'fill-primary' : 'text-white/10'} />
+                    <Star key={i} size={12} className={i < r.rating ? 'fill-primary' : 'text-muted-foreground/20'} />
                   ))}
                 </div>
               </div>
-              <p className="text-sm text-white/60 leading-relaxed italic relative z-10">
+              <p className="text-sm text-muted-foreground leading-relaxed italic relative z-10">
                 "{r.comment}"
               </p>
-              {/* Corner accent */}
               <div className="absolute top-0 right-0 w-8 h-8 border-t border-r border-primary/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-            </motion.div>
+            </div>
           )) : (
-            <div className="col-span-2 py-20 text-center border border-dashed border-white/10">
-              <p className="text-white/30 uppercase tracking-widest text-xs">No reviews yet. Be the first to collector.</p>
+            <div className="col-span-2 py-20 text-center border border-dashed border-border">
+              <p className="text-muted-foreground uppercase tracking-widest text-xs">No reviews yet. Be the first to collector.</p>
             </div>
           )}
         </div>
       </section>
     </div>
-  )
-}
-
-function Loader({ loading }: { loading: boolean }) {
-  return (
-    <AnimatePresence>
-      {loading && (
-        <div className="flex flex-col items-center gap-4 py-20">
-          <motion.div 
-            animate={{ rotate: 360 }}
-            transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-            className="w-12 h-12 border-2 border-primary border-t-transparent rounded-full"
-          />
-          <p className="text-[10px] uppercase tracking-[0.4em] text-primary font-black animate-pulse">Loading Universe...</p>
-        </div>
-      )}
-    </AnimatePresence>
   )
 }

@@ -28,14 +28,14 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
   if (loading || !user || !checkAdmin()) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="animate-spin text-primary" size={40} />
       </div>
     )
   }
 
   return (
-    <div className="flex min-h-screen bg-[#080808] text-white selection:bg-primary selection:text-black">
+    <div className="flex min-h-screen bg-background text-foreground selection:bg-primary selection:text-primary-foreground">
       {/* Sidebar Navigation */}
       <AdminSidebar open={sidebarOpen} onOpenChange={setSidebarOpen} />
 

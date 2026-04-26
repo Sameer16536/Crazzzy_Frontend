@@ -118,21 +118,21 @@ export default function CartPage() {
           {/* Summary */}
           <div className="lg:col-span-1">
             <Card className="p-5 sticky top-24">
-              <h2 className="text-xl font-black uppercase tracking-tight text-white mb-6">Order summary</h2>
+              <h2 className="text-xl font-black uppercase tracking-tight text-foreground mb-6">Order summary</h2>
               <div className="space-y-4 text-xs">
-                <div className="flex justify-between text-white/40">
+                <div className="flex justify-between text-muted-foreground">
                   <span className="uppercase tracking-widest">Subtotal</span>
-                  <span className="font-mono text-white">₹{subtotal.toLocaleString('en-IN')}</span>
+                  <span className="font-mono text-foreground">₹{subtotal.toLocaleString('en-IN')}</span>
                 </div>
-                <div className="flex justify-between text-white/40">
+                <div className="flex justify-between text-muted-foreground">
                   <span className="uppercase tracking-widest">Shipping</span>
-                  <span className="font-mono text-white">
+                  <span className="font-mono text-foreground">
                     {shipping === 0 ? 'FREE' : `₹${shipping}`}
                   </span>
                 </div>
-                <Separator className="bg-white/5" />
+                <Separator className="bg-border" />
                 <div className="flex justify-between text-lg font-black pt-2">
-                  <span className="uppercase tracking-tighter text-white">Total</span>
+                  <span className="uppercase tracking-tighter text-foreground">Total</span>
                   <span className="text-primary font-mono">₹{total.toLocaleString('en-IN')}</span>
                 </div>
               </div>
@@ -149,13 +149,13 @@ export default function CartPage() {
                 </Link>
                 <Link 
                   href="/shop" 
-                  className="w-full py-4 border border-white/10 hover:border-white/30 text-white/40 hover:text-white font-black uppercase tracking-[0.2em] text-[10px] transition-all flex items-center justify-center"
+                  className="w-full py-4 border border-border hover:border-foreground/20 text-muted-foreground hover:text-foreground font-black uppercase tracking-[0.2em] text-[10px] transition-all flex items-center justify-center"
                 >
                   Continue Shopping
                 </Link>
               </div>
 
-              <p className="text-[10px] text-white/20 mt-6 leading-relaxed font-light italic">
+              <p className="text-[10px] text-muted-foreground/40 mt-6 leading-relaxed font-light italic">
                 * Free shipping on orders above ₹1,999. Items are held for 15 minutes once checkout is initiated.
               </p>
             </Card>

@@ -43,10 +43,11 @@ interface ProductCardProps {
 function PremiumBadge({ label, variant = 'limited' }: { label: string; variant?: 'limited' | 'sold' }) {
   const bgColor = variant === 'sold' ? 'bg-red-500/90' : 'bg-primary/90'
   const borderColor = variant === 'sold' ? 'border-red-400' : 'border-primary/30'
+  const textColor = variant === 'sold' ? 'text-white' : 'text-primary-foreground'
 
   return (
     <motion.div
-      className={cn('absolute top-4 right-4 z-20 px-3 py-2 rounded-full text-xs font-bold text-white', bgColor, 'border', borderColor, 'backdrop-blur-sm')}
+      className={cn('absolute top-4 right-4 z-20 px-3 py-2 rounded-full text-xs font-bold', textColor, bgColor, 'border', borderColor, 'backdrop-blur-sm')}
       initial={{ scale: 0.8, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       exit={{ scale: 0.8, opacity: 0 }}
@@ -73,33 +74,28 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
         viewport={{ once: true }}
         transition={{ duration: 0.5 }}
       >
-        {/* Image Container with Hover Animation */}
-        <motion.div
-          className="relative w-full aspect-square bg-card rounded-2xl overflow-hidden mb-4 flex-shrink-0"
+        {/* Image Container */}
+        <div
+          className="relative w-full aspect-square bg-card rounded-2xl overflow-hidden mb-4 flex-shrink-0 transition-transform duration-300 group-hover:scale-[1.02]"
           onMouseEnter={() => setIsImageHovered(true)}
           onMouseLeave={() => setIsImageHovered(false)}
-          whileHover={{ scale: 1.02 }}
-          transition={{ duration: 0.3 }}
         >
           {/* Main Image */}
           {product.images?.[0] ? (
-            <motion.div
-              className="absolute inset-0 p-6 bg-white"
-              animate={{
-                opacity: isImageHovered && product.images[1] ? 0 : 1,
-              }}
-              transition={{ duration: 0.4 }}
+            <div
+              className="absolute inset-0 p-6 bg-white transition-opacity duration-400"
+              style={{ opacity: isImageHovered && product.images[1] ? 0 : 1 }}
             >
               <Image
                 src={product.images[0]}
                 alt={product.name}
                 fill
-                className="object-contain transition-transform duration-700"
+                className="object-contain"
                 quality={75}
                 priority={priority}
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
               />
-            </motion.div>
+            </div>
           ) : (
             <div className="absolute inset-0 bg-muted flex items-center justify-center text-muted-foreground">
               <span className="text-sm font-medium">No Image</span>
@@ -108,31 +104,25 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
 
           {/* Secondary Image - Cross-fade on hover */}
           {product.images?.[1] && (
-            <motion.div
-              className="absolute inset-0 p-6 bg-white"
-              animate={{
-                opacity: isImageHovered ? 1 : 0,
-              }}
-              transition={{ duration: 0.4 }}
+            <div
+              className="absolute inset-0 p-6 bg-white transition-opacity duration-400"
+              style={{ opacity: isImageHovered ? 1 : 0 }}
             >
               <Image
                 src={product.images[1]}
                 alt={`${product.name} alternate`}
                 fill
-                className="object-contain transition-transform duration-700"
+                className="object-contain"
                 quality={75}
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
               />
-            </motion.div>
+            </div>
           )}
 
           {/* Overlay Gradient */}
-          <motion.div
-            className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"
-            animate={{
-              opacity: isImageHovered ? 1 : 0,
-            }}
-            transition={{ duration: 0.3 }}
+          <div
+            className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent transition-opacity duration-300"
+            style={{ opacity: isImageHovered ? 1 : 0 }}
           />
 
           {/* Status Badges */}
@@ -140,18 +130,16 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
           {product.limited && product.inStock && <PremiumBadge label="Limited" variant="limited" />}
 
           {/* Wishlist Button */}
-          <motion.button
-            className="absolute bottom-4 right-4 z-20 p-3 bg-white/10 hover:bg-white/20 rounded-full backdrop-blur-sm transition-all cursor-interactive"
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
+          <button
+            className="absolute bottom-4 right-4 z-20 p-3 bg-white/20 hover:bg-white/40 rounded-full backdrop-blur-sm transition-all cursor-interactive"
             onClick={(e) => {
               e.preventDefault()
               e.stopPropagation()
             }}
           >
-            <Heart size={18} className="text-white" />
-          </motion.button>
-        </motion.div>
+            <Heart size={18} className="text-black" />
+          </button>
+        </div>
 
         {/* Product Info Section */}
         <div className="flex flex-1 flex-col gap-2.5">

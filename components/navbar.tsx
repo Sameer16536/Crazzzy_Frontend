@@ -87,15 +87,15 @@ export function Navbar() {
                                 </div>
                               </Link>
                             </NavigationMenuLink>
-                            
+
                             {/* Sub-categories preview */}
                             {subs.length > 0 && (
                               <div className="flex flex-wrap gap-x-3 gap-y-1">
                                 {subs.map(sub => (
-                                  <Link 
-                                    key={sub.id} 
+                                  <Link
+                                    key={sub.id}
                                     href={`/shop?category=${sub.slug}`}
-                                    className="text-[9px] font-bold text-white/30 hover:text-primary uppercase transition-colors"
+                                    className="text-[9px] font-bold text-muted-foreground/60 hover:text-primary uppercase transition-colors"
                                   >
                                     {sub.name}
                                   </Link>
@@ -172,15 +172,15 @@ export function Navbar() {
                       </Avatar>
                     </button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56 mt-2 bg-zinc-900 border-white/10 backdrop-blur-xl">
+                  <DropdownMenuContent align="end" className="w-56 mt-2 bg-popover border-border backdrop-blur-xl">
                     <DropdownMenuLabel className="font-bold flex flex-col">
-                      <span className="text-white">{user.name}</span>
-                      <span className="text-[10px] text-white/50 font-normal truncate uppercase tracking-widest">{user.email}</span>
+                      <span className="text-foreground">{user.name}</span>
+                      <span className="text-[10px] text-muted-foreground font-normal truncate uppercase tracking-widest">{user.email}</span>
                     </DropdownMenuLabel>
-                    <DropdownMenuSeparator className="bg-white/5" />
+                    <DropdownMenuSeparator className="bg-border" />
                     {isAdmin && (
                       <DropdownMenuItem asChild className="focus:bg-primary/10 focus:text-primary cursor-pointer">
-                        <Link href="/admin/dashboard" className="flex items-center gap-2">
+                        <Link href="/admin" className="flex items-center gap-2">
                           <ShieldCheck size={16} />
                           <span className="font-bold uppercase text-[10px] tracking-widest">Admin Dashboard</span>
                         </Link>
@@ -198,8 +198,8 @@ export function Navbar() {
                         <span className="font-bold uppercase text-[10px] tracking-widest">Orders</span>
                       </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuSeparator className="bg-white/5" />
-                    <DropdownMenuItem 
+                    <DropdownMenuSeparator className="bg-border" />
+                    <DropdownMenuItem
                       onClick={logout}
                       className="focus:bg-red-500/10 focus:text-red-500 cursor-pointer text-red-500/80"
                     >
@@ -230,21 +230,21 @@ export function Navbar() {
                     <Menu size={16} />
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="left" className="p-0 w-[280px] sm:w-[320px] bg-black border-white/10">
-                  <SheetHeader className="border-b border-white/5 px-6 py-6">
+                <SheetContent side="left" className="p-0 w-[280px] sm:w-[320px] bg-background border-border">
+                  <SheetHeader className="border-b border-border px-6 py-6">
                     <SheetTitle className="flex items-center gap-2 text-left">
-                      <span className="inline-flex size-7 items-center justify-center bg-primary text-black font-black text-sm">C</span>
-                      <span className="font-black text-white">CRAZZZY</span>
+                      <span className="inline-flex size-7 items-center justify-center bg-primary text-primary-foreground font-black text-sm">C</span>
+                      <span className="font-black text-foreground">CRAZZZY</span>
                     </SheetTitle>
                   </SheetHeader>
 
                   <div className="flex flex-col h-full overflow-y-auto">
                     <div className="p-6 space-y-6">
                       <div className="space-y-3">
-                        <Link href="/" className="block text-xs font-black uppercase tracking-[0.2em] text-white/40 hover:text-primary transition-colors">
+                        <Link href="/" className="block text-xs font-black uppercase tracking-[0.2em] text-muted-foreground hover:text-primary transition-colors">
                           HOME
                         </Link>
-                        <Link href="/shop" className="block text-xs font-black uppercase tracking-[0.2em] text-white/40 hover:text-primary transition-colors">
+                        <Link href="/shop" className="block text-xs font-black uppercase tracking-[0.2em] text-muted-foreground hover:text-primary transition-colors">
                           EXPLORE ALL
                         </Link>
                       </div>
@@ -256,7 +256,7 @@ export function Navbar() {
                             <Link
                               key={c.id}
                               href={`/shop?category=${c.slug}`}
-                              className="block py-2 text-sm font-bold text-white hover:text-primary transition-colors uppercase tracking-widest"
+                              className="block py-2 text-sm font-bold text-foreground hover:text-primary transition-colors uppercase tracking-widest"
                             >
                               {c.name}
                             </Link>
@@ -264,38 +264,38 @@ export function Navbar() {
                         </div>
                       </div>
 
-                      <div className="pt-6 border-t border-white/5 space-y-3">
-                        <Link href="/track" className="block text-[10px] font-bold text-white/40 hover:text-white uppercase tracking-widest">
+                      <div className="pt-6 border-t border-border space-y-3">
+                        <Link href="/track" className="block text-[10px] font-bold text-muted-foreground hover:text-foreground uppercase tracking-widest">
                           Track Order
                         </Link>
-                        <Link href="/contact" className="block text-[10px] font-bold text-white/40 hover:text-white uppercase tracking-widest">
+                        <Link href="/contact" className="block text-[10px] font-bold text-muted-foreground hover:text-foreground uppercase tracking-widest">
                           Contact
                         </Link>
                       </div>
 
-                      <div className="pt-6 border-t border-white/5">
+                      <div className="pt-6 border-t border-border">
                         {!loading && user ? (
                           <div className="space-y-4">
                             <div className="flex items-center gap-3">
-                                <Avatar className="w-10 h-10 border border-white/10">
-                                  <AvatarImage src={user.imageUrl} />
-                                  <AvatarFallback className="bg-primary text-black font-bold">
-                                    {user.name?.[0]}
-                                  </AvatarFallback>
-                                </Avatar>
-                                <div>
-                                  <p className="text-xs font-black text-white uppercase">{user.name}</p>
-                                  <p className="text-[10px] text-white/30 uppercase">{user.email}</p>
-                                </div>
+                              <Avatar className="w-10 h-10 border border-border">
+                                <AvatarImage src={user.imageUrl} />
+                                <AvatarFallback className="bg-primary text-black font-bold">
+                                  {user.name?.[0]}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <p className="text-xs font-black text-foreground uppercase">{user.name}</p>
+                                <p className="text-[10px] text-muted-foreground uppercase">{user.email}</p>
+                              </div>
                             </div>
                             <div className="grid grid-cols-2 gap-2">
-                               <Link href="/account" className="bg-white/5 p-3 text-[10px] font-bold text-center uppercase tracking-widest hover:bg-white/10 transition-all">Profile</Link>
-                               <Link href="/account/orders" className="bg-white/5 p-3 text-[10px] font-bold text-center uppercase tracking-widest hover:bg-white/10 transition-all">Orders</Link>
+                              <Link href="/account" className="bg-muted p-3 text-[10px] font-bold text-center uppercase tracking-widest hover:bg-muted/80 transition-all">Profile</Link>
+                              <Link href="/account/orders" className="bg-muted p-3 text-[10px] font-bold text-center uppercase tracking-widest hover:bg-muted/80 transition-all">Orders</Link>
                             </div>
                             <button onClick={logout} className="w-full bg-red-500/10 text-red-500 p-3 text-[10px] font-black uppercase tracking-widest">Sign Out</button>
                           </div>
                         ) : (
-                          <Link href="/login" className="block bg-primary text-black p-4 text-center text-xs font-black uppercase tracking-[0.2em]">
+                          <Link href="/login" className="block bg-primary text-primary-foreground p-4 text-center text-xs font-black uppercase tracking-[0.2em]">
                             Sign In
                           </Link>
                         )}

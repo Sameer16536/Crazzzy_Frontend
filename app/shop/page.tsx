@@ -38,7 +38,7 @@ function FilterPanel({
     <div className="space-y-10">
       {/* Category Filter */}
       <div className="space-y-6">
-        <h3 className="font-black text-[10px] text-white/40 tracking-[0.3em] uppercase border-b border-white/5 pb-3">
+        <h3 className="font-black text-[10px] text-muted-foreground tracking-[0.3em] uppercase border-b border-border pb-3">
           Collections
         </h3>
         <div className="space-y-1">
@@ -47,7 +47,7 @@ function FilterPanel({
             className={`block w-full text-left px-3 py-3 text-xs font-bold uppercase tracking-widest transition-all ${
               selectedCategoryId === null
                 ? 'text-primary'
-                : 'text-white/40 hover:text-white'
+                : 'text-muted-foreground hover:text-foreground'
             }`}
           >
             All Droplets
@@ -66,7 +66,7 @@ function FilterPanel({
                   className={`flex items-center justify-between w-full text-left px-3 py-3 text-xs font-bold uppercase tracking-widest transition-all ${
                     isSelected || hasSelectedSub
                       ? 'text-primary'
-                      : 'text-white/40 hover:text-white'
+                      : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
                   {root.name}
@@ -82,7 +82,7 @@ function FilterPanel({
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: 'auto', opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
-                      className="overflow-hidden pl-4 border-l border-white/5 ml-3 space-y-1"
+                      className="overflow-hidden pl-4 border-l border-border ml-3 space-y-1"
                     >
                       {subs.map(sub => (
                         <button
@@ -91,7 +91,7 @@ function FilterPanel({
                           className={`block w-full text-left px-3 py-2 text-[10px] font-bold uppercase tracking-widest transition-all ${
                             selectedCategoryId === sub.slug
                               ? 'text-primary'
-                              : 'text-white/30 hover:text-white'
+                              : 'text-muted-foreground/60 hover:text-foreground'
                           }`}
                         >
                           {sub.name}
@@ -108,7 +108,7 @@ function FilterPanel({
 
       {/* Price Filter */}
       <div className="space-y-6">
-        <h3 className="font-black text-[10px] text-white/40 tracking-[0.3em] uppercase border-b border-white/5 pb-3">
+        <h3 className="font-black text-[10px] text-muted-foreground tracking-[0.3em] uppercase border-b border-border pb-3">
           Price Range
         </h3>
         <div className="space-y-4 px-3">
@@ -119,9 +119,9 @@ function FilterPanel({
             step="50"
             value={priceRange[1]}
             onChange={(e) => onPriceChange([priceRange[0], Number(e.target.value)])}
-            className="w-full accent-primary h-1 bg-zinc-800 rounded-lg appearance-none cursor-pointer"
+            className="w-full accent-primary h-1 bg-muted rounded-lg appearance-none cursor-pointer"
           />
-          <div className="flex justify-between text-[10px] font-mono font-bold text-white/30">
+          <div className="flex justify-between text-[10px] font-mono font-bold text-muted-foreground">
             <span>₹{priceRange[0]}</span>
             <span>₹{priceRange[1]}</span>
           </div>
@@ -130,7 +130,7 @@ function FilterPanel({
 
       {/* Availability */}
       <div className="space-y-6">
-        <h3 className="font-black text-[10px] text-white/40 tracking-[0.3em] uppercase border-b border-white/5 pb-3">
+        <h3 className="font-black text-[10px] text-muted-foreground tracking-[0.3em] uppercase border-b border-border pb-3">
           Status
         </h3>
         <label className="flex items-center gap-3 px-3 cursor-pointer group">
@@ -138,9 +138,9 @@ function FilterPanel({
             type="checkbox" 
             checked={inStockOnly}
             onChange={(e) => onInStockChange(e.target.checked)}
-            className="w-4 h-4 rounded-none border-white/10 bg-zinc-900 accent-primary" 
+            className="w-4 h-4 rounded-none border-border bg-muted accent-primary" 
           />
-          <span className="text-[10px] font-bold uppercase tracking-widest text-white/40 group-hover:text-white transition-colors">In Stock Only</span>
+          <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground group-hover:text-foreground transition-colors">In Stock Only</span>
         </label>
       </div>
     </div>
@@ -230,11 +230,11 @@ export default function ShopPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white selection:bg-primary selection:text-black">
+    <div className="min-h-screen bg-background text-foreground selection:bg-primary selection:text-primary-foreground">
       <Navbar />
       
       {/* Header Section */}
-      <section className="pt-32 pb-16 border-b border-white/5 relative overflow-hidden">
+      <section className="pt-32 pb-16 border-b border-border relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary/20 via-transparent to-transparent" />
         </div>
@@ -246,10 +246,10 @@ export default function ShopPage() {
                 <div className="w-8 h-px bg-primary" />
                 <span className="text-primary text-[10px] font-mono tracking-[0.3em] uppercase">Universe</span>
               </div>
-              <h1 className="text-5xl sm:text-7xl font-black uppercase tracking-tighter leading-none">
+              <h1 className="text-5xl sm:text-7xl font-black uppercase tracking-tighter leading-none text-foreground">
                 THE SHOP
               </h1>
-              <p className="text-white/40 text-sm max-w-md font-light italic">
+              <p className="text-muted-foreground text-sm max-w-md font-light italic">
                 {selectedCategorySlug 
                   ? `Exploring ${allCategories.find(c => c.slug === selectedCategorySlug)?.name}`
                   : `Discover ${products.length} exclusive droplets curated for your premium aesthetic.`
@@ -259,13 +259,13 @@ export default function ShopPage() {
             
             {/* Search Bar */}
             <div className="relative group w-full md:w-80">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-primary transition-colors" size={18} />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={18} />
               <input 
                 type="text" 
                 placeholder="Search Universe..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-zinc-900 border border-white/10 px-12 py-4 text-sm font-bold uppercase tracking-widest focus:outline-none focus:border-primary/50 transition-all placeholder:text-white/10"
+                className="w-full bg-muted/30 border border-border px-12 py-4 text-sm font-bold uppercase tracking-widest focus:outline-none focus:border-primary/50 transition-all placeholder:text-muted-foreground/30"
               />
             </div>
           </div>
@@ -294,16 +294,16 @@ export default function ShopPage() {
                 Filters
               </button>
 
-              <p className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em]">
                 {isLoading ? 'Scanning...' : `${sortedProducts.length} Results Found`}
               </p>
 
               <div className="flex items-center gap-3">
-                <span className="hidden sm:inline text-[10px] font-bold text-white/30 uppercase tracking-widest">Sort By:</span>
+                <span className="hidden sm:inline text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Sort By:</span>
                 <select 
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
-                  className="bg-zinc-900 border border-white/10 px-4 py-2 text-[10px] font-black uppercase tracking-widest focus:outline-none focus:border-primary/50 cursor-pointer"
+                  className="bg-muted border border-border px-4 py-2 text-[10px] font-black uppercase tracking-widest focus:outline-none focus:border-primary/50 cursor-pointer"
                 >
                   <option value="newest">Newest Arrivals</option>
                   <option value="price_asc">Price: Low to High</option>
@@ -317,7 +317,7 @@ export default function ShopPage() {
             {isLoading ? (
                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-8">
                  {[...Array(6)].map((_, i) => (
-                   <div key={i} className="aspect-square bg-zinc-900 animate-pulse border border-white/5" />
+                   <div key={i} className="aspect-square bg-muted animate-pulse border border-border" />
                  ))}
                </div>
             ) : sortedProducts.length > 0 ? (
@@ -342,10 +342,10 @@ export default function ShopPage() {
                 </AnimatePresence>
               </motion.div>
             ) : (
-              <div className="py-32 text-center border border-dashed border-white/10">
-                <p className="text-white/30 text-xs uppercase tracking-[0.3em] mb-6 font-light">No artifacts match your search parameters.</p>
+              <div className="py-32 text-center border border-dashed border-border">
+                <p className="text-muted-foreground text-xs uppercase tracking-[0.3em] mb-6 font-light">No artifacts match your search parameters.</p>
                 <button 
-                  onClick={() => { setSelectedCategoryId(null); setPriceRange([0, 5000]); setSearchQuery(''); setInStockOnly(false); }}
+                  onClick={() => { setSelectedCategorySlug(null); setPriceRange([0, 5000]); setSearchQuery(''); setInStockOnly(false); }}
                   className="text-primary text-[10px] font-black uppercase tracking-widest hover:underline"
                 >
                   Reset Universe
@@ -371,11 +371,11 @@ export default function ShopPage() {
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
-              className="fixed right-0 top-0 bottom-0 z-[70] w-full max-w-xs bg-zinc-950 p-8 shadow-2xl border-l border-white/10 overflow-y-auto"
+              className="fixed right-0 top-0 bottom-0 z-[70] w-full max-w-xs bg-background p-8 shadow-2xl border-l border-border overflow-y-auto"
             >
               <div className="flex justify-between items-center mb-12">
-                <h2 className="text-2xl font-black uppercase tracking-tighter">Filters</h2>
-                <button onClick={() => setMobileFilterOpen(false)} className="text-white/40 hover:text-white transition-colors">
+                <h2 className="text-2xl font-black uppercase tracking-tighter text-foreground">Filters</h2>
+                <button onClick={() => setMobileFilterOpen(false)} className="text-muted-foreground hover:text-foreground transition-colors">
                   <X size={24} />
                 </button>
               </div>

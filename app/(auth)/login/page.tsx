@@ -38,12 +38,12 @@ export default function LoginPage() {
     try {
       const data = await api.post<any>('/auth/login', values)
       login(data.accessToken, data.refreshToken)
-      
+
       toast.success('Welcome back!')
-      
+
       // Redirect based on role or previous page
       if (data.user.role === 'ADMIN') {
-        router.push('/admin/dashboard')
+        router.push('/admin')
       } else {
         router.push(redirect)
       }

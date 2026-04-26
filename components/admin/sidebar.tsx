@@ -44,25 +44,25 @@ export function AdminSidebar({ open, onOpenChange }: AdminSidebarProps) {
 
       <aside
         className={cn(
-          'fixed md:static inset-y-0 left-0 z-50 w-72 bg-black border-r border-white/5 flex flex-col transition-transform duration-500 ease-out',
+          'fixed md:static inset-y-0 left-0 z-50 w-72 bg-card border-r border-border flex flex-col transition-transform duration-500 ease-out',
           open ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         )}
       >
         {/* Sidebar Header */}
-        <div className="h-24 flex items-center justify-between px-8 border-b border-white/5 bg-zinc-950/50">
+        <div className="h-24 flex items-center justify-between px-8 border-b border-border bg-muted/20">
           <Link href="/" className="flex items-center gap-3 group">
             <div className="w-10 h-10 bg-primary flex items-center justify-center relative overflow-hidden">
-               <span className="text-black font-black text-xl relative z-10">C</span>
+               <span className="text-primary-foreground font-black text-xl relative z-10">C</span>
                <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
             </div>
             <div className="flex flex-col">
-              <span className="font-black text-lg tracking-tighter text-white">COCKPIT</span>
+              <span className="font-black text-lg tracking-tighter text-foreground">COCKPIT</span>
               <span className="text-[8px] text-primary font-mono tracking-[0.4em] uppercase">Control Center</span>
             </div>
           </Link>
 
           <button
-            className="md:hidden p-2 text-white/40 hover:text-white transition-colors"
+            className="md:hidden p-2 text-muted-foreground hover:text-foreground transition-colors"
             onClick={() => onOpenChange(false)}
           >
             <X size={20} />
@@ -71,7 +71,7 @@ export function AdminSidebar({ open, onOpenChange }: AdminSidebarProps) {
 
         {/* Navigation */}
         <nav className="flex-1 px-4 py-8 space-y-2 overflow-y-auto scrollbar-hide">
-          <p className="px-4 text-[10px] font-black uppercase tracking-[0.4em] text-white/20 mb-6">Operations</p>
+          <p className="px-4 text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground/40 mb-6">Operations</p>
           {navItems.map((item) => {
             const Icon = item.icon
             const active = isActive(item.href)
@@ -84,7 +84,7 @@ export function AdminSidebar({ open, onOpenChange }: AdminSidebarProps) {
                   'flex items-center gap-4 px-4 py-4 transition-all duration-300 relative group',
                   active 
                     ? 'text-primary bg-primary/5' 
-                    : 'text-white/40 hover:text-white hover:bg-white/5'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
                 )}
               >
                 {active && (
@@ -93,26 +93,26 @@ export function AdminSidebar({ open, onOpenChange }: AdminSidebarProps) {
                     className="absolute left-0 w-1 h-6 bg-primary" 
                   />
                 )}
-                <Icon size={18} className={cn('transition-transform group-hover:scale-110', active ? 'text-primary' : 'text-white/20')} />
+                <Icon size={18} className={cn('transition-transform group-hover:scale-110', active ? 'text-primary' : 'text-muted-foreground/40')} />
                 <span className="font-bold text-[10px] uppercase tracking-widest">{item.label}</span>
               </Link>
             )
           })}
 
           <div className="pt-12">
-             <p className="px-4 text-[10px] font-black uppercase tracking-[0.4em] text-white/20 mb-6">Universe</p>
+             <p className="px-4 text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground/40 mb-6">Universe</p>
              <Link
                 href="/"
-                className="flex items-center gap-4 px-4 py-4 text-white/40 hover:text-white transition-all group"
+                className="flex items-center gap-4 px-4 py-4 text-muted-foreground hover:text-foreground transition-all group"
               >
-                <ExternalLink size={18} className="text-white/20" />
+                <ExternalLink size={18} className="text-muted-foreground/40" />
                 <span className="font-bold text-[10px] uppercase tracking-widest">Live Store</span>
               </Link>
           </div>
         </nav>
 
         {/* Footer */}
-        <div className="p-4 border-t border-white/5 bg-zinc-950/30">
+        <div className="p-4 border-t border-border bg-muted/20">
           <button 
             onClick={logout}
             className="w-full flex items-center gap-4 px-4 py-4 text-red-500/60 hover:text-red-500 transition-all group hover:bg-red-500/5"

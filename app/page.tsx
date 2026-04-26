@@ -98,7 +98,7 @@ function HeroHeadline() {
   ]
   let wordIdx = 0
   return (
-    <h1 className="text-[clamp(3rem,7vw,5rem)] font-black leading-[0.88] tracking-tight text-white">
+    <h1 className="text-[clamp(3rem,7vw,5rem)] font-black leading-[0.88] tracking-tight text-foreground">
       {lines.map((line, li) => (
         <div key={li} className="overflow-hidden">
           <div className="flex flex-wrap gap-x-[0.18em]">
@@ -314,10 +314,10 @@ export default function Home() {
         />
 
         {/* Multi-layer overlay */}
-        <div className="absolute inset-0 bg-black/55" style={{ zIndex: 1 }} />
-        <div className="absolute inset-0 backdrop-blur-[1px]" style={{ zIndex: 1 }} />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/20 to-black/80" style={{ zIndex: 1 }} />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-transparent to-transparent" style={{ zIndex: 1 }} />
+        <div className="absolute inset-0 bg-background/60 dark:bg-black/55" style={{ zIndex: 1 }} />
+        <div className="absolute inset-0 backdrop-blur-[2px]" style={{ zIndex: 1 }} />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/20 dark:via-black/20 to-background/90 dark:to-black/80" style={{ zIndex: 1 }} />
+        <div className="absolute inset-0 bg-gradient-to-r from-background/40 dark:from-black/50 via-transparent to-transparent" style={{ zIndex: 1 }} />
 
         {/* ── Two-column content grid ── */}
         <div className="relative z-10 max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 w-full h-full flex items-center">
@@ -354,7 +354,7 @@ export default function Home() {
                 variants={lineReveal}
                 initial="hidden"
                 animate="visible"
-                className="mt-5 text-base sm:text-lg text-white/70 max-w-lg leading-relaxed font-light"
+                className="mt-5 text-base sm:text-lg text-muted-foreground dark:text-white/70 max-w-lg leading-relaxed font-light"
               >
                 From anime figures to die-cast legends — discover premium pieces that turn any space into a personal gallery.
               </motion.p>
@@ -384,7 +384,7 @@ export default function Home() {
                 <Link
                   href="#categories"
                   id="hero-categories-cta"
-                  className="px-8 py-4 bg-transparent hover:bg-white/10 text-white font-semibold rounded-none border border-white/30 hover:border-white/60 transition-all duration-300 active:scale-95 inline-flex items-center justify-center cursor-interactive text-sm tracking-wider uppercase"
+                  className="px-8 py-4 bg-transparent hover:bg-foreground/5 text-foreground dark:text-white font-semibold rounded-none border border-border dark:border-white/30 hover:border-foreground/20 dark:hover:border-white/60 transition-all duration-300 active:scale-95 inline-flex items-center justify-center cursor-interactive text-sm tracking-wider uppercase"
                 >
                   Browse Categories
                 </Link>
@@ -404,8 +404,8 @@ export default function Home() {
                   { value: '24/7', label: 'Customer Support' },
                 ].map((stat) => (
                   <div key={stat.label} className="space-y-1">
-                    <p className="text-2xl font-black text-white font-mono">{stat.value}</p>
-                    <p className="text-xs text-white/50 uppercase tracking-wider">{stat.label}</p>
+                    <p className="text-2xl font-black text-foreground dark:text-white font-mono">{stat.value}</p>
+                    <p className="text-xs text-muted-foreground dark:text-white/50 uppercase tracking-wider">{stat.label}</p>
                   </div>
                 ))}
               </motion.div>
@@ -437,8 +437,8 @@ export default function Home() {
           aria-label="Scroll down"
           style={{ willChange: 'transform' }}
         >
-          <span className="text-[10px] text-white/40 tracking-[0.3em] uppercase">Scroll</span>
-          <ChevronDown size={18} className="text-white/40" />
+          <span className="text-[10px] text-muted-foreground dark:text-white/40 tracking-[0.3em] uppercase">Scroll</span>
+          <ChevronDown size={18} className="text-muted-foreground dark:text-white/40" />
         </motion.button>
       </section>
 

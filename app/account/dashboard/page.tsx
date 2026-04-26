@@ -93,7 +93,7 @@ export default function AccountDashboardPage() {
   if (authLoading || (loading && !user)) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
-        <motion.div 
+        <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
           className="w-10 h-10 border-2 border-primary border-t-transparent rounded-full"
@@ -109,9 +109,9 @@ export default function AccountDashboardPage() {
   return (
     <div className="min-h-screen bg-black text-white selection:bg-primary selection:text-black">
       <Navbar />
-      
+
       <div className="pt-32 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-24">
-        
+
         {/* Header Section */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-8 mb-16">
           <div className="space-y-4">
@@ -127,15 +127,15 @@ export default function AccountDashboardPage() {
 
           <div className="flex items-center gap-4">
             {isAdmin && (
-              <Link 
-                href="/admin/dashboard" 
+              <Link
+                href="/admin"
                 className="bg-primary/10 text-primary border border-primary/20 px-6 py-3 text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-primary/20 transition-all"
               >
                 <ShieldCheck size={14} />
                 Admin Cockpit
               </Link>
             )}
-            <button 
+            <button
               onClick={logout}
               className="bg-white/5 border border-white/10 px-6 py-3 text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/20 transition-all"
             >
@@ -182,7 +182,7 @@ export default function AccountDashboardPage() {
                   href={action.href}
                   className="group flex items-center gap-6 p-6 bg-zinc-900/30 border border-white/5 hover:border-primary/30 transition-all duration-300"
                 >
-                  <div 
+                  <div
                     className="w-12 h-12 flex items-center justify-center shrink-0 border border-white/5 transition-transform group-hover:scale-110"
                     style={{ backgroundColor: `${action.color}10` }}
                   >
@@ -201,21 +201,21 @@ export default function AccountDashboardPage() {
 
         {/* Recent Activity / Empty State */}
         <div className="bg-zinc-900/50 border border-white/5 p-16 text-center space-y-6">
-           <div className="w-16 h-16 bg-white/5 flex items-center justify-center mx-auto rounded-none border border-white/10">
-              <ShoppingBag size={24} className="text-white/20" />
-           </div>
-           <div className="space-y-2">
-             <h3 className="text-xl font-black uppercase tracking-tight">No Recent Activity</h3>
-             <p className="text-xs text-white/30 max-w-xs mx-auto uppercase tracking-widest leading-loose">
-               Your collection is currently empty. Explore the shop to start your journey.
-             </p>
-           </div>
-           <Link 
-             href="/shop" 
-             className="inline-block bg-primary text-black px-10 py-4 font-black uppercase tracking-[0.2em] text-[10px] hover:scale-105 transition-transform"
-           >
-             Enter the Shop
-           </Link>
+          <div className="w-16 h-16 bg-white/5 flex items-center justify-center mx-auto rounded-none border border-white/10">
+            <ShoppingBag size={24} className="text-white/20" />
+          </div>
+          <div className="space-y-2">
+            <h3 className="text-xl font-black uppercase tracking-tight">No Recent Activity</h3>
+            <p className="text-xs text-white/30 max-w-xs mx-auto uppercase tracking-widest leading-loose">
+              Your collection is currently empty. Explore the shop to start your journey.
+            </p>
+          </div>
+          <Link
+            href="/shop"
+            className="inline-block bg-primary text-black px-10 py-4 font-black uppercase tracking-[0.2em] text-[10px] hover:scale-105 transition-transform"
+          >
+            Enter the Shop
+          </Link>
         </div>
       </div>
     </div>

@@ -49,7 +49,7 @@ export default function AccountPage() {
           initial={{ opacity: 0, x: -40 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className="hidden lg:flex flex-col justify-between w-[40%] px-16 py-20 bg-[#080808] border-r border-border/20 relative overflow-hidden"
+          className="hidden lg:flex flex-col justify-between w-[40%] px-16 py-20 bg-muted/50 border-r border-border relative overflow-hidden"
         >
           <div className="absolute inset-0 opacity-[0.03] pointer-events-none"
             style={{
@@ -62,9 +62,9 @@ export default function AccountPage() {
           <div className="space-y-3 relative z-10">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-primary flex items-center justify-center">
-                <span className="text-black font-black">C</span>
+                <span className="text-primary-foreground font-black">C</span>
               </div>
-              <span className="text-white font-black text-xl tracking-tight">CRAZZZY</span>
+              <span className="text-foreground font-black text-xl tracking-tight">CRAZZZY</span>
             </div>
             <p className="text-xs text-muted-foreground font-mono tracking-[0.2em] uppercase">
               Curated for Your Kind
@@ -72,7 +72,7 @@ export default function AccountPage() {
           </div>
 
           <div className="space-y-6 relative z-10">
-            <h1 className="text-4xl xl:text-5xl font-black text-white leading-tight">
+            <h1 className="text-4xl xl:text-5xl font-black text-foreground leading-tight">
               Your<br />
               <span
                 style={{
@@ -96,8 +96,8 @@ export default function AccountPage() {
                     <Icon size={14} className="text-primary" />
                   </div>
                   <div>
-                    <p className="text-[10px] font-bold text-white uppercase tracking-wider">{label}</p>
-                    <p className="text-[10px] text-white/40 uppercase tracking-tight">{desc}</p>
+                    <p className="text-[10px] font-bold text-foreground uppercase tracking-wider">{label}</p>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-tight">{desc}</p>
                   </div>
                 </div>
               ))}
@@ -126,13 +126,13 @@ export default function AccountPage() {
             
             {/* User Header */}
             <div className="flex items-center gap-6">
-              <div className="w-20 h-20 bg-zinc-900 border border-white/10 rounded-none flex items-center justify-center relative group">
-                <User size={32} className="text-white/20 group-hover:text-primary transition-colors" />
+              <div className="w-20 h-20 bg-muted border border-border rounded-none flex items-center justify-center relative group">
+                <User size={32} className="text-muted-foreground group-hover:text-primary transition-colors" />
                 <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
               <div className="space-y-1">
-                <h2 className="text-3xl font-black text-white uppercase tracking-tighter">{user.name}</h2>
-                <p className="text-xs font-mono text-white/40 uppercase tracking-widest">{user.email}</p>
+                <h2 className="text-3xl font-black text-foreground uppercase tracking-tighter">{user.name}</h2>
+                <p className="text-xs font-mono text-muted-foreground uppercase tracking-widest">{user.email}</p>
               </div>
             </div>
 
@@ -140,58 +140,58 @@ export default function AccountPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Link 
                 href="/account/orders"
-                className="group p-6 bg-zinc-900/30 border border-white/5 hover:border-primary/30 transition-all flex items-center justify-between"
+                className="group p-6 bg-muted/30 border border-border hover:border-primary/30 transition-all flex items-center justify-between"
               >
                 <div className="flex items-center gap-4">
                   <Package className="text-primary" size={20} />
                   <div>
-                    <p className="text-xs font-bold text-white uppercase tracking-widest">My Orders</p>
-                    <p className="text-[10px] text-white/40 uppercase">View order history</p>
+                    <p className="text-xs font-bold text-foreground uppercase tracking-widest">My Orders</p>
+                    <p className="text-[10px] text-muted-foreground uppercase">View order history</p>
                   </div>
                 </div>
-                <ChevronRight size={16} className="text-white/20 group-hover:text-primary group-hover:translate-x-1 transition-all" />
+                <ChevronRight size={16} className="text-muted-foreground/30 group-hover:text-primary group-hover:translate-x-1 transition-all" />
               </Link>
 
               <Link 
                 href="/account/settings"
-                className="group p-6 bg-zinc-900/30 border border-white/5 hover:border-primary/30 transition-all flex items-center justify-between"
+                className="group p-6 bg-muted/30 border border-border hover:border-primary/30 transition-all flex items-center justify-between"
               >
                 <div className="flex items-center gap-4">
                   <Settings className="text-primary" size={20} />
                   <div>
-                    <p className="text-xs font-bold text-white uppercase tracking-widest">Settings</p>
-                    <p className="text-[10px] text-white/40 uppercase">Update preferences</p>
+                    <p className="text-xs font-bold text-foreground uppercase tracking-widest">Settings</p>
+                    <p className="text-[10px] text-muted-foreground uppercase">Update preferences</p>
                   </div>
                 </div>
-                <ChevronRight size={16} className="text-white/20 group-hover:text-primary group-hover:translate-x-1 transition-all" />
+                <ChevronRight size={16} className="text-muted-foreground/30 group-hover:text-primary group-hover:translate-x-1 transition-all" />
               </Link>
             </div>
 
             {/* Profile Details */}
-            <div className="space-y-6 pt-8 border-t border-white/5">
+            <div className="space-y-6 pt-8 border-t border-border">
               <h3 className="text-xs font-black text-primary uppercase tracking-[0.3em]">Profile Details</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-12">
                 <div className="space-y-1">
-                  <p className="text-[10px] font-bold text-white/30 uppercase tracking-widest">Full Name</p>
-                  <p className="text-sm text-white font-medium">{user.name}</p>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Full Name</p>
+                  <p className="text-sm text-foreground font-medium">{user.name}</p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-[10px] font-bold text-white/30 uppercase tracking-widest">Email Address</p>
-                  <p className="text-sm text-white font-medium">{user.email}</p>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Email Address</p>
+                  <p className="text-sm text-foreground font-medium">{user.email}</p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-[10px] font-bold text-white/30 uppercase tracking-widest">Member Since</p>
-                  <p className="text-sm text-white font-medium">{new Date(user.createdAt || Date.now()).toLocaleDateString()}</p>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Member Since</p>
+                  <p className="text-sm text-foreground font-medium">{new Date(user.createdAt || Date.now()).toLocaleDateString()}</p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-[10px] font-bold text-white/30 uppercase tracking-widest">Account Type</p>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Account Type</p>
                   <p className="text-sm text-primary font-bold uppercase tracking-widest">{user.role}</p>
                 </div>
               </div>
             </div>
 
             {/* Mobile Logout */}
-            <div className="lg:hidden pt-8 border-t border-white/5">
+            <div className="lg:hidden pt-8 border-t border-border">
               <button 
                 onClick={logout}
                 className="w-full bg-red-500/10 text-red-500 p-4 text-xs font-black uppercase tracking-widest transition-all active:scale-[0.98]"

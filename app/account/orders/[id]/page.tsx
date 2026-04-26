@@ -63,7 +63,7 @@ export default function OrderDetailsPage() {
 
   if (authLoading || (loading && !order)) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="w-10 h-10 border-2 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     )
@@ -71,8 +71,8 @@ export default function OrderDetailsPage() {
 
   if (!order) {
     return (
-      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-4">
-        <h1 className="text-2xl font-black uppercase mb-4">Order Not Found</h1>
+      <div className="min-h-screen bg-background text-foreground flex flex-col items-center justify-center p-4">
+        <h1 className="text-2xl font-black uppercase mb-4 text-foreground">Order Not Found</h1>
         <Link href="/account/orders" className="text-primary hover:underline uppercase text-[10px] font-bold tracking-widest">
           Back to Orders
         </Link>
@@ -83,7 +83,7 @@ export default function OrderDetailsPage() {
   const status = STATUS_MAP[order.status] || STATUS_MAP.PENDING
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-background text-foreground">
       <Navbar />
       
       <div className="pt-32 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-24">
@@ -91,7 +91,7 @@ export default function OrderDetailsPage() {
         {/* Navigation */}
         <Link 
           href="/account/orders" 
-          className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-white/40 hover:text-primary transition-colors mb-12"
+          className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground hover:text-foreground transition-colors mb-12"
         >
           <ChevronLeft size={14} />
           Return to Orders
@@ -105,7 +105,7 @@ export default function OrderDetailsPage() {
             {/* Header */}
             <div className="space-y-6">
               <div className="flex flex-wrap items-center gap-4">
-                <h1 className="text-4xl font-black uppercase tracking-tighter">
+                <h1 className="text-4xl font-black uppercase tracking-tighter text-foreground">
                   Order #{order.id.toString().padStart(6, '0')}
                 </h1>
                 <div className={`flex items-center gap-2 px-4 py-1.5 ${status.bg} ${status.color} border border-current/20 rounded-full`}>
@@ -113,19 +113,19 @@ export default function OrderDetailsPage() {
                   <span className="text-[10px] font-black uppercase tracking-widest">{status.label}</span>
                 </div>
               </div>
-              <p className="text-white/30 text-[10px] font-mono uppercase tracking-[0.3em]">
+              <p className="text-muted-foreground text-[10px] font-mono uppercase tracking-[0.3em]">
                 Placed on {new Date(order.createdAt).toLocaleDateString()} at {new Date(order.createdAt).toLocaleTimeString()}
               </p>
             </div>
 
             {/* Items List */}
             <div className="space-y-4">
-              <h2 className="text-xs font-black uppercase tracking-widest text-white/40 border-b border-white/5 pb-4">
+              <h2 className="text-xs font-black uppercase tracking-widest text-muted-foreground border-b border-border pb-4">
                 Shipment Contents
               </h2>
               <div className="space-y-4">
                 {order.items.map((item: any) => (
-                  <div key={item.id} className="flex gap-6 p-6 bg-zinc-900/30 border border-white/5 group hover:border-white/10 transition-colors">
+                  <div key={item.id} className="flex gap-6 p-6 bg-muted/30 border border-border group hover:border-foreground/20 transition-colors">
                     <div className="relative w-24 h-24 bg-white border border-black/5 shrink-0 p-4">
                       <Image 
                         src={item.product?.imageUrl || '/placeholder.jpg'} 
@@ -136,16 +136,16 @@ export default function OrderDetailsPage() {
                     </div>
                     <div className="flex-1 flex flex-col justify-between py-1">
                       <div>
-                        <h3 className="text-sm font-black uppercase tracking-tight">{item.product?.title}</h3>
-                        <p className="text-[10px] text-white/40 mt-1 uppercase tracking-widest">Qty: {item.quantity}</p>
+                        <h3 className="text-sm font-black uppercase tracking-tight text-foreground">{item.product?.title}</h3>
+                        <p className="text-[10px] text-muted-foreground mt-1 uppercase tracking-widest">Qty: {item.quantity}</p>
                       </div>
                       <p className="text-sm font-bold font-mono">₹{parseFloat(item.price).toLocaleString('en-IN')}</p>
                     </div>
                     <Link 
-                      href={`/shop`} // Simplified for now
-                      className="self-center p-3 hover:bg-white/5 rounded-full transition-colors text-white/20 hover:text-primary"
+                      href={`/shop`}
+                      className="self-center p-3 hover:bg-muted rounded-full transition-colors text-muted-foreground/30 hover:text-primary"
                     >
-                      <ExternalLink size={18} />
+                      <ChevronRight size={16} className="text-muted-foreground/30 group-hover:text-primary group-hover:translate-x-1 transition-all" />
                     </Link>
                   </div>
                 ))}
@@ -161,11 +161,11 @@ export default function OrderDetailsPage() {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div>
-                    <p className="text-[10px] text-white/40 uppercase tracking-widest mb-1">Carrier</p>
-                    <p className="text-sm font-bold uppercase tracking-widest">{order.courierName || 'BlueDart'}</p>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest mb-1">Carrier</p>
+                    <p className="text-sm font-bold uppercase tracking-widest text-foreground">{order.courierName || 'BlueDart'}</p>
                   </div>
                   <div>
-                    <p className="text-[10px] text-white/40 uppercase tracking-widest mb-1">Tracking ID</p>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest mb-1">Tracking ID</p>
                     <p className="text-sm font-bold font-mono text-primary">{order.trackingNumber}</p>
                   </div>
                 </div>
@@ -177,57 +177,57 @@ export default function OrderDetailsPage() {
           <div className="lg:col-span-4 space-y-8">
             
             {/* Delivery Details */}
-            <div className="bg-zinc-900/50 border border-white/5 p-8 space-y-8">
+            <div className="bg-muted/50 border border-border p-8 space-y-8">
               <div className="space-y-6">
                 <div className="flex items-start gap-4">
                   <MapPin className="text-primary shrink-0 mt-1" size={18} />
                   <div className="space-y-2">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-white/40">Shipping Destination</p>
-                    <p className="text-xs font-bold leading-relaxed">{order.shippingAddress}</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Shipping Destination</p>
+                    <p className="text-xs font-bold leading-relaxed text-foreground">{order.shippingAddress}</p>
                   </div>
                 </div>
                 
-                <div className="flex items-start gap-4 pt-6 border-t border-white/5">
+                <div className="flex items-start gap-4 pt-6 border-t border-border">
                   <Phone className="text-primary shrink-0 mt-1" size={18} />
                   <div className="space-y-2">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-white/40">Contact Number</p>
-                    <p className="text-xs font-bold font-mono">+91 {order.phoneNumber}</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Contact Number</p>
+                    <p className="text-xs font-bold font-mono text-foreground">+91 {order.phoneNumber}</p>
                   </div>
                 </div>
 
-                <div className="flex items-start gap-4 pt-6 border-t border-white/5">
+                <div className="flex items-start gap-4 pt-6 border-t border-border">
                   <CreditCard className="text-primary shrink-0 mt-1" size={18} />
                   <div className="space-y-2">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-white/40">Payment Metadata</p>
-                    <p className="text-[10px] text-white/60 font-mono break-all">{order.paymentId}</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Payment Metadata</p>
+                    <p className="text-[10px] text-muted-foreground/60 font-mono break-all">{order.paymentId}</p>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Financial Summary */}
-            <div className="bg-zinc-900/80 border border-primary/20 p-8 space-y-6">
+            <div className="bg-muted/80 border border-primary/20 p-8 space-y-6">
               <h3 className="text-xs font-black uppercase tracking-[0.2em] text-primary">Financial Summary</h3>
               
-              <div className="space-y-4 border-b border-white/10 pb-6">
-                <div className="flex justify-between text-[10px] uppercase tracking-widest">
-                  <span className="text-white/40">Subtotal</span>
+              <div className="space-y-4 border-b border-border pb-6">
+                <div className="flex justify-between text-[10px] uppercase tracking-widest text-foreground">
+                  <span className="text-muted-foreground">Subtotal</span>
                   <span className="font-mono">₹{parseFloat(order.totalAmount).toLocaleString('en-IN')}</span>
                 </div>
-                <div className="flex justify-between text-[10px] uppercase tracking-widest">
-                  <span className="text-white/40">Shipping</span>
+                <div className="flex justify-between text-[10px] uppercase tracking-widest text-foreground">
+                  <span className="text-muted-foreground">Shipping</span>
                   <span className="text-emerald-500">FREE</span>
                 </div>
                 {parseFloat(order.discountApplied) > 0 && (
-                  <div className="flex justify-between text-[10px] uppercase tracking-widest">
-                    <span className="text-white/40">Discount</span>
+                  <div className="flex justify-between text-[10px] uppercase tracking-widest text-foreground">
+                    <span className="text-muted-foreground">Discount</span>
                     <span className="text-red-400">-₹{parseFloat(order.discountApplied).toLocaleString('en-IN')}</span>
                   </div>
                 )}
               </div>
 
               <div className="flex justify-between items-end">
-                <span className="text-xs font-black uppercase tracking-widest">Grand Total</span>
+                <span className="text-xs font-black uppercase tracking-widest text-foreground">Grand Total</span>
                 <span className="text-2xl font-black font-mono text-primary">₹{parseFloat(order.totalAmount).toLocaleString('en-IN')}</span>
               </div>
             </div>

@@ -51,14 +51,14 @@ export default function OrdersPage() {
 
   if (authLoading || (loading && !user)) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="w-10 h-10 border-2 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-background text-foreground">
       <Navbar />
       
       <div className="pt-32 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-24">
@@ -66,15 +66,15 @@ export default function OrdersPage() {
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-8 mb-16">
           <div className="space-y-4">
-            <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] text-white/40 mb-4">
-              <Link href="/account/dashboard" className="hover:text-primary transition-colors">Dashboard</Link>
+            <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-4">
+              <Link href="/account" className="hover:text-primary transition-colors">Dashboard</Link>
               <ChevronRight size={10} />
-              <span className="text-white">Orders</span>
+              <span className="text-foreground">Orders</span>
             </div>
-            <h1 className="text-5xl font-black uppercase tracking-tighter leading-none">
+            <h1 className="text-5xl font-black uppercase tracking-tighter leading-none text-foreground">
               MY ORDERS
             </h1>
-            <p className="text-white/40 text-[10px] font-mono uppercase tracking-widest">Tracking {orders.length} deployments</p>
+            <p className="text-muted-foreground text-[10px] font-mono uppercase tracking-widest">Tracking {orders.length} deployments</p>
           </div>
           
           <div className="flex items-center gap-3 w-full md:w-auto">
@@ -83,7 +83,7 @@ export default function OrdersPage() {
               <input 
                 type="text" 
                 placeholder="Find Order ID..."
-                className="w-full bg-zinc-900 border border-white/5 px-10 py-3 text-[10px] font-black uppercase tracking-widest focus:outline-none focus:border-primary/30"
+                className="w-full bg-muted border border-border px-10 py-3 text-[10px] font-black uppercase tracking-widest focus:outline-none focus:border-primary/30 text-foreground"
               />
             </div>
           </div>
@@ -99,7 +99,7 @@ export default function OrdersPage() {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: i * 0.1 }}
-                className="group bg-zinc-900/30 border border-white/5 hover:border-primary/20 transition-all duration-300 overflow-hidden"
+                className="group bg-muted/30 border border-border hover:border-primary/20 transition-all duration-300 overflow-hidden"
               >
                 <Link href={`/account/orders/${order.id}`} className="block p-8">
                   <div className="flex flex-col md:flex-row justify-between gap-8 items-start md:items-center">
@@ -110,9 +110,9 @@ export default function OrdersPage() {
                          <Package className="text-primary/40 group-hover:text-primary transition-colors" size={24} />
                       </div>
                       <div className="space-y-1">
-                        <p className="text-[10px] text-white/30 uppercase tracking-widest">Order ID</p>
-                        <p className="text-sm font-black uppercase tracking-widest">#{order.id.toString().padStart(6, '0')}</p>
-                        <p className="text-[10px] text-white/20 uppercase tracking-widest font-light">{new Date(order.createdAt).toLocaleDateString()}</p>
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Order ID</p>
+                        <p className="text-sm font-black uppercase tracking-widest text-foreground">#{order.id.toString().padStart(6, '0')}</p>
+                        <p className="text-[10px] text-muted-foreground/60 uppercase tracking-widest font-light">{new Date(order.createdAt).toLocaleDateString()}</p>
                       </div>
                     </div>
 
@@ -122,7 +122,7 @@ export default function OrdersPage() {
                         <status.icon size={14} />
                         <span className="text-[10px] font-black uppercase tracking-widest">{status.label}</span>
                       </div>
-                      <p className="text-xl font-black font-mono">₹{parseFloat(order.totalAmount).toLocaleString('en-IN')}</p>
+                      <p className="text-xl font-black font-mono text-foreground">₹{parseFloat(order.totalAmount).toLocaleString('en-IN')}</p>
                     </div>
 
                     <div className="hidden md:block">
@@ -133,17 +133,17 @@ export default function OrdersPage() {
               </motion.div>
             )
           }) : (
-            <div className="py-32 text-center border border-dashed border-white/10 bg-zinc-900/10">
-              <div className="w-16 h-16 bg-white/5 flex items-center justify-center mx-auto mb-6">
-                <ShoppingBag className="text-white/20" size={24} />
+            <div className="py-32 text-center border border-dashed border-border bg-muted/10">
+              <div className="w-16 h-16 bg-muted flex items-center justify-center mx-auto mb-6">
+                <ShoppingBag className="text-muted-foreground/20" size={24} />
               </div>
-              <h3 className="text-xl font-black uppercase tracking-tight mb-2">No Deployments Found</h3>
-              <p className="text-[10px] text-white/30 uppercase tracking-[0.2em] max-w-xs mx-auto leading-loose mb-8">
+              <h3 className="text-xl font-black uppercase tracking-tight mb-2 text-foreground">No Deployments Found</h3>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-[0.2em] max-w-xs mx-auto leading-loose mb-8">
                 Your mission record is currently clear.
               </p>
               <Link 
                 href="/shop" 
-                className="inline-block bg-primary text-black px-8 py-3 font-black uppercase tracking-widest text-[10px] hover:scale-105 transition-transform"
+                className="inline-block bg-primary text-primary-foreground px-8 py-3 font-black uppercase tracking-widest text-[10px] hover:scale-105 transition-transform"
               >
                 Initiate Mission
               </Link>

@@ -120,7 +120,7 @@ export function ProductForm({ productId }: { productId?: string }) {
       {/* Main Stats */}
       <div className="lg:col-span-2 space-y-8">
         <div className="bg-zinc-900/30 border border-white/5 p-8 space-y-8">
-          <div className="flex items-center gap-4 border-b border-white/5 pb-6">
+          <div className="flex items-center gap-4 border-b border-border pb-6">
              <div className="w-10 h-10 bg-primary/10 border border-primary/20 flex items-center justify-center">
                 <Info size={20} className="text-primary" />
              </div>
@@ -139,7 +139,7 @@ export function ProductForm({ productId }: { productId?: string }) {
                 onChange={handleInputChange}
                 required
                 placeholder="ARTIFACT NAME"
-                className="w-full bg-black border border-white/5 px-6 py-4 text-xs font-black uppercase tracking-widest focus:border-primary/40 transition-all outline-none"
+                className="w-full bg-background border border-border px-6 py-4 text-xs font-black uppercase tracking-widest focus:border-primary/40 transition-all outline-none text-foreground placeholder:text-muted-foreground/30"
               />
             </div>
 
@@ -151,34 +151,34 @@ export function ProductForm({ productId }: { productId?: string }) {
                 onChange={handleInputChange}
                 rows={5}
                 placeholder="DETAILED ARTIFACT RECONNAISSANCE..."
-                className="w-full bg-black border border-white/5 px-6 py-4 text-xs font-bold uppercase tracking-widest focus:border-primary/40 transition-all outline-none resize-none"
+                className="w-full bg-background border border-border px-6 py-4 text-xs font-bold uppercase tracking-widest focus:border-primary/40 transition-all outline-none resize-none text-foreground placeholder:text-muted-foreground/30"
               />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40 pl-1">Registry SKU</label>
+                <label className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground pl-1">Registry SKU</label>
                 <input
                   name="sku"
                   value={formData.sku}
                   onChange={handleInputChange}
                   required
                   placeholder="X-999-UNIT"
-                  className="w-full bg-black border border-white/5 px-6 py-4 text-xs font-mono font-bold uppercase tracking-widest focus:border-primary/40 transition-all outline-none"
+                  className="w-full bg-background border border-border px-6 py-4 text-xs font-mono font-bold uppercase tracking-widest focus:border-primary/40 transition-all outline-none text-foreground placeholder:text-muted-foreground/30"
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40 pl-1">Sector Class</label>
+                <label className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground pl-1">Sector Class</label>
                 <select
                   name="categoryId"
                   value={formData.categoryId}
                   onChange={handleInputChange}
                   required
-                  className="w-full bg-black border border-white/5 px-6 py-4 text-xs font-black uppercase tracking-widest focus:border-primary/40 transition-all outline-none appearance-none"
+                  className="w-full bg-background border border-border px-6 py-4 text-xs font-black uppercase tracking-widest focus:border-primary/40 transition-all outline-none appearance-none text-foreground"
                 >
                   <option value="">Select Sector</option>
                   {categories.map(main => (
-                    <optgroup key={main.id} label={main.name.toUpperCase()} className="bg-zinc-900 text-white font-black">
+                    <optgroup key={main.id} label={main.name.toUpperCase()} className="bg-background text-foreground font-black">
                       <option value={main.id}>{main.name} (MAIN)</option>
                       {main.subcategories?.map(sub => (
                         <option key={sub.id} value={sub.id}>
@@ -195,7 +195,7 @@ export function ProductForm({ productId }: { productId?: string }) {
 
         {/* Financials & Inventory */}
         <div className="bg-zinc-900/30 border border-white/5 p-8 space-y-8">
-           <div className="flex items-center gap-4 border-b border-white/5 pb-6">
+           <div className="flex items-center gap-4 border-b border-border pb-6">
              <div className="w-10 h-10 bg-primary/10 border border-primary/20 flex items-center justify-center">
                 <Package size={20} className="text-primary" />
              </div>
@@ -216,7 +216,7 @@ export function ProductForm({ productId }: { productId?: string }) {
                   value={formData.price}
                   onChange={handleInputChange}
                   required
-                  className="w-full bg-black border border-white/5 pl-12 pr-6 py-4 text-xs font-mono font-bold focus:border-primary/40 transition-all outline-none"
+                  className="w-full bg-background border border-border pl-12 pr-6 py-4 text-xs font-mono font-bold focus:border-primary/40 transition-all outline-none text-foreground"
                 />
               </div>
             </div>
@@ -229,7 +229,7 @@ export function ProductForm({ productId }: { productId?: string }) {
                   type="number"
                   value={formData.originalPrice}
                   onChange={handleInputChange}
-                  className="w-full bg-black border border-white/5 pl-12 pr-6 py-4 text-xs font-mono font-bold focus:border-primary/40 transition-all outline-none"
+                  className="w-full bg-background border border-border pl-12 pr-6 py-4 text-xs font-mono font-bold focus:border-primary/40 transition-all outline-none text-foreground"
                 />
               </div>
             </div>
@@ -241,7 +241,7 @@ export function ProductForm({ productId }: { productId?: string }) {
                 value={formData.stock}
                 onChange={handleInputChange}
                 required
-                className="w-full bg-black border border-white/5 px-6 py-4 text-xs font-mono font-bold focus:border-primary/40 transition-all outline-none"
+                className="w-full bg-background border border-border px-6 py-4 text-xs font-mono font-bold focus:border-primary/40 transition-all outline-none text-foreground"
               />
             </div>
           </div>
@@ -251,7 +251,7 @@ export function ProductForm({ productId }: { productId?: string }) {
       {/* Sidebar: Visuals */}
       <div className="space-y-8">
         <div className="bg-zinc-900/30 border border-white/5 p-8 space-y-6">
-          <div className="flex items-center gap-4 border-b border-white/5 pb-6">
+          <div className="flex items-center gap-4 border-b border-border pb-6">
              <div className="w-10 h-10 bg-primary/10 border border-primary/20 flex items-center justify-center">
                 <Upload size={20} className="text-primary" />
              </div>
@@ -261,9 +261,9 @@ export function ProductForm({ productId }: { productId?: string }) {
              </div>
           </div>
 
-          <div className="aspect-square border-2 border-dashed border-white/5 bg-black flex flex-col items-center justify-center group hover:border-primary/20 transition-all cursor-pointer">
-            <Upload className="text-white/10 group-hover:text-primary transition-colors mb-4" size={32} />
-            <p className="text-[10px] font-black uppercase tracking-widest text-white/20 group-hover:text-white transition-colors">Initialize Upload</p>
+          <div className="aspect-square border-2 border-dashed border-border bg-muted/20 flex flex-col items-center justify-center group hover:border-primary/20 transition-all cursor-pointer">
+            <Upload className="text-muted-foreground/20 group-hover:text-primary transition-colors mb-4" size={32} />
+            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/30 group-hover:text-foreground transition-colors">Initialize Upload</p>
           </div>
 
           <div className="grid grid-cols-4 gap-2">
@@ -281,7 +281,7 @@ export function ProductForm({ productId }: { productId?: string }) {
         <button 
           type="submit"
           disabled={submitting}
-          className="w-full bg-primary py-6 text-black font-black uppercase tracking-[0.4em] hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 disabled:scale-100"
+          className="w-full bg-primary py-6 text-primary-foreground font-black uppercase tracking-[0.4em] hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 disabled:scale-100"
         >
           {submitting ? (
             <div className="flex items-center justify-center gap-3">

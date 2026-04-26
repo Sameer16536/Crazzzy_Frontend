@@ -18,6 +18,7 @@ interface AuthContextType {
   login: (accessToken: string, refreshToken: string) => void;
   logout: () => void;
   checkAdmin: () => boolean;
+  fetchProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -67,7 +68,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const checkAdmin = () => user?.role === 'ADMIN';
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, checkAdmin }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, checkAdmin, fetchProfile }}>
       {children}
     </AuthContext.Provider>
   );

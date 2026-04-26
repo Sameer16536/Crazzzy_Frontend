@@ -2,13 +2,15 @@
 
 import { useAuth } from '@/lib/auth/auth-context'
 import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Navbar } from '@/components/navbar'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { ShoppingBag, Star, Truck, Shield, User, LogOut, Package, Settings, ChevronRight, Heart } from 'lucide-react'
+import { ShoppingBag, Star, Truck, Shield, User, LogOut, Package, Settings, ChevronRight, Heart, Pencil } from 'lucide-react'
 import { useCatalog } from '@/lib/catalog/catalog-context'
 import { ProductCard } from '@/components/product-card'
+import { toast } from 'sonner'
+import { api } from '@/lib/api-client'
 
 /** Store value propositions shown in the left branding panel */
 const STORE_VALUES = [
@@ -19,10 +21,14 @@ const STORE_VALUES = [
 ]
 
 export default function AccountPage() {
-  const { user, loading, logout } = useAuth()
+  const { user, loading, logout, fetchProfile } = useAuth()
   const { data, wishlistIds } = useCatalog()
   const router = useRouter()
   
+  const [editingField, setEditingField] = useState<string | null>(null)
+  const [editValue, setEditValue] = useState('')
+  const [isSaving, setIsSaving] = useState(false)
+
   const wishlistedProducts = data?.products.filter(p => wishlistIds.has(String(p.id))) || []
 
   /** If user is NOT signed in, send them to login */
@@ -31,6 +37,31 @@ export default function AccountPage() {
       router.replace('/login?redirect=/account')
     }
   }, [loading, user, router])
+
+  const handleEditClick = (field: string, currentValue: string) => {
+    setEditingField(field)
+    setEditValue(currentValue || '')
+  }
+
+  const handleSave = async () => {
+    if (!editingField || !editValue.trim() || isSaving) return
+    setIsSaving(true)
+    try {
+      await api.patch('/auth/me', { [editingField]: editValue.trim() })
+      await fetchProfile()
+      toast.success('Profile updated successfully')
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to update profile')
+    } finally {
+      setIsSaving(false)
+      setEditingField(null)
+    }
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') handleSave()
+    if (e.key === 'Escape') setEditingField(null)
+  }
 
   if (loading) {
     return (
@@ -118,22 +149,80 @@ export default function AccountPage() {
               <h3 className="text-[10px] font-black text-primary uppercase tracking-[0.4em]">Profile Details</h3>
               <div className="h-[1px] flex-1 bg-border" />
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-              <div className="space-y-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 lg:gap-8">
+              <div className="space-y-1 min-w-0">
                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Full Name</p>
-                <p className="text-sm text-foreground font-bold uppercase">{user.name}</p>
+                {editingField === 'name' ? (
+                  <input
+                    autoFocus
+                    value={editValue}
+                    onChange={(e) => setEditValue(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    onBlur={handleSave}
+                    disabled={isSaving}
+                    className="w-full bg-transparent border-b border-primary text-sm text-foreground font-bold uppercase focus:outline-none"
+                  />
+                ) : (
+                  <p 
+                    onClick={() => handleEditClick('name', user.name)}
+                    className="text-sm text-foreground font-bold uppercase truncate cursor-pointer group flex items-center gap-2 hover:text-primary transition-colors"
+                  >
+                    {user.name} <Pencil size={12} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </p>
+                )}
               </div>
-              <div className="space-y-1">
+              <div className="space-y-1 min-w-0">
                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Email Address</p>
-                <p className="text-sm text-foreground font-bold uppercase">{user.email}</p>
+                {editingField === 'email' ? (
+                  <input
+                    autoFocus
+                    value={editValue}
+                    onChange={(e) => setEditValue(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    onBlur={handleSave}
+                    disabled={isSaving}
+                    className="w-full bg-transparent border-b border-primary text-sm text-foreground font-bold uppercase focus:outline-none"
+                  />
+                ) : (
+                  <p 
+                    onClick={() => handleEditClick('email', user.email)}
+                    className="text-sm text-foreground font-bold uppercase break-all cursor-pointer group flex items-start gap-2 hover:text-primary transition-colors"
+                  >
+                    {user.email} <Pencil size={12} className="opacity-0 group-hover:opacity-100 transition-opacity mt-1 shrink-0" />
+                  </p>
+                )}
               </div>
-              <div className="space-y-1">
+              <div className="space-y-1 min-w-0">
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Phone Number</p>
+                {editingField === 'phone' ? (
+                  <input
+                    autoFocus
+                    value={editValue}
+                    onChange={(e) => setEditValue(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    onBlur={handleSave}
+                    disabled={isSaving}
+                    placeholder="10-digit number"
+                    className="w-full bg-transparent border-b border-primary text-sm text-foreground font-bold uppercase focus:outline-none"
+                  />
+                ) : (
+                  <p 
+                    // @ts-ignore
+                    onClick={() => handleEditClick('phone', user.phone || '')}
+                    className="text-sm text-foreground font-bold uppercase truncate cursor-pointer group flex items-center gap-2 hover:text-primary transition-colors"
+                  >
+                    {/* @ts-ignore */}
+                    {user.phone || 'Not Provided'} <Pencil size={12} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </p>
+                )}
+              </div>
+              <div className="space-y-1 min-w-0">
                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Member Since</p>
-                <p className="text-sm text-foreground font-bold uppercase">{new Date(user.createdAt || Date.now()).toLocaleDateString()}</p>
+                <p className="text-sm text-foreground font-bold uppercase truncate">{new Date(user.createdAt || Date.now()).toLocaleDateString()}</p>
               </div>
-              <div className="space-y-1">
+              <div className="space-y-1 min-w-0">
                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Account Type</p>
-                <p className="text-sm text-primary font-black uppercase tracking-widest">{user.role}</p>
+                <p className="text-sm text-primary font-black uppercase tracking-widest truncate">{user.role}</p>
               </div>
             </div>
           </div>

@@ -28,6 +28,15 @@ export default function CheckoutPage() {
   const [phoneNumber, setPhoneNumber] = useState('')
   const [phoneError, setPhoneError] = useState('')
 
+  // Prefill phone number from user profile if available
+  useEffect(() => {
+    // @ts-ignore
+    if (user?.phone && !phoneNumber) {
+      // @ts-ignore
+      setPhoneNumber(user.phone)
+    }
+  }, [user])
+
   const [newAddress, setNewAddress] = useState({
     label: 'Home',
     street: '',

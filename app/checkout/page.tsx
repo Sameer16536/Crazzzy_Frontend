@@ -162,9 +162,12 @@ export default function CheckoutPage() {
               razorpay_signature: response.razorpay_signature,
               orderId,
             })
+            console.log('Payment verified, redirecting to success page...', orderId)
             toast.success('🎉 Payment successful! Your order is confirmed.')
             dispatch(clearCart())
-            router.push(`/checkout/success/${orderId}`)
+            
+            // Using window.location for a hard redirect to ensure the new route is loaded correctly
+            window.location.href = `/checkout/success/${orderId}`
           } catch (err: any) {
             toast.error(err.message || 'Payment verification failed. Contact support.')
           }
@@ -425,8 +428,8 @@ export default function CheckoutPage() {
 
           {/* ── Right: Order Summary ──────────────────────────────────── */}
           <div className="lg:col-span-4">
-            <div className="bg-neutral-900/50 backdrop-blur-md border border-white/5 p-8 sticky top-24 space-y-10">
-              <h3 className="font-black uppercase tracking-[0.2em] text-xs border-b border-white/10 pb-6 text-foreground">Order Summary</h3>
+            <div className="bg-card/80 dark:bg-neutral-900/80 backdrop-blur-md border border-border/50 p-8 sticky top-24 space-y-10 shadow-2xl shadow-black/5">
+              <h3 className="font-black uppercase tracking-[0.2em] text-xs border-b border-border/50 pb-6 text-foreground">Order Summary</h3>
 
               <div className="space-y-4 max-h-60 overflow-y-auto">
                 {items.map((item) => (
@@ -445,7 +448,7 @@ export default function CheckoutPage() {
                 ))}
               </div>
 
-              <div className="space-y-5 pt-4 border-t border-white/10">
+              <div className="space-y-5 pt-4 border-t border-border/50">
                 <div className="flex justify-between text-xs text-muted-foreground">
                   <span className="uppercase tracking-widest font-bold">Subtotal</span>
                   <span className="font-mono text-foreground font-bold">₹{subtotal.toLocaleString('en-IN')}</span>
@@ -459,7 +462,7 @@ export default function CheckoutPage() {
                 {shipping > 0 && (
                   <p className="text-[10px] text-muted-foreground/40 uppercase tracking-wider">Free shipping on orders ₹1,999+</p>
                 )}
-                <div className="flex justify-between text-xl font-black border-t border-white/10 pt-6">
+                <div className="flex justify-between text-xl font-black border-t border-border/50 pt-6">
                   <span className="uppercase tracking-normal text-foreground">Total</span>
                   <span className="text-primary font-mono">₹{total.toLocaleString('en-IN')}</span>
                 </div>

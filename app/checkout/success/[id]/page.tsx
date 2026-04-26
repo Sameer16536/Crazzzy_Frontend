@@ -87,7 +87,7 @@ export default function OrderSuccessPage() {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.4 }}
-            className="bg-neutral-900/50 backdrop-blur-md border border-white/5 p-8 space-y-8"
+            className="bg-card/80 dark:bg-neutral-900/80 backdrop-blur-md border border-border/50 p-8 space-y-8 shadow-2xl shadow-black/5"
           >
              <div className="flex items-start gap-4">
                 <div className="w-10 h-10 bg-primary/10 flex items-center justify-center shrink-0">

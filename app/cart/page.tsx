@@ -149,7 +149,7 @@ export default function CartPage() {
                 </Link>
                 <Link 
                   href="/shop" 
-                  className="w-full py-2 text-muted-foreground/40 hover:text-white font-black uppercase tracking-[0.2em] text-[10px] transition-all flex items-center justify-center group"
+                  className="w-full py-2 text-muted-foreground/40 hover:text-primary font-black uppercase tracking-[0.2em] text-[10px] transition-all flex items-center justify-center group"
                 >
                   <span className="group-hover:scale-105 transition-transform">Continue Shopping</span>
                 </Link>

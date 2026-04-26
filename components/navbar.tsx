@@ -76,26 +76,26 @@ export function Navbar() {
                             <NavigationMenuLink asChild>
                               <Link
                                 href={`/shop?category=${c.slug}`}
-                                className="group block space-y-1"
+                                className="group/item block space-y-3 p-5 hover:bg-primary transition-all duration-500 rounded-none border border-transparent hover:border-primary/20 shadow-none hover:shadow-xl hover:shadow-primary/5"
                               >
-                                <div className="text-xs font-black text-primary uppercase tracking-widest flex items-center gap-2">
+                                <div className="text-[11px] font-black text-primary group-hover/item:text-black uppercase tracking-[0.2em] flex items-center gap-2 transition-colors">
                                   {c.name}
-                                  <ChevronRight size={10} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                                  <ChevronRight size={12} className="opacity-0 group-hover/item:opacity-100 group-hover/item:translate-x-1 transition-all" />
                                 </div>
-                                <div className="text-[10px] text-muted-foreground line-clamp-1 uppercase tracking-tight">
+                                <div className="text-[10px] text-muted-foreground/90 group-hover/item:text-black/80 line-clamp-2 uppercase tracking-tight transition-colors leading-relaxed">
                                   {c.description}
                                 </div>
                               </Link>
                             </NavigationMenuLink>
 
-                            {/* Sub-categories preview */}
-                            {subs.length > 0 && (
-                              <div className="flex flex-wrap gap-x-3 gap-y-1">
+                             {/* Sub-categories preview */}
+                             {subs.length > 0 && (
+                              <div className="flex flex-wrap gap-x-4 gap-y-2 px-1">
                                 {subs.map(sub => (
                                   <Link
                                     key={sub.id}
                                     href={`/shop?category=${sub.slug}`}
-                                    className="text-[9px] font-bold text-muted-foreground/60 hover:text-primary uppercase transition-colors"
+                                    className="text-[9px] font-black text-muted-foreground hover:text-primary uppercase transition-colors tracking-widest"
                                   >
                                     {sub.name}
                                   </Link>

@@ -6,6 +6,8 @@
 'use client'
 
 import Link from 'next/link'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { Search, ShoppingCart, Menu, LayoutDashboard, LogOut, User as UserIcon, ShieldCheck, ChevronRight } from 'lucide-react'
 import { useCatalog } from '@/lib/catalog/use-catalog'
 import { useAppSelector } from '@/lib/store/hooks'
@@ -31,13 +33,53 @@ import {
   NavigationMenuTrigger,
 } from '@/components/ui/navigation-menu'
 import { cn } from '@/lib/utils'
+import { AnimatePresence, motion } from 'framer-motion'
+import { X } from 'lucide-react'
 
 export function Navbar() {
-  const { rootCategories, getSubcategories } = useCatalog()
+  const { rootCategories, getSubcategories, data } = useCatalog()
   const cartCount = useAppSelector((s) => s.cart.items.reduce((sum, i) => sum + i.quantity, 0))
   const { user, loading, logout, checkAdmin } = useAuth()
+  const router = useRouter()
 
   const isAdmin = checkAdmin()
+
+  const [searchOpen, setSearchOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+
+  useEffect(() => {
+    const down = (e: KeyboardEvent) => {
+      if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault()
+        setSearchOpen((open) => {
+          if (!open) setTimeout(() => document.getElementById('mega-search-input')?.focus(), 100)
+          return !open
+        })
+      }
+      if (e.key === 'Escape' && searchOpen) {
+        setSearchOpen(false)
+      }
+    }
+    document.addEventListener('keydown', down)
+    return () => document.removeEventListener('keydown', down)
+  }, [searchOpen])
+
+  // Compute live search results for the dropdown
+  const searchResults = data?.products 
+    ? data.products.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase())).slice(0, 3)
+    : []
+
+  const suggestedCategories = rootCategories
+    .filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    .slice(0, 3)
+
+  const handleSearchSubmit = (e?: React.FormEvent) => {
+    e?.preventDefault()
+    if (searchQuery.trim()) {
+      setSearchOpen(false)
+      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`)
+    }
+  }
 
   return (
     <nav className="fixed top-0 w-full z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border/10">
@@ -135,10 +177,20 @@ export function Navbar() {
 
             <button
               id="navbar-search"
-              className="p-2 hover:bg-muted rounded-lg transition-colors text-foreground"
+              onClick={() => {
+                setSearchOpen(!searchOpen)
+                if (!searchOpen) setTimeout(() => document.getElementById('mega-search-input')?.focus(), 100)
+              }}
+              className={cn(
+                "p-2 rounded-lg transition-colors text-foreground flex items-center gap-2",
+                searchOpen ? "bg-muted" : "hover:bg-muted"
+              )}
               aria-label="Search"
             >
               <Search size={18} />
+              <span className="hidden lg:inline-flex text-[10px] font-bold text-muted-foreground uppercase tracking-widest border border-border px-1.5 py-0.5 rounded opacity-60">
+                ⌘K
+              </span>
             </button>
 
             <Link
@@ -308,6 +360,114 @@ export function Navbar() {
           </div>
         </div>
       </div>
+
+      {/* ── Mega-Menu Search Dropdown ── */}
+      <AnimatePresence>
+        {searchOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+            className="absolute top-full left-0 w-full bg-background border-b border-border shadow-2xl overflow-hidden z-40"
+          >
+            <div className="max-w-4xl mx-auto px-6 py-8">
+              
+              {/* Search Input */}
+              <form onSubmit={handleSearchSubmit} className="flex items-center justify-between border border-border bg-muted/20 px-6 py-4 rounded-none group hover:border-primary/50 focus-within:border-primary transition-colors">
+                <div className="flex flex-col flex-1">
+                  <span className="text-[9px] uppercase font-bold text-muted-foreground tracking-[0.3em] mb-1">Search</span>
+                  <input
+                    id="mega-search-input"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Type to search..."
+                    className="w-full bg-transparent text-foreground text-xl font-black uppercase tracking-widest outline-none placeholder:text-muted-foreground/30"
+                    autoComplete="off"
+                  />
+                </div>
+                <div className="flex items-center gap-4">
+                  {searchQuery && (
+                    <button type="button" onClick={() => setSearchQuery('')} className="p-2 text-muted-foreground hover:text-foreground">
+                      <X size={16} />
+                    </button>
+                  )}
+                  <button type="submit" className="p-3 bg-primary text-primary-foreground hover:opacity-90 transition-opacity">
+                    <Search size={20} />
+                  </button>
+                </div>
+              </form>
+
+              {/* Two Column Layout */}
+              {searchQuery.trim().length > 0 && (
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-12 mt-12">
+                  
+                  {/* Left: Suggestions */}
+                  <div className="md:col-span-4 space-y-6">
+                    <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.4em] border-b border-border pb-3">Suggestions</h4>
+                    <ul className="space-y-4">
+                      {suggestedCategories.map(cat => (
+                        <li key={cat.id}>
+                          <Link 
+                            href={`/shop?category=${cat.slug}`}
+                            onClick={() => setSearchOpen(false)}
+                            className="text-sm font-bold uppercase tracking-widest text-foreground hover:text-primary transition-colors block"
+                          >
+                            {cat.name} <span className="text-[10px] text-muted-foreground ml-2">Category</span>
+                          </Link>
+                        </li>
+                      ))}
+                      <li>
+                        <button 
+                          onClick={handleSearchSubmit}
+                          className="text-sm font-bold uppercase tracking-widest text-primary hover:opacity-80 transition-opacity flex items-center gap-2 mt-4"
+                        >
+                          Search for "{searchQuery}" <ChevronRight size={14} />
+                        </button>
+                      </li>
+                    </ul>
+                  </div>
+
+                  {/* Right: Products */}
+                  <div className="md:col-span-8 space-y-6">
+                    <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.4em] border-b border-border pb-3">Products</h4>
+                    {searchResults.length > 0 ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {searchResults.map(product => (
+                          <Link
+                            key={product.id}
+                            href={`/product/${product.id}`}
+                            onClick={() => setSearchOpen(false)}
+                            className="group flex items-center gap-4 p-3 bg-muted/10 border border-transparent hover:border-border hover:bg-muted/30 transition-all"
+                          >
+                            <div className="w-16 h-16 bg-muted/50 overflow-hidden flex-shrink-0">
+                              {product.imageUrl ? (
+                                <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                              ) : (
+                                <Search className="w-full h-full p-4 text-muted-foreground opacity-20" />
+                              )}
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="font-black text-xs text-foreground uppercase tracking-widest line-clamp-2 leading-tight mb-1 group-hover:text-primary transition-colors">{product.name}</span>
+                              <span className="font-price text-muted-foreground text-[10px] font-bold tracking-wider">₹{product.price}</span>
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="py-8 text-center border border-dashed border-border">
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">No products match this query.</p>
+                      </div>
+                    )}
+                  </div>
+
+                </div>
+              )}
+
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </nav>
   )
 }

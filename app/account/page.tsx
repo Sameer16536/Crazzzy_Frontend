@@ -47,89 +47,15 @@ export default function AccountPage() {
       <Navbar />
       <div className="pt-16" />
 
-      <div className="min-h-[calc(100vh-64px)] flex flex-col lg:flex-row">
-
-        {/* ── LEFT: Branding Panel ── */}
+      <div className="max-w-4xl mx-auto px-6 py-16 lg:py-24">
         <motion.div
-          initial={{ opacity: 0, x: -40 }}
-          animate={{ opacity: 1, x: 0 }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className="hidden lg:flex flex-col justify-between w-[40%] px-16 py-20 bg-muted/50 border-r border-border relative overflow-hidden"
+          className="space-y-12"
         >
-          <div className="absolute inset-0 opacity-[0.03] pointer-events-none"
-            style={{
-              backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
-              backgroundSize: '256px',
-            }}
-          />
-          <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-gradient-to-b from-transparent via-primary to-transparent" />
-
-          <div className="space-y-3 relative z-10">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-primary flex items-center justify-center">
-                <span className="text-primary-foreground font-black">C</span>
-              </div>
-              <span className="text-foreground font-black text-xl tracking-tight">CRAZZZY</span>
-            </div>
-            <p className="text-xs text-muted-foreground font-mono tracking-[0.2em] uppercase">
-              Curated for Your Kind
-            </p>
-          </div>
-
-          <div className="space-y-6 relative z-10">
-            <h1 className="text-4xl xl:text-5xl font-black text-foreground leading-tight">
-              Your<br />
-              <span
-                style={{
-                  background: 'linear-gradient(135deg, #d4af37 0%, #f5e27a 50%, #d4af37 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
-                }}
-              >
-                Profile.
-              </span>
-            </h1>
-            <p className="text-muted-foreground text-sm leading-relaxed max-w-xs">
-              Manage your orders, personal details, and preferences in one premium space.
-            </p>
-
-            <div className="space-y-4 pt-4 border-t border-border/20">
-              {STORE_VALUES.map(({ icon: Icon, label, desc }) => (
-                <div key={label} className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <Icon size={14} className="text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-bold text-foreground uppercase tracking-wider">{label}</p>
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-tight">{desc}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="relative z-10">
-            <button 
-              onClick={logout}
-              className="text-xs text-red-500 hover:text-red-400 transition-colors font-bold flex items-center gap-2 uppercase tracking-widest"
-            >
-              <LogOut size={14} />
-              Sign Out
-            </button>
-          </div>
-        </motion.div>
-
-        {/* ── RIGHT: Account Overview ── */}
-        <motion.div
-          initial={{ opacity: 0, x: 40 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className="flex-1 px-6 sm:px-12 lg:px-20 py-16 lg:py-24"
-        >
-          <div className="max-w-2xl mx-auto space-y-12">
-            
-            {/* User Header */}
+          {/* User Header */}
+          <div className="flex flex-col sm:flex-row items-center sm:items-end justify-between gap-8 pb-12 border-b border-border">
             <div className="flex items-center gap-6">
               <div className="w-20 h-20 bg-muted border border-border rounded-none flex items-center justify-center relative group">
                 <User size={32} className="text-muted-foreground group-hover:text-primary transition-colors" />
@@ -141,102 +67,108 @@ export default function AccountPage() {
               </div>
             </div>
 
-            {/* Quick Links Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Link 
-                href="/account/orders"
-                className="group p-6 bg-muted/30 border border-border hover:border-primary/30 transition-all flex items-center justify-between"
-              >
-                <div className="flex items-center gap-4">
-                  <Package className="text-primary" size={20} />
-                  <div>
-                    <p className="text-xs font-bold text-foreground uppercase tracking-widest">My Orders</p>
-                    <p className="text-[10px] text-muted-foreground uppercase">View order history</p>
-                  </div>
-                </div>
-                <ChevronRight size={16} className="text-muted-foreground/30 group-hover:text-primary group-hover:translate-x-1 transition-all" />
-              </Link>
+            <button 
+              onClick={logout}
+              className="bg-red-500/10 text-red-500 px-6 py-3 text-[10px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all flex items-center gap-2"
+            >
+              <LogOut size={14} />
+              Sign Out
+            </button>
+          </div>
 
-              <Link 
-                href="/account/settings"
-                className="group p-6 bg-muted/30 border border-border hover:border-primary/30 transition-all flex items-center justify-between"
-              >
-                <div className="flex items-center gap-4">
-                  <Settings className="text-primary" size={20} />
-                  <div>
-                    <p className="text-xs font-bold text-foreground uppercase tracking-widest">Settings</p>
-                    <p className="text-[10px] text-muted-foreground uppercase">Update preferences</p>
-                  </div>
+          {/* Quick Links Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Link 
+              href="/account/orders"
+              className="group p-8 bg-muted/30 border border-border hover:border-primary/30 transition-all flex items-center justify-between"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-primary/10 flex items-center justify-center">
+                  <Package className="text-primary" size={24} />
                 </div>
-                <ChevronRight size={16} className="text-muted-foreground/30 group-hover:text-primary group-hover:translate-x-1 transition-all" />
-              </Link>
-            </div>
-
-            {/* Profile Details */}
-            <div className="space-y-6 pt-8 border-t border-border">
-              <h3 className="text-xs font-black text-primary uppercase tracking-[0.3em]">Profile Details</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-12">
-                <div className="space-y-1">
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Full Name</p>
-                  <p className="text-sm text-foreground font-medium">{user.name}</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Email Address</p>
-                  <p className="text-sm text-foreground font-medium">{user.email}</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Member Since</p>
-                  <p className="text-sm text-foreground font-medium">{new Date(user.createdAt || Date.now()).toLocaleDateString()}</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Account Type</p>
-                  <p className="text-sm text-primary font-bold uppercase tracking-widest">{user.role}</p>
+                <div>
+                  <p className="text-xs font-bold text-foreground uppercase tracking-widest">My Orders</p>
+                  <p className="text-[10px] text-muted-foreground uppercase">View order history</p>
                 </div>
               </div>
-            </div>
+              <ChevronRight size={16} className="text-muted-foreground/30 group-hover:text-primary group-hover:translate-x-1 transition-all" />
+            </Link>
 
-            {/* Wishlist Section */}
-            <div className="space-y-8 pt-12 border-t border-border">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Heart className="text-primary fill-current" size={18} />
-                  <h3 className="text-xs font-black text-foreground uppercase tracking-[0.3em]">My Wishlist</h3>
+            <Link 
+              href="/account/settings"
+              className="group p-8 bg-muted/30 border border-border hover:border-primary/30 transition-all flex items-center justify-between"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-primary/10 flex items-center justify-center">
+                  <Settings className="text-primary" size={24} />
                 </div>
-                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest bg-muted px-2 py-1">
-                  {wishlistedProducts.length} Items
-                </span>
+                <div>
+                  <p className="text-xs font-bold text-foreground uppercase tracking-widest">Settings</p>
+                  <p className="text-[10px] text-muted-foreground uppercase">Update preferences</p>
+                </div>
               </div>
+              <ChevronRight size={16} className="text-muted-foreground/30 group-hover:text-primary group-hover:translate-x-1 transition-all" />
+            </Link>
+          </div>
 
-              {wishlistedProducts.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  {wishlistedProducts.map(product => (
-                    <ProductCard key={product.id} product={product} />
-                  ))}
-                </div>
-              ) : (
-                <div className="bg-muted/30 border border-dashed border-border p-12 text-center rounded-none">
-                  <Heart className="mx-auto text-muted-foreground/20 mb-4" size={32} />
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-4">Your wishlist is empty</p>
-                  <Link 
-                    href="/shop" 
-                    className="inline-block bg-primary text-primary-foreground px-6 py-3 text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all"
-                  >
-                    Start Exploring
-                  </Link>
-                </div>
-              )}
+          {/* Profile Details */}
+          <div className="space-y-6 pt-4">
+            <div className="flex items-center gap-3">
+              <div className="h-[1px] flex-1 bg-border" />
+              <h3 className="text-[10px] font-black text-primary uppercase tracking-[0.4em]">Profile Details</h3>
+              <div className="h-[1px] flex-1 bg-border" />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+              <div className="space-y-1">
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Full Name</p>
+                <p className="text-sm text-foreground font-bold uppercase">{user.name}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Email Address</p>
+                <p className="text-sm text-foreground font-bold uppercase">{user.email}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Member Since</p>
+                <p className="text-sm text-foreground font-bold uppercase">{new Date(user.createdAt || Date.now()).toLocaleDateString()}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Account Type</p>
+                <p className="text-sm text-primary font-black uppercase tracking-widest">{user.role}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Wishlist Section */}
+          <div className="space-y-10 pt-12">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Heart className="text-primary fill-current" size={20} />
+                <h3 className="text-xl font-black text-foreground uppercase tracking-tighter">My Wishlist</h3>
+              </div>
+              <span className="text-[10px] font-black text-primary uppercase tracking-widest bg-primary/10 px-4 py-2">
+                {wishlistedProducts.length} Items
+              </span>
             </div>
 
-            {/* Mobile Logout */}
-            <div className="lg:hidden pt-8 border-t border-border">
-              <button 
-                onClick={logout}
-                className="w-full bg-red-500/10 text-red-500 p-4 text-xs font-black uppercase tracking-widest transition-all active:scale-[0.98]"
-              >
-                Sign Out
-              </button>
-            </div>
-
+            {wishlistedProducts.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                {wishlistedProducts.map(product => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
+              </div>
+            ) : (
+              <div className="bg-muted/10 border border-border p-20 text-center relative overflow-hidden group">
+                <div className="absolute inset-0 bg-primary/5 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
+                <Heart className="mx-auto text-muted-foreground/20 mb-6 relative z-10" size={48} />
+                <p className="text-xs font-black text-muted-foreground uppercase tracking-[0.2em] mb-8 relative z-10">Your wishlist is currently empty</p>
+                <Link 
+                  href="/shop" 
+                  className="relative z-10 inline-block bg-primary text-primary-foreground px-10 py-4 text-[10px] font-black uppercase tracking-[0.2em] hover:scale-105 transition-all shadow-xl shadow-primary/20"
+                >
+                  Enter the Shop
+                </Link>
+              </div>
+            )}
           </div>
         </motion.div>
       </div>

@@ -117,31 +117,31 @@ export default function CartPage() {
 
           {/* Summary */}
           <div className="lg:col-span-1">
-            <Card className="p-5 sticky top-24">
-              <h2 className="text-xl font-black uppercase tracking-tight text-foreground mb-6">Order summary</h2>
-              <div className="space-y-4 text-xs">
+            <div className="p-8 sticky top-24 bg-card/80 dark:bg-neutral-900/80 backdrop-blur-md border border-border/50 rounded-none space-y-10 shadow-2xl shadow-black/5">
+              <h2 className="text-xl font-black uppercase tracking-tight text-foreground mb-2">Order summary</h2>
+              <div className="space-y-6 text-xs">
                 <div className="flex justify-between text-muted-foreground">
-                  <span className="uppercase tracking-widest">Subtotal</span>
-                  <span className="font-mono text-foreground">₹{subtotal.toLocaleString('en-IN')}</span>
+                  <span className="uppercase tracking-widest font-bold">Subtotal</span>
+                  <span className="font-mono text-foreground font-bold">₹{subtotal.toLocaleString('en-IN')}</span>
                 </div>
                 <div className="flex justify-between text-muted-foreground">
-                  <span className="uppercase tracking-widest">Shipping</span>
-                  <span className="font-mono text-foreground">
+                  <span className="uppercase tracking-widest font-bold">Shipping</span>
+                  <span className="font-mono text-foreground font-bold">
                     {shipping === 0 ? 'FREE' : `₹${shipping}`}
                   </span>
                 </div>
-                <Separator className="bg-border" />
-                <div className="flex justify-between text-lg font-black pt-2">
-                  <span className="uppercase tracking-tighter text-foreground">Total</span>
+                <Separator className="bg-white/10" />
+                <div className="flex justify-between text-xl font-black pt-2">
+                  <span className="uppercase tracking-normal text-foreground">Total</span>
                   <span className="text-primary font-mono">₹{total.toLocaleString('en-IN')}</span>
                 </div>
               </div>
 
-              <div className="mt-8 space-y-4">
+              <div className="space-y-4">
                 <Link
                   href="/checkout"
                   className={`
-                    w-full py-5 bg-primary hover:bg-primary/90 text-black font-black uppercase tracking-[0.2em] text-sm transition-all active:scale-[0.98] flex items-center justify-center gap-3
+                    w-full py-5 bg-primary hover:bg-primary/90 text-black font-bold uppercase tracking-[0.1em] text-xs transition-all active:scale-[0.98] flex items-center justify-center gap-3 shadow-xl shadow-primary/10 whitespace-nowrap
                     ${items.length === 0 ? 'opacity-30 pointer-events-none grayscale' : ''}
                   `}
                 >
@@ -149,16 +149,16 @@ export default function CartPage() {
                 </Link>
                 <Link 
                   href="/shop" 
-                  className="w-full py-4 border border-border hover:border-foreground/20 text-muted-foreground hover:text-foreground font-black uppercase tracking-[0.2em] text-[10px] transition-all flex items-center justify-center"
+                  className="w-full py-2 text-muted-foreground/40 hover:text-white font-black uppercase tracking-[0.2em] text-[10px] transition-all flex items-center justify-center group"
                 >
-                  Continue Shopping
+                  <span className="group-hover:scale-105 transition-transform">Continue Shopping</span>
                 </Link>
               </div>
 
               <p className="text-[10px] text-muted-foreground/40 mt-6 leading-relaxed font-light italic">
                 * Free shipping on orders above ₹1,999. Items are held for 15 minutes once checkout is initiated.
               </p>
-            </Card>
+              </div>
           </div>
         </div>
       </section>

@@ -164,7 +164,7 @@ export default function CheckoutPage() {
             })
             toast.success('🎉 Payment successful! Your order is confirmed.')
             dispatch(clearCart())
-            router.push(`/account/orders/${orderId}`)
+            router.push(`/checkout/success/${orderId}`)
           } catch (err: any) {
             toast.error(err.message || 'Payment verification failed. Contact support.')
           }
@@ -425,8 +425,8 @@ export default function CheckoutPage() {
 
           {/* ── Right: Order Summary ──────────────────────────────────── */}
           <div className="lg:col-span-4">
-            <div className="bg-muted/50 border border-border p-8 sticky top-24 space-y-8">
-              <h3 className="font-bold uppercase tracking-widest text-xs border-b border-border pb-4 text-foreground">Order Summary</h3>
+            <div className="bg-neutral-900/50 backdrop-blur-md border border-white/5 p-8 sticky top-24 space-y-10">
+              <h3 className="font-black uppercase tracking-[0.2em] text-xs border-b border-white/10 pb-6 text-foreground">Order Summary</h3>
 
               <div className="space-y-4 max-h-60 overflow-y-auto">
                 {items.map((item) => (
@@ -445,22 +445,22 @@ export default function CheckoutPage() {
                 ))}
               </div>
 
-              <div className="space-y-3 pt-4 border-t border-border">
+              <div className="space-y-5 pt-4 border-t border-white/10">
                 <div className="flex justify-between text-xs text-muted-foreground">
-                  <span className="uppercase tracking-widest">Subtotal</span>
-                  <span className="font-mono text-foreground">₹{subtotal.toLocaleString('en-IN')}</span>
+                  <span className="uppercase tracking-widest font-bold">Subtotal</span>
+                  <span className="font-mono text-foreground font-bold">₹{subtotal.toLocaleString('en-IN')}</span>
                 </div>
                 <div className="flex justify-between text-xs text-muted-foreground">
-                  <span className="uppercase tracking-widest">Shipping</span>
-                  <span className={`font-mono ${shipping === 0 ? 'text-primary' : 'text-foreground'}`}>
+                  <span className="uppercase tracking-widest font-bold">Shipping</span>
+                  <span className={`font-mono font-bold ${shipping === 0 ? 'text-primary' : 'text-foreground'}`}>
                     {shipping === 0 ? 'FREE' : `₹${shipping}`}
                   </span>
                 </div>
                 {shipping > 0 && (
                   <p className="text-[10px] text-muted-foreground/40 uppercase tracking-wider">Free shipping on orders ₹1,999+</p>
                 )}
-                <div className="flex justify-between text-lg font-bold border-t border-border pt-4">
-                  <span className="uppercase tracking-tight text-foreground">Total</span>
+                <div className="flex justify-between text-xl font-black border-t border-white/10 pt-6">
+                  <span className="uppercase tracking-normal text-foreground">Total</span>
                   <span className="text-primary font-mono">₹{total.toLocaleString('en-IN')}</span>
                 </div>
               </div>
@@ -487,11 +487,11 @@ export default function CheckoutPage() {
                 disabled={loading}
                 onClick={handleCheckout}
                 className={`
-                  w-full py-5 uppercase tracking-[0.15em] text-xs transition-all active:scale-[0.98] flex items-center justify-center gap-3 font-bold
+                  w-full py-5 uppercase tracking-[0.1em] text-xs transition-all active:scale-[0.98] flex items-center justify-center gap-3 font-bold whitespace-nowrap
                   ${loading
                     ? 'bg-muted text-foreground/20 cursor-not-allowed'
                     : isReadyToPay
-                    ? 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-[0_0_30px_rgba(212,175,55,0.25)]'
+                    ? 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-2xl shadow-primary/20'
                     : 'bg-muted border border-border text-muted-foreground hover:border-primary/40 cursor-pointer'}
                 `}
               >

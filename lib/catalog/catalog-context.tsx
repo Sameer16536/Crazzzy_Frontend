@@ -1,6 +1,7 @@
 'use client'
 
-import React, { createContext, useContext, useEffect, useState, useMemo, useCallback } from 'react'
+import React, { createContext, useContext, useEffect, useState, useMemo, useCallback, useRef } from 'react'
+import { usePathname } from 'next/navigation'
 import { api } from '@/lib/api-client'
 import { toast } from 'sonner'
 
@@ -111,6 +112,9 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
   const [wishlistIds, setWishlistIds] = useState<Set<string>>(new Set())
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  
+  const pathname = usePathname()
+  const lastPathname = useRef(pathname)
 
   const fetchWishlist = useCallback(async () => {
     try {
@@ -217,6 +221,15 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
     fetchCatalog()
     fetchWishlist()
   }, [fetchWishlist])
+
+  // Automatically refresh catalog when leaving the admin panel
+  // This ensures the storefront reflects any changes made by the admin (e.g. Featured Products, Deal of the Day)
+  useEffect(() => {
+    if (lastPathname.current?.startsWith('/admin') && !pathname?.startsWith('/admin')) {
+      fetchCatalog()
+    }
+    lastPathname.current = pathname
+  }, [pathname])
 
   const value = useMemo(() => ({
     data,

@@ -9,7 +9,7 @@ import { clearCart } from '@/lib/store/slices/cart-slice'
 import { api } from '@/lib/api-client'
 import { openRazorpay } from '@/lib/razorpay'
 import { toast } from 'sonner'
-import { Loader2, CreditCard, ChevronRight, CheckCircle2, ShieldCheck, Phone } from 'lucide-react'
+import { Loader2, CreditCard, ChevronRight, CheckCircle2, ShieldCheck, Phone, Tag, X } from 'lucide-react'
 import { useAuth } from '@/lib/auth/auth-context'
 
 export default function CheckoutPage() {
@@ -27,6 +27,11 @@ export default function CheckoutPage() {
   // Phone number is mandatory per backend validation
   const [phoneNumber, setPhoneNumber] = useState('')
   const [phoneError, setPhoneError] = useState('')
+
+  // Coupon state
+  const [couponCodeInput, setCouponCodeInput] = useState('')
+  const [applyingCoupon, setApplyingCoupon] = useState(false)
+  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string, discountAmount: number } | null>(null)
 
   // Prefill phone number from user profile if available
   useEffect(() => {
@@ -150,6 +155,7 @@ export default function CheckoutPage() {
         })),
         addressId: selectedAddressId, // Already a number
         phoneNumber: phoneNumber.replace(/\s+/g, ''),
+        couponCode: appliedCoupon?.code || undefined,
       })
 
       const { orderId, razorpay: rpData } = orderData
@@ -192,8 +198,40 @@ export default function CheckoutPage() {
   }
 
   const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0)
-  const shipping = subtotal >= 1999 ? 0 : 99
-  const total = subtotal + shipping
+  
+  const handleApplyCoupon = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!couponCodeInput.trim()) return
+
+    setApplyingCoupon(true)
+    try {
+      const res = await api.post<any>('/orders/apply-coupon', { 
+        code: couponCodeInput.trim(), 
+        cartTotal: subtotal 
+      })
+      
+      if (res.success && res.coupon) {
+        setAppliedCoupon({ code: res.coupon.code, discountAmount: res.coupon.discountAmount })
+        toast.success(`Coupon applied! You saved ₹${res.coupon.discountAmount}`)
+        setCouponCodeInput('')
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'Invalid coupon code')
+      setAppliedCoupon(null)
+    } finally {
+      setApplyingCoupon(false)
+    }
+  }
+
+  const removeCoupon = () => {
+    setAppliedCoupon(null)
+    toast.info('Coupon removed')
+  }
+
+  const discountAmount = appliedCoupon ? appliedCoupon.discountAmount : 0
+  const finalSubtotal = Math.max(0, subtotal - discountAmount)
+  const shipping = finalSubtotal >= 1999 ? 0 : 99
+  const total = finalSubtotal + shipping
 
   const isReadyToPay = !!selectedAddressId && !!phoneNumber && !phoneError
 
@@ -457,11 +495,53 @@ export default function CheckoutPage() {
                 ))}
               </div>
 
-              <div className="space-y-5 pt-4 border-t border-border/50">
+              {/* Coupon Section */}
+              <div className="pt-6 border-t border-border/50">
+                <form onSubmit={handleApplyCoupon} className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <input
+                      type="text"
+                      placeholder="ENTER PROMO CODE"
+                      value={couponCodeInput}
+                      onChange={(e) => setCouponCodeInput(e.target.value.toUpperCase())}
+                      className="w-full bg-background border border-border pl-10 pr-4 py-3 text-xs font-bold uppercase tracking-widest focus:outline-none focus:border-primary transition-colors text-foreground"
+                      disabled={!!appliedCoupon || applyingCoupon}
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={!couponCodeInput.trim() || !!appliedCoupon || applyingCoupon}
+                    className="px-6 bg-primary text-primary-foreground text-[10px] font-black uppercase tracking-widest hover:opacity-90 disabled:opacity-50 transition-opacity flex items-center justify-center min-w-[100px]"
+                  >
+                    {applyingCoupon ? <Loader2 size={14} className="animate-spin" /> : 'Apply'}
+                  </button>
+                </form>
+                
+                {appliedCoupon && (
+                  <div className="mt-3 flex items-center justify-between p-3 bg-green-500/10 border border-green-500/20 text-green-600 dark:text-green-400">
+                    <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest">
+                      <CheckCircle2 size={14} />
+                      Code '{appliedCoupon.code}' Applied
+                    </div>
+                    <button type="button" onClick={removeCoupon} className="hover:opacity-70 transition-opacity">
+                      <X size={14} />
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-5 pt-6 border-t border-border/50 mt-6">
                 <div className="flex justify-between text-xs text-muted-foreground">
                   <span className="uppercase tracking-widest font-bold">Subtotal</span>
                   <span className="font-mono text-foreground font-bold">₹{subtotal.toLocaleString('en-IN')}</span>
                 </div>
+                {appliedCoupon && (
+                  <div className="flex justify-between text-xs text-green-600 dark:text-green-400">
+                    <span className="uppercase tracking-widest font-bold">Discount</span>
+                    <span className="font-mono font-bold">-₹{appliedCoupon.discountAmount.toLocaleString('en-IN')}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-xs text-muted-foreground">
                   <span className="uppercase tracking-widest font-bold">Shipping</span>
                   <span className={`font-mono font-bold ${shipping === 0 ? 'text-primary' : 'text-foreground'}`}>

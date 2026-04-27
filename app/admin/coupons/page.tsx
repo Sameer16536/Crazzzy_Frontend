@@ -27,7 +27,7 @@ export default function CouponsPage() {
     try {
       setLoading(true)
       const res = await api.get<any>('/admin/coupons')
-      const list = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : [])
+      const list = Array.isArray(res?.coupons) ? res.coupons : []
       setCoupons(list)
     } catch (error) {
       console.error('Failed to fetch coupons', error)
@@ -44,7 +44,14 @@ export default function CouponsPage() {
     e.preventDefault()
     setIsSubmitting(true)
     try {
-      await api.post('/admin/coupons', newCoupon)
+      const payload = {
+        code: newCoupon.code,
+        discountType: newCoupon.type,
+        discountValue: Number(newCoupon.value),
+        expiresAt: newCoupon.expiryDate || null,
+        usageLimit: newCoupon.usageLimit ? Number(newCoupon.usageLimit) : null,
+      }
+      await api.post('/admin/coupons', payload)
       toast.success('Coupon deployed to marketing channels')
       setShowAddModal(false)
       fetchCoupons()
@@ -110,7 +117,6 @@ export default function CouponsPage() {
                 <tr className="border-b border-white/5 bg-zinc-950/50">
                   <th className="p-6 text-[10px] font-black uppercase tracking-[0.3em] text-white/40">Code</th>
                   <th className="p-6 text-[10px] font-black uppercase tracking-[0.3em] text-white/40">Benefit</th>
-                  <th className="p-6 text-[10px] font-black uppercase tracking-[0.3em] text-white/40">Threshold</th>
                   <th className="p-6 text-[10px] font-black uppercase tracking-[0.3em] text-white/40">Expiry</th>
                   <th className="p-6 text-[10px] font-black uppercase tracking-[0.3em] text-white/40">Usage</th>
                   <th className="p-6 text-[10px] font-black uppercase tracking-[0.3em] text-white/40 text-right">Control</th>
@@ -139,20 +145,17 @@ export default function CouponsPage() {
                     </td>
                     <td className="p-6">
                       <span className="text-sm font-black text-white">
-                        {c.type === 'PERCENTAGE' ? `${c.value}% OFF` : `₹${c.value} OFF`}
+                        {c.discountType === 'PERCENTAGE' ? `${c.discountValue}% OFF` : `₹${c.discountValue} OFF`}
                       </span>
-                    </td>
-                    <td className="p-6 text-[10px] text-white/40 uppercase tracking-widest font-mono">
-                      Min ₹{c.minOrderAmount}
                     </td>
                     <td className="p-6">
                       <div className="flex items-center gap-2 text-[10px] text-white/40 uppercase tracking-widest">
                         <Calendar size={12} />
-                        {new Date(c.expiryDate).toLocaleDateString()}
+                        {c.expiresAt ? new Date(c.expiresAt).toLocaleDateString() : 'Never'}
                       </div>
                     </td>
                     <td className="p-6 text-[10px] text-white/40 uppercase tracking-widest font-mono">
-                      {c.usedCount} / {c.usageLimit}
+                      {c.usedCount} / {c.usageLimit || '∞'}
                     </td>
                     <td className="p-6 text-right">
                       <button 
@@ -236,33 +239,18 @@ export default function CouponsPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-white/40">Min. Order (₹)</label>
-                    <input
-                      type="number"
-                      required
-                      value={newCoupon.minOrderAmount}
-                      onChange={(e) => setNewCoupon({ ...newCoupon, minOrderAmount: e.target.value })}
-                      className="w-full bg-black border border-white/10 px-4 py-3 text-[10px] font-mono font-bold focus:border-primary/40 outline-none transition-all"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                   <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase tracking-widest text-white/40">Expiry Date</label>
                     <input
                       type="date"
-                      required
                       value={newCoupon.expiryDate}
                       onChange={(e) => setNewCoupon({ ...newCoupon, expiryDate: e.target.value })}
                       className="w-full bg-black border border-white/10 px-4 py-3 text-[10px] font-bold uppercase focus:border-primary/40 outline-none transition-all"
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-white/40">Usage Limit</label>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-white/40">Usage Limit (Optional)</label>
                     <input
                       type="number"
-                      required
                       value={newCoupon.usageLimit}
                       onChange={(e) => setNewCoupon({ ...newCoupon, usageLimit: e.target.value })}
                       className="w-full bg-black border border-white/10 px-4 py-3 text-[10px] font-mono font-bold focus:border-primary/40 outline-none transition-all"

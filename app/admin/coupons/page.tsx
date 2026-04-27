@@ -13,6 +13,7 @@ export default function CouponsPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [showAddModal, setShowAddModal] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [editingId, setEditingId] = useState<number | null>(null)
 
   const [newCoupon, setNewCoupon] = useState({
     code: '',
@@ -40,7 +41,7 @@ export default function CouponsPage() {
     fetchCoupons()
   }, [])
 
-  const handleCreate = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
     try {
@@ -51,8 +52,15 @@ export default function CouponsPage() {
         expiresAt: newCoupon.expiryDate || null,
         usageLimit: newCoupon.usageLimit ? Number(newCoupon.usageLimit) : null,
       }
-      await api.post('/admin/coupons', payload)
-      toast.success('Coupon deployed to marketing channels')
+      
+      if (editingId) {
+        await api.patch(`/admin/coupons/${editingId}`, payload)
+        toast.success('Coupon updated successfully')
+      } else {
+        await api.post('/admin/coupons', payload)
+        toast.success('Coupon deployed to marketing channels')
+      }
+      
       setShowAddModal(false)
       fetchCoupons()
     } catch (error: any) {
@@ -60,6 +68,32 @@ export default function CouponsPage() {
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  const openEditModal = (c: any) => {
+    setEditingId(c.id)
+    setNewCoupon({
+      code: c.code,
+      type: c.discountType,
+      value: String(c.discountValue),
+      minOrderAmount: '',
+      expiryDate: c.expiresAt ? new Date(c.expiresAt).toISOString().split('T')[0] : '',
+      usageLimit: c.usageLimit ? String(c.usageLimit) : '',
+    })
+    setShowAddModal(true)
+  }
+
+  const openCreateModal = () => {
+    setEditingId(null)
+    setNewCoupon({
+      code: '',
+      type: 'PERCENTAGE',
+      value: '',
+      minOrderAmount: '',
+      expiryDate: '',
+      usageLimit: '',
+    })
+    setShowAddModal(true)
   }
 
   const handleDelete = async (id: number) => {
@@ -89,7 +123,7 @@ export default function CouponsPage() {
             <h1 className="text-4xl font-black uppercase tracking-tighter leading-none">COUPON REGISTRY</h1>
           </div>
           <button 
-            onClick={() => setShowAddModal(true)}
+            onClick={openCreateModal}
             className="px-6 py-4 bg-primary text-black text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:scale-105 transition-transform"
           >
             <Plus size={14} />
@@ -158,12 +192,20 @@ export default function CouponsPage() {
                       {c.usedCount} / {c.usageLimit || '∞'}
                     </td>
                     <td className="p-6 text-right">
-                      <button 
-                        onClick={() => handleDelete(c.id)}
-                        className="p-2 text-white/20 hover:text-red-500 hover:bg-red-500/10 transition-all"
-                      >
-                        <Trash2 size={16} />
-                      </button>
+                      <div className="flex justify-end gap-2">
+                        <button 
+                          onClick={() => openEditModal(c)}
+                          className="p-2 text-white/20 hover:text-primary hover:bg-primary/10 transition-all"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
+                        </button>
+                        <button 
+                          onClick={() => handleDelete(c.id)}
+                          className="p-2 text-white/20 hover:text-red-500 hover:bg-red-500/10 transition-all"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
                     </td>
                   </motion.tr>
                 ))}
@@ -197,11 +239,11 @@ export default function CouponsPage() {
               className="relative w-full max-w-lg bg-zinc-900 border border-white/10 p-8 shadow-2xl space-y-8"
             >
               <div className="space-y-2">
-                <h2 className="text-2xl font-black uppercase tracking-tighter">Generate Coupon</h2>
-                <p className="text-[10px] text-white/40 uppercase tracking-widest">Create a new discount artifact</p>
+                <h2 className="text-2xl font-black uppercase tracking-tighter">{editingId ? 'Edit Coupon' : 'Generate Coupon'}</h2>
+                <p className="text-[10px] text-white/40 uppercase tracking-widest">{editingId ? 'Modify existing discount artifact' : 'Create a new discount artifact'}</p>
               </div>
 
-              <form onSubmit={handleCreate} className="space-y-6">
+              <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                    <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase tracking-widest text-white/40">Code Designation</label>
@@ -271,7 +313,7 @@ export default function CouponsPage() {
                     disabled={isSubmitting}
                     className="flex-1 px-6 py-4 bg-primary text-black text-[10px] font-black uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50"
                   >
-                    {isSubmitting ? <Loader2 className="animate-spin mx-auto" size={16} /> : 'Deploy Code'}
+                    {isSubmitting ? <Loader2 className="animate-spin mx-auto" size={16} /> : (editingId ? 'Update Code' : 'Deploy Code')}
                   </button>
                 </div>
               </form>

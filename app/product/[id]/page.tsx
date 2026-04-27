@@ -24,7 +24,7 @@ export default function ProductPage() {
   const [quantity, setQuantity] = useState(1)
   const [selectedImage, setSelectedImage] = useState(0)
   const [isWishlisted, setIsWishlisted] = useState(false)
-  const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({})
+  const [selectedVariant, setSelectedVariant] = useState<any>(null)
   const dispatch = useAppDispatch()
 
   useEffect(() => {
@@ -54,9 +54,12 @@ export default function ProductPage() {
     }
   }, [id, data, catalogLoading])
 
-  const handleVariantChange = (name: string, value: string) => {
-    setSelectedVariants((prev) => ({ ...prev, [name]: value }))
-  }
+  // Automatically select the first variant if available
+  useEffect(() => {
+    if (product?.variants && product.variants.length > 0 && !selectedVariant) {
+      setSelectedVariant(product.variants[0])
+    }
+  }, [product, selectedVariant])
 
   if (loading || catalogLoading) {
     return (
@@ -95,11 +98,9 @@ export default function ProductPage() {
     .filter((p) => p.categoryId === product.categoryId && p.id !== product.id)
     .slice(0, 4)
 
-  const variantsByName = product.variants?.reduce((acc: any, v: any) => {
-    if (!acc[v.name]) acc[v.name] = []
-    acc[v.name].push(v)
-    return acc
-  }, {})
+  const basePrice = Number(product.price) || 0
+  const additionalPrice = selectedVariant ? Number(selectedVariant.additionalPrice) || 0 : 0
+  const displayPrice = basePrice + additionalPrice
 
   return (
     <div className="min-h-screen bg-background text-foreground selection:bg-primary selection:text-primary-foreground" style={{ isolation: 'isolate' }}>
@@ -178,11 +179,11 @@ export default function ProductPage() {
             <div className="bg-muted/30 border border-border p-8 sm:p-12 space-y-10">
               <div className="flex items-baseline gap-4">
                 <span className="text-5xl font-black text-foreground">
-                  ₹{product.price.toLocaleString('en-IN')}
+                  ₹{displayPrice.toLocaleString('en-IN')}
                 </span>
                 {product.originalPrice && (
                   <span className="text-2xl text-muted-foreground line-through font-light">
-                    ₹{product.originalPrice.toLocaleString('en-IN')}
+                    ₹{Number(product.originalPrice).toLocaleString('en-IN')}
                   </span>
                 )}
               </div>
@@ -191,31 +192,30 @@ export default function ProductPage() {
               </p>
             </div>
 
-            {variantsByName && Object.keys(variantsByName).length > 0 && (
-              <div className="space-y-8">
-                {Object.entries(variantsByName).map(([name, items]: [string, any]) => (
-                  <div key={name} className="space-y-4">
-                    <label className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground font-black">
-                      Select {name}
-                    </label>
-                    <div className="flex flex-wrap gap-3">
-                      {items.map((item: any) => (
-                        <button
-                          key={item.value}
-                          onClick={() => handleVariantChange(name, item.value)}
-                          className={`
-                            px-6 py-3 text-xs font-bold border transition-all duration-300 uppercase tracking-widest
-                            ${selectedVariants[name] === item.value 
-                              ? 'bg-primary text-primary-foreground border-primary scale-105' 
-                              : 'bg-transparent text-foreground border-border hover:border-foreground/30'}
-                          `}
-                        >
-                          {item.value}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                ))}
+            {product.variants && product.variants.length > 0 && (
+              <div className="space-y-4">
+                <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-medium">
+                  Size
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {product.variants.map((v: any) => (
+                    <button
+                      key={v.id}
+                      onClick={() => setSelectedVariant(v)}
+                      className={`
+                        px-6 py-2 text-[10px] font-bold border rounded-full transition-all duration-300 uppercase tracking-widest
+                        ${selectedVariant?.id === v.id 
+                          ? 'bg-foreground text-background border-foreground scale-[1.02]' 
+                          : 'bg-transparent text-foreground border-border hover:border-foreground/30'}
+                      `}
+                    >
+                      {v.variantName}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-[9px] text-muted-foreground/80 leading-relaxed max-w-sm mt-3">
+                  Note: Please check the size chart carefully before placing your order. Size change requests after ordering may not be possible.
+                </p>
               </div>
             )}
 
@@ -251,11 +251,12 @@ export default function ProductPage() {
                     dispatch(
                       addToCart({
                         productId: product.id,
-                        name: product.name,
-                        image: product.images?.[0],
-                        price: product.price,
+                        name: product.name || product.title,
+                        image: product.images?.[0]?.imageUrl || product.images?.[0] || product.imageUrl,
+                        price: displayPrice,
                         quantity,
-                        variants: selectedVariants,
+                        variantId: selectedVariant?.id,
+                        variantName: selectedVariant?.variantName,
                       }),
                     )
                     toast.success('Added to cart')

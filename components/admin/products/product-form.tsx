@@ -29,6 +29,7 @@ interface FormData {
   isFeatured: boolean
   isDealOfTheDay: boolean
   isActive: boolean
+  variants: { variantName: string, additionalPrice: string, stock: string }[]
 }
 
 export function ProductForm({ productId }: { productId?: string }) {
@@ -49,6 +50,7 @@ export function ProductForm({ productId }: { productId?: string }) {
     isFeatured: false,
     isDealOfTheDay: false,
     isActive: true,
+    variants: [],
   })
 
   const fetchInitialData = useCallback(async () => {
@@ -84,6 +86,11 @@ export function ProductForm({ productId }: { productId?: string }) {
           isFeatured: !!product.isFeatured,
           isDealOfTheDay: !!product.isDealOfTheDay,
           isActive: product.isActive !== false,
+          variants: Array.isArray(product.variants) ? product.variants.map((v: any) => ({
+            variantName: v.variantName,
+            additionalPrice: String(v.additionalPrice || '0'),
+            stock: String(v.stock || '0'),
+          })) : [],
         })
       }
     } catch (error) {
@@ -132,6 +139,34 @@ export function ProductForm({ productId }: { productId?: string }) {
         <Loader2 className="animate-spin text-primary" size={32} />
       </div>
     )
+  }
+
+  // Find if selected category is a poster category
+  const isPosterCategory = () => {
+    if (!formData.categoryId) return false
+    const mainCat = categories.find(c => c.id === Number(formData.categoryId) || c.subcategories?.some(sub => sub.id === Number(formData.categoryId)))
+    return mainCat?.slug === 'wall-posters' || mainCat?.slug === 'sports' // Just in case sports poster falls under sports category, but normally wall-posters is the main
+  }
+
+  const addVariant = () => {
+    setFormData(prev => ({
+      ...prev,
+      variants: [...prev.variants, { variantName: '', additionalPrice: '0', stock: '100' }]
+    }))
+  }
+
+  const removeVariant = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      variants: prev.variants.filter((_, i) => i !== index)
+    }))
+  }
+
+  const updateVariant = (index: number, field: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      variants: prev.variants.map((v, i) => i === index ? { ...v, [field]: value } : v)
+    }))
   }
 
   return (
@@ -276,6 +311,76 @@ export function ProductForm({ productId }: { productId?: string }) {
             </div>
           </div>
         </div>
+
+        {/* Variant Manager (Conditional) */}
+        {isPosterCategory() && (
+          <div className="bg-card border border-border p-8 space-y-8 rounded-xl shadow-sm">
+             <div className="flex items-center justify-between border-b border-border pb-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 bg-primary/10 border border-primary/20 flex items-center justify-center rounded-lg">
+                      <Layers size={20} className="text-primary" />
+                  </div>
+                  <div>
+                      <h2 className="text-sm font-black uppercase tracking-widest text-foreground">Variants Manager</h2>
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-[0.2em]">Manage size options and pricing</p>
+                  </div>
+                </div>
+                <Button type="button" onClick={addVariant} variant="outline" className="text-[10px] font-black uppercase tracking-widest border-primary/50 text-primary hover:bg-primary/10">
+                  + Add Variant
+                </Button>
+            </div>
+
+            <div className="space-y-4">
+              {formData.variants.length === 0 ? (
+                <div className="p-8 border border-dashed border-border bg-muted/10 text-center">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">No variants configured. Product will have a single price.</p>
+                </div>
+              ) : (
+                formData.variants.map((variant, index) => (
+                  <div key={index} className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 border border-border bg-muted/20 relative group">
+                    <div className="space-y-2 md:col-span-2">
+                      <label className="text-[9px] font-black uppercase tracking-[0.3em] text-muted-foreground">Variant Name</label>
+                      <input
+                        value={variant.variantName}
+                        onChange={(e) => updateVariant(index, 'variantName', e.target.value)}
+                        placeholder="e.g. Size: A3"
+                        required
+                        className="w-full bg-background border border-border px-4 py-2 text-xs font-bold uppercase tracking-widest focus:border-primary/40 outline-none text-foreground"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[9px] font-black uppercase tracking-[0.3em] text-muted-foreground">Add. Price (₹)</label>
+                      <input
+                        type="number"
+                        value={variant.additionalPrice}
+                        onChange={(e) => updateVariant(index, 'additionalPrice', e.target.value)}
+                        required
+                        className="w-full bg-background border border-border px-4 py-2 text-xs font-mono font-bold focus:border-primary/40 outline-none text-foreground"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[9px] font-black uppercase tracking-[0.3em] text-muted-foreground">Stock</label>
+                      <input
+                        type="number"
+                        value={variant.stock}
+                        onChange={(e) => updateVariant(index, 'stock', e.target.value)}
+                        required
+                        className="w-full bg-background border border-border px-4 py-2 text-xs font-mono font-bold focus:border-primary/40 outline-none text-foreground"
+                      />
+                    </div>
+                    <button 
+                      type="button" 
+                      onClick={() => removeVariant(index)}
+                      className="absolute -top-3 -right-3 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X size={12} />
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Visibility & Status */}
         <div className="bg-card border border-border p-8 space-y-8 rounded-xl shadow-sm">

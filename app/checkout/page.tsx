@@ -151,7 +151,7 @@ export default function CheckoutPage() {
         items: items.map((i) => ({
           productId: Number(i.productId),
           quantity: i.quantity,
-          ...(i.variants ? { variantId: Object.values(i.variants)[0] } : {}),
+          variantId: i.variantId ? Number(i.variantId) : undefined,
         })),
         addressId: selectedAddressId, // Already a number
         phoneNumber: phoneNumber.replace(/\s+/g, ''),
@@ -480,7 +480,7 @@ export default function CheckoutPage() {
 
               <div className="space-y-4 max-h-60 overflow-y-auto">
                 {items.map((item) => (
-                  <div key={item.productId} className="flex gap-4">
+                  <div key={`${item.productId}-${item.variantId || 'base'}`} className="flex gap-4">
                     <div className="relative w-16 h-16 bg-background border border-border shrink-0 p-3">
                       <Image src={item.image || '/placeholder.jpg'} alt={item.name} fill className="object-contain" />
                       <span className="absolute -top-2 -right-2 bg-primary text-black w-5 h-5 flex items-center justify-center text-[10px] font-bold rounded-full border-2 border-background shadow-lg">
@@ -489,6 +489,9 @@ export default function CheckoutPage() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-bold uppercase tracking-tight truncate text-foreground">{item.name}</p>
+                      {item.variantName && (
+                        <p className="text-[9px] uppercase tracking-widest text-muted-foreground mt-0.5">{item.variantName}</p>
+                      )}
                       <p className="text-[10px] text-muted-foreground mt-1 font-mono">₹{item.price.toLocaleString('en-IN')}</p>
                     </div>
                   </div>

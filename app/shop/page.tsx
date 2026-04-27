@@ -199,9 +199,11 @@ export default function ShopPage() {
       }
 
       const matchesPrice = p.price >= priceRange[0] && p.price <= priceRange[1]
+      const category = allCategories.find(c => c.id === p.categoryId)
       const matchesSearch = !searchQuery || 
         p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-        p.description.toLowerCase().includes(searchQuery.toLowerCase())
+        p.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        category?.name.toLowerCase().includes(searchQuery.toLowerCase())
       const matchesStock = !inStockOnly || p.inStock
       
       return matchesCategory && matchesPrice && matchesSearch && matchesStock

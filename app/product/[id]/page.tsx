@@ -17,13 +17,13 @@ import { toast } from 'sonner'
 export default function ProductPage() {
   const params = useParams<{ id: string }>()
   const id = params?.id
-  const { data, isLoading: catalogLoading } = useCatalog()
+  const { data, isLoading: catalogLoading, toggleWishlist, wishlistIds } = useCatalog()
   const [product, setProduct] = useState<any>(null)
   const [reviews, setReviews] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [quantity, setQuantity] = useState(1)
   const [selectedImage, setSelectedImage] = useState(0)
-  const [isWishlisted, setIsWishlisted] = useState(false)
+  const isWishlisted = product ? wishlistIds.has(String(product.id)) : false
   const [selectedVariant, setSelectedVariant] = useState<any>(null)
   const dispatch = useAppDispatch()
 
@@ -33,13 +33,12 @@ export default function ProductPage() {
     async function fetchProductDetails() {
       try {
         setLoading(true)
-        // Fetch specific product by ID or Slug (backend guide says /products/:slug but usually ID works too or we can find it in catalog)
-        // For now, let's find it in catalog to get the full object, then fetch reviews
-        const found = data?.products.find((p) => p.id === id)
+        // Fetch specific product by ID or Slug
+        const found = data?.products.find((p) => String(p.id) === id || p.slug === id)
         if (found) {
           setProduct(found)
           // Fetch real reviews
-          const reviewsData = await api.get<any[]>(`/products/${id}/reviews`)
+          const reviewsData = await api.get<any[]>(`/products/${found.id}/reviews`).catch(() => [])
           setReviews(reviewsData)
         }
       } catch (error) {
@@ -267,7 +266,7 @@ export default function ProductPage() {
                   {product.inStock ? 'Add to Cart' : 'Out of Stock'}
                 </button>
                 <button
-                  onClick={() => setIsWishlisted(!isWishlisted)}
+                  onClick={() => product && toggleWishlist(String(product.id))}
                   className={`
                     p-5 border transition-all duration-300
                     ${isWishlisted ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground hover:text-foreground hover:border-foreground/30'}

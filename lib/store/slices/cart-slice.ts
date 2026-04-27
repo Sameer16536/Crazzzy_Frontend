@@ -2,6 +2,8 @@ import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
 
 export type CartItem = {
   productId: string
+  variantId?: number
+  variantName?: string
   name: string
   image?: string
   price: number
@@ -19,7 +21,9 @@ const initialState: CartState = {
 }
 
 function upsertItem(items: CartItem[], next: Omit<CartItem, 'quantity'> & { quantity?: number }) {
-  const idx = items.findIndex((i) => i.productId === next.productId)
+  const idx = items.findIndex((i) => 
+    i.productId === next.productId && i.variantId === next.variantId
+  )
   const addQty = next.quantity ?? 1
   if (idx === -1) {
     items.push({ ...next, quantity: Math.max(1, addQty) })
@@ -40,14 +44,18 @@ export const cartSlice = createSlice({
       upsertItem(state.items, action.payload)
       state.lastUpdatedAt = Date.now()
     },
-    setQuantity(state, action: PayloadAction<{ productId: string; quantity: number }>) {
-      const item = state.items.find((i) => i.productId === action.payload.productId)
+    setQuantity(state, action: PayloadAction<{ productId: string; variantId?: number; quantity: number }>) {
+      const item = state.items.find((i) => 
+        i.productId === action.payload.productId && i.variantId === action.payload.variantId
+      )
       if (!item) return
       item.quantity = Math.max(1, Math.floor(action.payload.quantity))
       state.lastUpdatedAt = Date.now()
     },
-    removeFromCart(state, action: PayloadAction<{ productId: string }>) {
-      state.items = state.items.filter((i) => i.productId !== action.payload.productId)
+    removeFromCart(state, action: PayloadAction<{ productId: string; variantId?: number }>) {
+      state.items = state.items.filter((i) => 
+        !(i.productId === action.payload.productId && i.variantId === action.payload.variantId)
+      )
       state.lastUpdatedAt = Date.now()
     },
     clearCart(state) {

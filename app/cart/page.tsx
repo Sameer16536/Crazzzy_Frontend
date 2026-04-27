@@ -55,7 +55,7 @@ export default function CartPage() {
               </Card>
             ) : (
               items.map((item) => (
-                <Card key={item.productId} className="p-4 sm:p-5">
+                <Card key={`${item.productId}-${item.variantId || 'base'}`} className="p-4 sm:p-5">
                   <div className="flex gap-4">
                     <div className="relative size-20 sm:size-24 rounded-lg overflow-hidden bg-white border border-black/5 p-4">
                       {item.image ? (
@@ -71,13 +71,16 @@ export default function CartPage() {
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
                           <p className="font-semibold text-foreground truncate">{item.name}</p>
+                          {item.variantName && (
+                            <p className="text-[10px] uppercase tracking-widest text-muted-foreground mt-0.5">{item.variantName}</p>
+                          )}
                           <p className="text-sm text-muted-foreground mt-1">{formatINR(item.price)}</p>
                         </div>
                         <Button
                           variant="ghost"
                           size="icon"
                           aria-label="Remove item"
-                          onClick={() => dispatch(removeFromCart({ productId: item.productId }))}
+                          onClick={() => dispatch(removeFromCart({ productId: item.productId, variantId: item.variantId }))}
                         >
                           <Trash2 />
                         </Button>
@@ -89,7 +92,7 @@ export default function CartPage() {
                             variant="ghost"
                             size="icon-sm"
                             aria-label="Decrease quantity"
-                            onClick={() => dispatch(setQuantity({ productId: item.productId, quantity: item.quantity - 1 }))}
+                            onClick={() => dispatch(setQuantity({ productId: item.productId, variantId: item.variantId, quantity: item.quantity - 1 }))}
                           >
                             <Minus />
                           </Button>
@@ -98,7 +101,7 @@ export default function CartPage() {
                             variant="ghost"
                             size="icon-sm"
                             aria-label="Increase quantity"
-                            onClick={() => dispatch(setQuantity({ productId: item.productId, quantity: item.quantity + 1 }))}
+                            onClick={() => dispatch(setQuantity({ productId: item.productId, variantId: item.variantId, quantity: item.quantity + 1 }))}
                           >
                             <Plus />
                           </Button>

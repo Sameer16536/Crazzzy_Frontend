@@ -35,6 +35,13 @@ export type CatalogProduct = {
   soldOut?: boolean
   featured?: boolean
   dealOfTheDay?: boolean
+  slug: string
+  variants?: {
+    id: number
+    variantName: string
+    additionalPrice: string
+    stock: number
+  }[]
 }
 
 interface CatalogContextType {
@@ -205,6 +212,8 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
         soldOut: p.stock === 0,
         featured: p.isFeatured,
         dealOfTheDay: p.isDealOfTheDay,
+        slug: p.slug,
+        variants: p.variants,
       }))
 
       setData({ categories, products })

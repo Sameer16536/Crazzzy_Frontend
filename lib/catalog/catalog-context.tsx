@@ -51,8 +51,9 @@ interface CatalogContextType {
   } | null
   wishlistIds: Set<string>
   isLoading: boolean
+  isSyncing: boolean // Added to track background category switches
   error: string | null
-  refresh: () => Promise<void>
+  refresh: (category?: string) => Promise<void>
   toggleWishlist: (productId: string) => Promise<void>
 }
 
@@ -61,37 +62,16 @@ const CatalogContext = createContext<CatalogContextType | undefined>(undefined)
 const API_BASE = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api').replace(/\/api$/, '')
 
 /**
- * Helper to resolve relative backend image paths or Cloudinary URLs to absolute strings.
- */
-/**
  * Helper to resolve backend image paths or Cloudinary URLs.
- * Handles:
- * 1. Absolute URLs (Cloudinary, external)
- * 2. Relative backend paths (prefixed with API_BASE)
- * 3. Base64/Data URLs
- * 4. Fallback to placeholder
  */
 function resolveImageUrl(url: string | null | undefined): string {
   if (!url) return '/placeholder.jpg'
-
-  // If it's already an absolute URL (like Cloudinary), return it
-  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
-    return url
-  }
-
-  // Otherwise, treat as a relative path from our backend
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) return url
   const base = API_BASE.endsWith('/') ? API_BASE.slice(0, -1) : API_BASE
   const path = url.startsWith('/') ? url : `/${url}`
   return `${base}${path}`
 }
 
-/**
- * Aesthetic metadata for Root Categories.
- * This is used to provide the premium "Cockpit" branding (colors, descriptors)
- * even when fetching dynamic data from the backend.
- * 
- * YOU CAN PASTE YOUR CLOUDINARY URLS INTO 'imageOverride' FOR EACH CATEGORY.
- */
 const CATEGORY_DESIGN_DATA: Record<string, { color: string, description: string, imageOverride?: string }> = {
   'tote-bags': { color: '#c084fc', description: 'Aesthetic tote bags for every vibe' },
   'die-cast-cars-and-bikes': { color: '#f97316', description: 'Premium 1:24 scale die-cast models' },
@@ -104,20 +84,11 @@ const CATEGORY_DESIGN_DATA: Record<string, { color: string, description: string,
   'aesthetic-items': { color: '#8b5cf6', description: 'Curated décor for modern spaces' },
 }
 
-/**
- * Global Catalog Provider
- * 
- * DESIGN RATIONALE:
- * To solve the "taking too much time to load routes" issue, we fetch the entire
- * product and category tree once at the root of the application. This allows:
- * 1. Instant navigation between categories (no spinning loaders).
- * 2. Smooth "Cockpit" sidebar transitions.
- * 3. Global access to product counts and hierarchy.
- */
 export function CatalogProvider({ children }: { children: React.ReactNode }) {
   const [data, setData] = useState<CatalogContextType['data']>(null)
   const [wishlistIds, setWishlistIds] = useState<Set<string>>(new Set())
   const [isLoading, setIsLoading] = useState(true)
+  const [isSyncing, setIsSyncing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   
   const pathname = usePathname()
@@ -125,67 +96,55 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
 
   const fetchWishlist = useCallback(async () => {
     try {
-      const token = localStorage.getItem('accessToken')
-      if (!token) return
-
       const res = await api.get<any>('/users/wishlist')
       const items = res?.data || []
       setWishlistIds(new Set(items.map((p: any) => String(p.id))))
-    } catch (e) {
-      console.error('Failed to fetch wishlist:', e)
-    }
+    } catch (e) { /* silent fail for guests */ }
   }, [])
 
   const toggleWishlist = useCallback(async (productId: string) => {
     try {
-      const token = localStorage.getItem('accessToken')
-      if (!token) {
+      if (!localStorage.getItem('accessToken')) {
         toast.error('Please login to use wishlist')
         return
       }
-
       await api.post(`/users/wishlist/${productId}`, {})
-
       setWishlistIds(prev => {
         const next = new Set(prev)
         if (next.has(productId)) next.delete(productId)
         else next.add(productId)
         return next
       })
-
       toast.success('Wishlist updated')
     } catch (e: any) {
       toast.error(e.message || 'Failed to update wishlist')
     }
   }, [])
 
-  const fetchCatalog = async () => {
+  const fetchCatalog = async (categorySlug?: string) => {
     try {
-      setIsLoading(true)
+      if (!data) setIsLoading(true)
+      else setIsSyncing(true)
 
-      // Fetch both categories and initial products in parallel
+      // If categorySlug is provided, we use the backend's superior hierarchical filter
+      const productQuery = categorySlug ? `/products?category=${categorySlug}&limit=250` : '/products?limit=250'
+
       const [categoriesData, productsData] = await Promise.all([
         api.get<any>('/categories'),
-        api.get<any>('/products?limit=250'), // Increased limit to minimize re-fetching
+        api.get<any>(productQuery),
       ])
 
       const rawCategories = categoriesData.data || []
-
-      // Transform backend categories into our CatalogCategory format
       const categories: CatalogCategory[] = rawCategories.map((c: any) => {
-        // Find design tokens (color/desc) based on the root ancestor's slug
-        // This ensures sub-categories (like 'Anime Posters') share the 'Wall Posters' branding.
         const designSlug = c.parentId ? rawCategories.find((pc: any) => pc.id === c.parentId)?.slug : c.slug
         const design = CATEGORY_DESIGN_DATA[designSlug || ''] || {
           color: '#d4af37',
           description: c.description || 'Explore our curated collection'
         }
-
         return {
           id: String(c.id),
           name: c.name,
           slug: c.slug,
-          // Use imageOverride if provided, otherwise use backend imageUrl
           image: resolveImageUrl(design.imageOverride || c.imageUrl),
           description: design.description,
           color: design.color,
@@ -193,17 +152,17 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
         }
       })
 
-      // Transform backend products
       const rawProducts = productsData.data || []
       const products: CatalogProduct[] = rawProducts.map((p: any) => ({
         id: String(p.id),
-        name: p.title, // Backend uses 'title'
-        categoryId: String(p.categoryId),
+        name: p.title,
+        // CRITICAL FIX: Backend sometimes uses 'category_id' or nested 'category.id'
+        // Using p.categoryId || p.category_id || p.category?.id for maximum robustness
+        categoryId: String(p.categoryId || p.category_id || p.category?.id || ''),
         price: parseFloat(p.price),
         originalPrice: p.originalPrice ? parseFloat(p.originalPrice) : undefined,
         rating: parseFloat(p.ratingAvg || 0),
         reviews: p.reviewCount || 0,
-        // Support multiple images with fallback to main imageUrl
         images: p.images?.length > 0
           ? p.images.map((img: any) => resolveImageUrl(img.imageUrl))
           : [resolveImageUrl(p.imageUrl)],
@@ -220,9 +179,10 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
       setError(null)
     } catch (e) {
       console.error('Catalog Sync Error:', e)
-      setError('Failed to synchronize catalog with Crazzzy backend.')
+      setError('Failed to synchronize catalog.')
     } finally {
       setIsLoading(false)
+      setIsSyncing(false)
     }
   }
 
@@ -231,8 +191,6 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
     fetchWishlist()
   }, [fetchWishlist])
 
-  // Automatically refresh catalog when leaving the admin panel
-  // This ensures the storefront reflects any changes made by the admin (e.g. Featured Products, Deal of the Day)
   useEffect(() => {
     if (lastPathname.current?.startsWith('/admin') && !pathname?.startsWith('/admin')) {
       fetchCatalog()
@@ -244,10 +202,11 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
     data,
     wishlistIds,
     isLoading,
+    isSyncing,
     error,
     refresh: fetchCatalog,
     toggleWishlist
-  }), [data, wishlistIds, isLoading, error, toggleWishlist])
+  }), [data, wishlistIds, isLoading, isSyncing, error, toggleWishlist])
 
   return (
     <CatalogContext.Provider value={value}>

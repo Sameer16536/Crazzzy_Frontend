@@ -148,7 +148,7 @@ function FilterPanel({
 }
 
 export default function ShopPage() {
-  const { data, isLoading, rootCategories, getSubcategories } = useCatalog()
+  const { data, isLoading, isSyncing, refresh, rootCategories, getSubcategories } = useCatalog()
   const searchParams = useSearchParams()
   const router = useRouter()
 
@@ -166,7 +166,13 @@ export default function ShopPage() {
   useEffect(() => {
     const cat = searchParams.get('category')
     const search = searchParams.get('search')
-    if (cat) setSelectedCategorySlug(cat)
+    if (cat) {
+      setSelectedCategorySlug(cat)
+      refresh(cat) // Fetch specific category data on load
+    } else {
+      setSelectedCategorySlug(null)
+      refresh() // Fetch all
+    }
     if (search) setSearchQuery(search)
   }, [searchParams])
 
@@ -177,6 +183,7 @@ export default function ShopPage() {
     if (slug) params.set('category', slug)
     else params.delete('category')
     router.push(`/shop?${params.toString()}`, { scroll: false })
+    // Refresh will be triggered by the useEffect observing searchParams
   }
 
   // Memoized filter logic: includes sub-category inheritance (if parent is selected, show all children)
@@ -297,7 +304,7 @@ export default function ShopPage() {
               </button>
 
               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em]">
-                {isLoading ? 'Scanning...' : `${sortedProducts.length} Results Found`}
+                {isLoading || isSyncing ? 'Scanning...' : `${sortedProducts.length} Results Found`}
               </p>
 
               <div className="flex items-center gap-3">
@@ -316,7 +323,7 @@ export default function ShopPage() {
             </div>
 
             {/* Grid */}
-            {isLoading ? (
+            {isLoading || isSyncing ? (
                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-8">
                  {[...Array(6)].map((_, i) => (
                    <div key={i} className="aspect-square bg-muted animate-pulse border border-border" />

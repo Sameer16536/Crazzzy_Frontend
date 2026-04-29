@@ -113,6 +113,11 @@ export default function OrdersPage() {
                         <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Order ID</p>
                         <p className="text-sm font-black uppercase tracking-widest text-foreground">#{order.id.toString().padStart(6, '0')}</p>
                         <p className="text-[10px] text-muted-foreground/60 uppercase tracking-widest font-light">{new Date(order.createdAt).toLocaleDateString()}</p>
+                        {order.trackingNumber && (
+                          <p className="text-[9px] text-primary/60 uppercase tracking-widest mt-2 font-mono flex items-center gap-1">
+                            <Truck size={10} /> {order.courierName}: {order.trackingNumber}
+                          </p>
+                        )}
                       </div>
                     </div>
 

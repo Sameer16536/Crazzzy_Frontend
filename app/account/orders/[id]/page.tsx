@@ -18,7 +18,9 @@ import {
   MapPin, 
   Phone, 
   CreditCard,
-  ExternalLink
+  ExternalLink,
+  Copy,
+  Check
 } from 'lucide-react'
 import Image from 'next/image'
 
@@ -37,6 +39,14 @@ export default function OrderDetailsPage() {
   const params = useParams()
   const [order, setOrder] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [copied, setCopied] = useState(false)
+
+  const copyId = () => {
+    if (!order) return
+    navigator.clipboard.writeText(String(order.id))
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -106,9 +116,17 @@ export default function OrderDetailsPage() {
             {/* Header */}
             <div className="space-y-6">
               <div className="flex flex-wrap items-center gap-4">
-                <h1 className="text-4xl font-black uppercase tracking-tighter text-foreground">
-                  Order #{order.id.toString().padStart(6, '0')}
-                </h1>
+                <div className="flex items-center gap-2">
+                  <h1 className="text-4xl font-black uppercase tracking-tighter text-foreground">
+                    Order #{order.id.toString().padStart(6, '0')}
+                  </h1>
+                  <button 
+                    onClick={copyId}
+                    className="p-2 hover:bg-muted rounded-full transition-colors text-muted-foreground"
+                  >
+                    {copied ? <Check size={16} className="text-green-500" /> : <Copy size={16} />}
+                  </button>
+                </div>
                 <div className={`flex items-center gap-2 px-4 py-1.5 ${status.bg} ${status.color} border border-current/20 rounded-full`}>
                   <status.icon size={12} />
                   <span className="text-[10px] font-black uppercase tracking-widest">{status.label}</span>
@@ -153,8 +171,8 @@ export default function OrderDetailsPage() {
               </div>
             </div>
 
-            {/* Tracking (If Shipped) */}
-            {order.trackingNumber && (
+            {/* Tracking (If Shipped or info available) */}
+            {(order.trackingNumber || order.courierName || order.estimatedDelivery) && (
               <div className="p-8 bg-primary/5 border border-primary/20 space-y-4">
                 <div className="flex items-center gap-3 text-primary">
                   <Truck size={20} />
@@ -169,6 +187,14 @@ export default function OrderDetailsPage() {
                     <p className="text-[10px] text-muted-foreground uppercase tracking-widest mb-1">Tracking ID</p>
                     <p className="text-sm font-bold font-mono text-primary">{order.trackingNumber}</p>
                   </div>
+                  {order.estimatedDelivery && (
+                    <div className="md:col-span-2 pt-4 border-t border-primary/10">
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-widest mb-1">Estimated Arrival</p>
+                      <p className="text-sm font-bold uppercase tracking-widest text-foreground">
+                        {new Date(order.estimatedDelivery).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             )}

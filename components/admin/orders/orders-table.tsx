@@ -5,13 +5,21 @@ import { api } from '@/lib/api-client'
 import { Card } from '@/components/ui/card'
 import { StatusBadge } from '../status-badge'
 import { OrderActions } from './order-actions'
-import { Loader2, Package, Search, Filter } from 'lucide-react'
+import { Loader2, Package, Search, Filter, Copy, Check } from 'lucide-react'
 import { toast } from 'sonner'
 
 export function OrdersTable() {
   const [orders, setOrders] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
+  const [copiedId, setCopiedId] = useState<string | null>(null)
+
+  const copyToClipboard = (id: string) => {
+    navigator.clipboard.writeText(id)
+    setCopiedId(id)
+    toast.success('ID copied to clipboard')
+    setTimeout(() => setCopiedId(null), 2000)
+  }
 
   const fetchOrders = async () => {
     try {
@@ -86,12 +94,25 @@ export function OrdersTable() {
                   className="border-b border-white/5 hover:bg-white/[0.02] transition-colors group"
                 >
                   <td className="p-6">
-                    <p className="text-xs font-mono font-bold text-primary">#{order.id.toString().padStart(6, '0')}</p>
+                    <div className="flex items-center gap-2 group/id">
+                      <p className="text-xs font-mono font-bold text-primary">#{order.id.toString().padStart(6, '0')}</p>
+                      <button 
+                        onClick={() => copyToClipboard(String(order.id))}
+                        className="opacity-0 group-hover/id:opacity-100 transition-opacity p-1 hover:bg-white/5 rounded"
+                      >
+                        {copiedId === String(order.id) ? <Check size={12} className="text-green-500" /> : <Copy size={12} className="text-white/20" />}
+                      </button>
+                    </div>
                   </td>
                   <td className="p-6">
                     <div className="min-w-0">
                       <p className="text-sm font-black uppercase tracking-tight truncate text-white">{order.user?.name || 'Unknown'}</p>
                       <p className="text-[10px] text-white/20 uppercase tracking-widest truncate">{order.user?.email}</p>
+                      {order.trackingNumber && (
+                        <p className="text-[9px] text-primary/60 uppercase tracking-widest mt-1 font-mono flex items-center gap-1">
+                          <Truck size={10} /> {order.courierName}: {order.trackingNumber}
+                        </p>
+                      )}
                     </div>
                   </td>
                   <td className="p-6 text-[10px] text-white/40 uppercase tracking-widest font-mono">

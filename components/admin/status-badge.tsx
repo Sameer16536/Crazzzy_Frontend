@@ -12,7 +12,7 @@
 import { Badge } from '@/components/ui/badge'
 
 interface StatusBadgeProps {
-  status: 'pending' | 'completed' | 'shipped' | 'cancelled'
+  status: 'pending' | 'completed' | 'shipped' | 'cancelled' | 'paid' | 'delivered' | 'processing'
 }
 
 export function StatusBadge({ status }: StatusBadgeProps) {
@@ -33,6 +33,18 @@ export function StatusBadge({ status }: StatusBadgeProps) {
     cancelled: {
       label: 'Cancelled',
       className: 'bg-red-100 text-red-800 hover:bg-red-200',
+    },
+    paid: {
+      label: 'Paid',
+      className: 'bg-green-100 text-green-800 hover:bg-green-200',
+    },
+    delivered: {
+      label: 'Delivered',
+      className: 'bg-green-100 text-green-800 hover:bg-green-200',
+    },
+    processing: {
+      label: 'Processing',
+      className: 'bg-orange-100 text-orange-800 hover:bg-orange-200',
     },
   }
 

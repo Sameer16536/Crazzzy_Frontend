@@ -101,7 +101,9 @@ export function OrdersTable() {
                     <p className="text-sm font-black font-mono text-white">₹{parseFloat(order.totalAmount).toLocaleString('en-IN')}</p>
                   </td>
                   <td className="p-6">
-                    <PaymentStatusBadge status={order.status === 'PAID' ? 'paid' : 'pending'} />
+                    <PaymentStatusBadge 
+                      status={['PAID', 'SHIPPED', 'DELIVERED', 'PROCESSING'].includes(order.status) ? 'paid' : 'pending'} 
+                    />
                   </td>
                   <td className="p-6">
                     <StatusBadge status={order.status.toLowerCase() as any} />

@@ -42,7 +42,7 @@ export function OrderActions({ orderId, onUpdate }: OrderActionsProps) {
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="p-2 hover:bg-white/5 rounded-lg transition-colors text-white/20 hover:text-white"
+        className="p-2 bg-white/5 border border-white/10 rounded-lg transition-all text-white/40 hover:text-white hover:bg-white/10 active:scale-95"
       >
         <MoreVertical size={18} />
       </button>
@@ -119,6 +119,7 @@ export function OrderActions({ orderId, onUpdate }: OrderActionsProps) {
                       onChange={(e) => setShipData({ ...shipData, status: e.target.value })}
                       className="w-full bg-black border border-white/10 px-4 py-3 text-[10px] font-black uppercase tracking-widest focus:border-primary/40 outline-none transition-all"
                     >
+                      <option value="PAID">Paid</option>
                       <option value="PROCESSING">Processing</option>
                       <option value="SHIPPED">Shipped</option>
                       <option value="DELIVERED">Delivered</option>

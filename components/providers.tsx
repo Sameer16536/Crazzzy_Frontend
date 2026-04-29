@@ -7,6 +7,7 @@ import { CustomCursor } from '@/components/custom-cursor'
 import { LenisProvider } from '@/components/lenis-provider'
 import { AuthProvider } from '@/lib/auth/auth-context'
 import { CatalogProvider } from '@/lib/catalog/use-catalog'
+import { Toaster } from '@/components/ui/sonner'
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const storeRef = useRef<AppStore | null>(null)
@@ -19,6 +20,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
           <CatalogProvider>
             <CustomCursor />
             {children}
+            <Toaster />
           </CatalogProvider>
         </AuthProvider>
       </LenisProvider>

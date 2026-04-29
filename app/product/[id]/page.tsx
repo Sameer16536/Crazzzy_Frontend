@@ -7,17 +7,19 @@ import { ShoppingCart, Heart, Share2, Star, ShieldCheck, ChevronRight } from 'lu
 import Link from 'next/link'
 import { useAppDispatch } from '@/lib/store/hooks'
 import { addToCart } from '@/lib/store/slices/cart-slice'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import { useCatalog } from '@/lib/catalog/use-catalog'
 import { ProductCard } from '@/components/product-card'
 import { api } from '@/lib/api-client'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
+import { useAuth } from '@/lib/auth/auth-context'
+import { ReviewForm } from '@/components/review-form'
 
 export default function ProductPage() {
   const params = useParams<{ id: string }>()
   const id = params?.id
-  const { data, isLoading: catalogLoading, toggleWishlist, wishlistIds } = useCatalog()
+  const { data, isLoading: catalogLoading, toggleWishlist, wishlistIds, refresh: refreshCatalog } = useCatalog()
   const [product, setProduct] = useState<any>(null)
   const [reviews, setReviews] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -25,6 +27,9 @@ export default function ProductPage() {
   const [selectedImage, setSelectedImage] = useState(0)
   const isWishlisted = product ? wishlistIds.has(String(product.id)) : false
   const [selectedVariant, setSelectedVariant] = useState<any>(null)
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false)
+  const { user } = useAuth()
+  const router = useRouter()
   const dispatch = useAppDispatch()
 
   useEffect(() => {
@@ -38,8 +43,8 @@ export default function ProductPage() {
         if (found) {
           setProduct(found)
           // Fetch real reviews
-          const reviewsData = await api.get<any[]>(`/products/${found.id}/reviews`).catch(() => [])
-          setReviews(reviewsData)
+          const reviewsData = await api.get<any>(`/products/${found.id}/reviews`).catch(() => ({ reviews: [] }))
+          setReviews(reviewsData.reviews || [])
         }
       } catch (error) {
         console.error('Failed to fetch product details', error)
@@ -91,6 +96,32 @@ export default function ProductPage() {
         </div>
       </div>
     )
+  }
+
+  const fetchReviews = async () => {
+    if (!product) return
+    try {
+      const reviewsData = await api.get<any>(`/products/${product.id}/reviews`)
+      setReviews(reviewsData.reviews || [])
+    } catch (error) {
+      console.error('Failed to fetch reviews', error)
+    }
+  }
+
+  const handleWriteReview = () => {
+    if (!user) {
+      toast.error('Please login to write a review')
+      router.push('/login?redirect=' + window.location.pathname)
+      return
+    }
+    setIsReviewModalOpen(true)
+  }
+
+  const handleSuccess = async () => {
+    await Promise.all([
+      fetchReviews(),
+      refreshCatalog()
+    ])
   }
 
   const similar = (data?.products ?? [])
@@ -334,7 +365,10 @@ export default function ProductPage() {
                <span className="text-muted-foreground text-xs uppercase tracking-widest">Based on {reviews.length} experiences</span>
             </div>
           </div>
-          <button className="bg-background hover:bg-muted text-foreground border border-border px-8 py-4 font-black uppercase tracking-widest text-[10px] transition-all">
+          <button 
+            onClick={handleWriteReview}
+            className="bg-background hover:bg-muted text-foreground border border-border px-8 py-4 font-black uppercase tracking-widest text-[10px] transition-all"
+          >
             Write a Review
           </button>
         </div>
@@ -346,7 +380,7 @@ export default function ProductPage() {
                 <div className="space-y-1">
                   <div className="flex items-center gap-3">
                     <p className="font-black uppercase tracking-tighter text-lg">{r.userName || r.user?.name || 'Anonymous'}</p>
-                    {r.isVerified && (
+                    {true && (
                       <span className="flex items-center gap-1 text-[8px] bg-primary/10 text-primary border border-primary/20 px-1.5 py-0.5 rounded-full font-bold uppercase tracking-widest">
                         <ShieldCheck size={10} /> Verified
                       </span>
@@ -372,6 +406,17 @@ export default function ProductPage() {
           )}
         </div>
       </section>
+
+      {product && (
+        <ReviewForm
+          productId={Number(product.id)}
+          isOpen={isReviewModalOpen}
+          onClose={() => setIsReviewModalOpen(false)}
+          onSuccess={handleSuccess}
+          initialRating={reviews.find(r => (r.userId || r.user?.id) === user?.id)?.rating}
+          initialComment={reviews.find(r => (r.userId || r.user?.id) === user?.id)?.comment}
+        />
+      )}
     </div>
   )
 }

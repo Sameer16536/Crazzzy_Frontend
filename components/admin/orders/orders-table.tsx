@@ -5,8 +5,9 @@ import { api } from '@/lib/api-client'
 import { Card } from '@/components/ui/card'
 import { StatusBadge } from '../status-badge'
 import { OrderActions } from './order-actions'
-import { Loader2, Package, Search, Filter, Copy, Check } from 'lucide-react'
+import { Loader2, Package, Search, Filter, Copy, Check, Truck } from 'lucide-react'
 import { toast } from 'sonner'
+
 
 export function OrdersTable() {
   const [orders, setOrders] = useState<any[]>([])
@@ -39,7 +40,7 @@ export function OrdersTable() {
     fetchOrders()
   }, [])
 
-  const filteredOrders = Array.isArray(orders) ? orders.filter(o => 
+  const filteredOrders = Array.isArray(orders) ? orders.filter(o =>
     String(o.id).includes(searchQuery) ||
     o.user?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     o.shippingAddress?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -60,10 +61,10 @@ export function OrdersTable() {
           />
         </div>
         <div className="flex items-center gap-4">
-           <button className="px-6 py-4 bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-white/10 transition-all text-white/60">
-             <Filter size={14} />
-             Filter
-           </button>
+          <button className="px-6 py-4 bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-white/10 transition-all text-white/60">
+            <Filter size={14} />
+            Filter
+          </button>
         </div>
       </div>
 
@@ -96,7 +97,7 @@ export function OrdersTable() {
                   <td className="p-6">
                     <div className="flex items-center gap-2 group/id">
                       <p className="text-xs font-mono font-bold text-primary">#{order.id.toString().padStart(6, '0')}</p>
-                      <button 
+                      <button
                         onClick={() => copyToClipboard(String(order.id))}
                         className="opacity-0 group-hover/id:opacity-100 transition-opacity p-1 hover:bg-white/5 rounded"
                       >
@@ -122,8 +123,8 @@ export function OrdersTable() {
                     <p className="text-sm font-black font-mono text-white">₹{parseFloat(order.totalAmount).toLocaleString('en-IN')}</p>
                   </td>
                   <td className="p-6">
-                    <PaymentStatusBadge 
-                      status={['PAID', 'SHIPPED', 'DELIVERED', 'PROCESSING'].includes(order.status) ? 'paid' : 'pending'} 
+                    <PaymentStatusBadge
+                      status={['PAID', 'SHIPPED', 'DELIVERED', 'PROCESSING'].includes(order.status) ? 'paid' : 'pending'}
                     />
                   </td>
                   <td className="p-6">
@@ -137,7 +138,7 @@ export function OrdersTable() {
             </tbody>
           </table>
         </div>
-        
+
         {!loading && filteredOrders.length === 0 && (
           <div className="py-20 text-center text-white/20 border-t border-white/5">
             <p className="text-[10px] font-black uppercase tracking-[0.3em]">No transmissions detected in this sector.</p>

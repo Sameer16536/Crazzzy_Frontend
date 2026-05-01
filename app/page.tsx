@@ -39,18 +39,15 @@ const HERO_VIDEOS = [
  */
 function useVideoCycle(count: number, interval: number = 10_000) {
   const [active, setActive] = useState(0)
-  const [prev, setPrev] = useState<number | null>(null)
   const [fading, setFading] = useState(false)
 
   useEffect(() => {
     const id = setInterval(() => {
       setFading(true)
-      // After fade-out (600ms), swap the active index
       const timer = setTimeout(() => {
-        setPrev((cur) => cur)               // keep old for cleanup
         setActive((cur) => (cur + 1) % count)
         setFading(false)
-      }, 600)
+      }, 800) // Match crossfade duration
       return () => clearTimeout(timer)
     }, interval)
     return () => clearInterval(id)
@@ -176,32 +173,29 @@ function CinematicPortal({ activeIdx, fading }: { activeIdx: number; fading: boo
         {/* Clipped video container */}
         <div
           style={{ clipPath: `url(#${CLIP_ID})`, width: '100%', height: '100%' }}
-          className="relative overflow-hidden"
+          className="relative overflow-hidden bg-black"
         >
-          {/* Current video — fades OUT when switching */}
+          {/* Stable Video Elements - no keys, no re-mounting */}
           <video
-            key={`portal-cur-${activeIdx}`}
-            src={HERO_VIDEOS[activeIdx]}
-            autoPlay muted loop playsInline preload="auto"
+            src={HERO_VIDEOS[0]}
+            autoPlay muted loop playsInline preload="metadata"
             aria-hidden="true"
             className="absolute inset-0 w-full h-full object-cover scale-110"
             style={{
-              willChange: 'transform, opacity',
-              opacity: fading ? 0 : 1,
-              transition: 'opacity 0.6s ease',
+              willChange: 'opacity',
+              opacity: activeIdx === 0 ? (fading ? 0 : 1) : (fading && activeIdx === 1 ? 1 : 0),
+              transition: 'opacity 0.8s ease-in-out',
             }}
           />
-          {/* Next video — fades IN when switching */}
           <video
-            key={`portal-nxt-${nextIdx}`}
-            src={HERO_VIDEOS[nextIdx]}
-            autoPlay muted loop playsInline preload="auto"
+            src={HERO_VIDEOS[1]}
+            autoPlay muted loop playsInline preload="metadata"
             aria-hidden="true"
             className="absolute inset-0 w-full h-full object-cover scale-110"
             style={{
-              willChange: 'transform, opacity',
-              opacity: fading ? 1 : 0,
-              transition: 'opacity 0.6s ease',
+              willChange: 'opacity',
+              opacity: activeIdx === 1 ? (fading ? 0 : 1) : (fading && activeIdx === 0 ? 1 : 0),
+              transition: 'opacity 0.8s ease-in-out',
             }}
           />
           {/* Inner scrim */}
@@ -284,31 +278,28 @@ export default function Home() {
         className="relative h-screen w-full flex items-center justify-center overflow-hidden"
       >
         {/* ── Full-bleed crossfading background videos ── */}
-        {/* Active video — fades out */}
+        {/* Stable Background Videos - no keys, no re-mounting */}
         <video
-          key={`bg-cur-${bgCycle.active}`}
-          src={HERO_VIDEOS[bgCycle.active]}
-          autoPlay muted loop playsInline preload="auto"
+          src={HERO_VIDEOS[0]}
+          autoPlay muted loop playsInline preload="metadata"
           aria-hidden="true"
           className="absolute inset-0 w-full h-full object-cover"
           style={{
             willChange: 'opacity',
-            opacity: bgCycle.fading ? 0 : 1,
-            transition: 'opacity 0.8s ease',
+            opacity: bgCycle.active === 0 ? (bgCycle.fading ? 0 : 1) : (bgCycle.fading && bgCycle.active === 1 ? 1 : 0),
+            transition: 'opacity 1s ease-in-out',
             zIndex: 0,
           }}
         />
-        {/* Next video — fades in */}
         <video
-          key={`bg-nxt-${bgNext}`}
-          src={HERO_VIDEOS[bgNext]}
-          autoPlay muted loop playsInline preload="auto"
+          src={HERO_VIDEOS[1]}
+          autoPlay muted loop playsInline preload="metadata"
           aria-hidden="true"
           className="absolute inset-0 w-full h-full object-cover"
           style={{
             willChange: 'opacity',
-            opacity: bgCycle.fading ? 1 : 0,
-            transition: 'opacity 0.8s ease',
+            opacity: bgCycle.active === 1 ? (bgCycle.fading ? 0 : 1) : (bgCycle.fading && bgCycle.active === 0 ? 1 : 0),
+            transition: 'opacity 1s ease-in-out',
             zIndex: 0,
           }}
         />

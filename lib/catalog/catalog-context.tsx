@@ -66,10 +66,21 @@ const API_BASE = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api'
  */
 function resolveImageUrl(url: string | null | undefined): string {
   if (!url) return '/placeholder.jpg'
-  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) return url
-  const base = API_BASE.endsWith('/') ? API_BASE.slice(0, -1) : API_BASE
-  const path = url.startsWith('/') ? url : `/${url}`
-  return `${base}${path}`
+  
+  let finalUrl = url;
+  if (!(url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:'))) {
+    const base = API_BASE.endsWith('/') ? API_BASE.slice(0, -1) : API_BASE
+    const path = url.startsWith('/') ? url : `/${url}`
+    finalUrl = `${base}${path}`
+  }
+
+  // Optimize Cloudinary URLs on-the-fly (Free tier compatible)
+  // This reduces RAM usage and bandwidth by requesting optimized 800px versions
+  if (finalUrl.includes('res.cloudinary.com') && finalUrl.includes('/upload/')) {
+    return finalUrl.replace('/upload/', '/upload/w_800,q_auto,f_auto/')
+  }
+
+  return finalUrl
 }
 
 const CATEGORY_DESIGN_DATA: Record<string, { color: string, description: string, imageOverride?: string }> = {

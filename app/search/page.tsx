@@ -69,7 +69,7 @@ export default function SearchPage() {
         </div>
 
         {matchingProducts.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 gap-y-12">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-8 gap-y-6 md:gap-y-12">
             {matchingProducts.map(product => (
               <ProductCard key={product.id} product={product} />
             ))}

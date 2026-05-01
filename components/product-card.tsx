@@ -73,7 +73,7 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
   return (
     <Link href={`/product/${product.id}`}>
       <motion.div
-        className="group cursor-pointer h-full flex flex-col"
+        className="group cursor-pointer h-full flex flex-col active:scale-[0.98] md:active:scale-100 transition-transform"
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
@@ -81,7 +81,7 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
       >
         {/* Image Container */}
         <div
-          className="relative w-full aspect-square bg-card rounded-2xl overflow-hidden mb-4 flex-shrink-0 transition-transform duration-300 group-hover:scale-[1.02]"
+          className="relative w-full aspect-square bg-card rounded-xl md:rounded-2xl overflow-hidden mb-3 md:mb-4 flex-shrink-0 transition-transform duration-300 group-hover:scale-[1.02]"
           onMouseEnter={() => setIsImageHovered(true)}
           onMouseLeave={() => setIsImageHovered(false)}
         >
@@ -137,7 +137,7 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
           {/* Wishlist Button */}
           <button
             className={cn(
-              "absolute bottom-4 right-4 z-20 p-3 rounded-full backdrop-blur-sm transition-all cursor-interactive border",
+              "absolute bottom-2 right-2 md:bottom-4 md:right-4 z-20 p-2 md:p-3 rounded-full backdrop-blur-sm transition-all cursor-interactive border",
               isWishlisted 
                 ? "bg-primary border-primary text-primary-foreground" 
                 : "bg-white/20 border-white/10 text-black hover:bg-white/40"
@@ -149,50 +149,50 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
             }}
           >
             <Heart 
-              size={18} 
-              className={cn("transition-transform duration-300", isWishlisted && "fill-current scale-110")} 
+              size={16} 
+              className={cn("md:w-[18px] md:h-[18px] transition-transform duration-300", isWishlisted && "fill-current scale-110")} 
             />
           </button>
         </div>
 
         {/* Product Info Section */}
-        <div className="flex flex-1 flex-col gap-2.5">
+        <div className="flex flex-1 flex-col gap-1.5 md:gap-2.5">
           {/* Product Name */}
-          <div className="min-h-[44px]">
-            <h3 className="text-sm sm:text-base font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-2 leading-snug">
+          <div className="min-h-[36px] md:min-h-[44px]">
+            <h3 className="text-[13px] md:text-base font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-2 leading-tight md:leading-snug">
               {product.name}
             </h3>
           </div>
 
           {/* Rating Stars */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 md:gap-2">
             <div className="flex gap-0.5">
               {[...Array(5)].map((_, i) => (
                 <span
                   key={i}
-                  className="text-xs"
+                  className="text-[10px] md:text-xs"
                 >
                   {i < Math.floor(product.rating) ? '★' : '☆'}
                 </span>
               ))}
             </div>
-            <span className="text-xs text-muted-foreground ml-auto">
+            <span className="text-[10px] md:text-xs text-muted-foreground ml-auto">
               {product.rating}
-              <span className="text-muted-foreground/60 ml-1">({product.reviews})</span>
+              <span className="hidden md:inline text-muted-foreground/60 ml-1">({product.reviews})</span>
             </span>
           </div>
 
           {/* Price Section */}
-          <div className="flex items-baseline gap-2 py-1">
-            <span className="text-base sm:text-lg font-bold text-foreground">
+          <div className="flex items-baseline gap-1.5 md:gap-2 py-0.5 md:py-1">
+            <span className="text-sm md:text-lg font-bold text-foreground">
               ₹{product.price.toLocaleString('en-IN')}
             </span>
             {product.originalPrice && product.originalPrice > product.price && (
               <>
-                <span className="text-sm text-muted-foreground line-through">
+                <span className="text-[10px] md:text-sm text-muted-foreground line-through">
                   ₹{product.originalPrice.toLocaleString('en-IN')}
                 </span>
-                <span className="text-xs font-semibold text-primary ml-auto">
+                <span className="hidden md:inline text-xs font-semibold text-primary ml-auto">
                   {Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}% OFF
                 </span>
               </>
@@ -207,8 +207,8 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
           {/* Spacer */}
           <div className="flex-1" />
 
-          {/* Magnetic Add to Cart Button */}
-          <div ref={magneticRef} className="relative">
+          {/* Add to Cart Button - Responsive */}
+          <div ref={magneticRef} className="relative mt-auto">
             <motion.button
               onClick={(e) => {
                 e.preventDefault()
@@ -222,13 +222,16 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
                       quantity: 1,
                     }),
                   )
+                  toast.success('Added to cart')
                 }
               }}
               className={cn(
-                'w-full py-3 rounded-xl font-semibold text-sm transition-all duration-200 flex items-center justify-center gap-2 cursor-interactive',
+                'w-full transition-all duration-200 flex items-center justify-center gap-2 cursor-interactive rounded-xl',
                 product.inStock
-                  ? 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl'
+                  ? 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm hover:shadow-md'
                   : 'bg-muted text-muted-foreground cursor-not-allowed opacity-50',
+                // Responsive sizing
+                'h-9 md:h-12 text-[11px] md:text-sm font-semibold'
               )}
               disabled={!product.inStock}
               style={
@@ -239,11 +242,16 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
                   }
                   : undefined
               }
-              whileTap={{ scale: 0.98 }}
-              transition={{ type: 'spring', stiffness: 150, damping: 15 }}
+              whileTap={{ scale: 0.96 }}
+              transition={{ type: 'spring', stiffness: 200, damping: 20 }}
             >
-              <ShoppingCart size={16} className="flex-shrink-0" />
-              <span>{product.inStock ? 'Add to Cart' : 'Out of Stock'}</span>
+              <ShoppingCart size={14} className="md:w-4 md:h-4 flex-shrink-0" />
+              <span>{product.inStock ? (
+                <>
+                  <span className="md:hidden">Add</span>
+                  <span className="hidden md:inline">Add to Cart</span>
+                </>
+              ) : 'Out of Stock'}</span>
             </motion.button>
           </div>
         </div>

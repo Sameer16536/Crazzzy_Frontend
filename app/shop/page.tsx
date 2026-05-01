@@ -324,14 +324,14 @@ export default function ShopPage() {
 
             {/* Grid */}
             {isLoading || isSyncing ? (
-               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-8">
+               <div className="grid grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-8">
                  {[...Array(6)].map((_, i) => (
                    <div key={i} className="aspect-square bg-muted animate-pulse border border-border" />
                  ))}
                </div>
             ) : sortedProducts.length > 0 ? (
               <motion.div 
-                className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-8"
+                className="grid grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-8"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
               >

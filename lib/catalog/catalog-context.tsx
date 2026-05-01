@@ -59,7 +59,9 @@ interface CatalogContextType {
 
 const CatalogContext = createContext<CatalogContextType | undefined>(undefined)
 
-const API_BASE = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api').replace(/\/api$/, '')
+const API_BASE = (process.env.NEXT_PUBLIC_API_URL || '').startsWith('/') 
+  ? '/backend-static' 
+  : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api').replace(/\/api$/, '')
 
 /**
  * Helper to resolve backend image paths or Cloudinary URLs.

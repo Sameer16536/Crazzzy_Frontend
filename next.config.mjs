@@ -28,6 +28,18 @@ const nextConfig = {
       },
     ],
   },
+  async rewrites() {
+    return [
+      {
+        source: '/api-proxy/:path*',
+        destination: 'https://crazzzybackend-production.up.railway.app/api/:path*',
+      },
+      {
+        source: '/backend-static/:path*',
+        destination: 'https://crazzzybackend-production.up.railway.app/:path*',
+      },
+    ]
+  },
 }
 
 export default nextConfig

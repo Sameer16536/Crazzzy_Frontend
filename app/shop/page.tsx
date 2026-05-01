@@ -294,30 +294,32 @@ export default function ShopPage() {
           {/* Main List */}
           <div className="flex-1 space-y-12">
             {/* Toolbar */}
-            <div className="flex items-center justify-between border-b border-white/5 pb-6">
-              <button 
-                onClick={() => setMobileFilterOpen(true)}
-                className="lg:hidden flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary"
-              >
-                <SlidersHorizontal size={14} />
-                Filters
-              </button>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5 pb-6">
+              <div className="flex items-center justify-between w-full sm:w-auto gap-4">
+                <button 
+                  onClick={() => setMobileFilterOpen(true)}
+                  className="lg:hidden flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary border border-primary/20 px-3 py-2 rounded-lg"
+                >
+                  <SlidersHorizontal size={14} />
+                  Filters
+                </button>
 
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em]">
-                {isLoading || isSyncing ? 'Scanning...' : `${sortedProducts.length} Results Found`}
-              </p>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] whitespace-nowrap">
+                  {isLoading || isSyncing ? 'Scanning...' : `${sortedProducts.length} Items`}
+                </p>
+              </div>
 
-              <div className="flex items-center gap-3">
-                <span className="hidden sm:inline text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Sort By:</span>
+              <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest whitespace-nowrap">Sort:</span>
                 <select 
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
-                  className="bg-muted border border-border px-4 py-2 text-[10px] font-black uppercase tracking-widest focus:outline-none focus:border-primary/50 cursor-pointer"
+                  className="flex-1 sm:flex-none bg-muted border border-border px-3 py-2 text-[10px] font-black uppercase tracking-widest focus:outline-none focus:border-primary/50 cursor-pointer min-w-[140px]"
                 >
-                  <option value="newest">Newest Arrivals</option>
-                  <option value="price_asc">Price: Low to High</option>
-                  <option value="price_desc">Price: High to Low</option>
-                  <option value="popularity">Most Popular</option>
+                  <option value="newest">Newest</option>
+                  <option value="price_asc">Price: Low</option>
+                  <option value="price_desc">Price: High</option>
+                  <option value="popularity">Popular</option>
                 </select>
               </div>
             </div>

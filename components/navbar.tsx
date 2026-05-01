@@ -304,15 +304,36 @@ export function Navbar() {
                       <div className="space-y-4">
                         <p className="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Collections</p>
                         <div className="space-y-1">
-                          {rootCategories.map((c) => (
-                            <Link
-                              key={c.id}
-                              href={`/shop?category=${c.slug}`}
-                              className="block py-2 text-sm font-bold text-foreground hover:text-primary transition-colors uppercase tracking-widest"
-                            >
-                              {c.name}
-                            </Link>
-                          ))}
+                          {rootCategories.map((c) => {
+                            const subs = getSubcategories(c.id)
+                            const hasSubs = subs.length > 0
+
+                            return (
+                              <div key={c.id} className="space-y-1">
+                                <div className="flex items-center justify-between">
+                                  <Link
+                                    href={`/shop?category=${c.slug}`}
+                                    className="block py-2 text-sm font-bold text-foreground hover:text-primary transition-colors uppercase tracking-widest"
+                                  >
+                                    {c.name}
+                                  </Link>
+                                </div>
+                                {hasSubs && (
+                                  <div className="pl-4 border-l border-border/50 space-y-1 ml-1">
+                                    {subs.map((sub) => (
+                                      <Link
+                                        key={sub.id}
+                                        href={`/shop?category=${sub.slug}`}
+                                        className="block py-1.5 text-[11px] font-medium text-muted-foreground hover:text-primary transition-colors uppercase tracking-wider"
+                                      >
+                                        {sub.name}
+                                      </Link>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            )
+                          })}
                         </div>
                       </div>
 

@@ -23,6 +23,7 @@ import {
   Check
 } from 'lucide-react'
 import Image from 'next/image'
+import { toast } from 'sonner'
 
 const STATUS_MAP: Record<string, { label: string, icon: any, color: string, bg: string }> = {
   PENDING: { label: 'Pending', icon: Clock, color: 'text-yellow-500', bg: 'bg-yellow-500/10' },
@@ -67,6 +68,21 @@ export default function OrderDetailsPage() {
       setOrder(res?.data || res)
     } catch (error) {
       console.error('Failed to fetch order details', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleCancelOrder = async () => {
+    if (!window.confirm('Are you sure you want to cancel this order? If paid, a refund will be initiated.')) return
+    
+    try {
+      setLoading(true)
+      await api.post(`/orders/${order.id}/cancel`, {})
+      toast.success('Order cancelled successfully')
+      fetchOrderDetails()
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to cancel order')
     } finally {
       setLoading(false)
     }
@@ -257,6 +273,16 @@ export default function OrderDetailsPage() {
                 <span className="text-xs font-black uppercase tracking-widest text-foreground">Grand Total</span>
                 <span className="text-2xl font-black font-mono text-primary">₹{parseFloat(order.totalAmount).toLocaleString('en-IN')}</span>
               </div>
+
+              {['PENDING', 'PAID'].includes(order.status) && (
+                <button
+                  onClick={handleCancelOrder}
+                  disabled={loading}
+                  className="w-full bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 py-4 text-[10px] font-black uppercase tracking-widest transition-all mt-4 disabled:opacity-50"
+                >
+                  {loading ? 'Processing...' : 'Cancel Order'}
+                </button>
+              )}
             </div>
 
           </div>

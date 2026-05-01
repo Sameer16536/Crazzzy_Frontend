@@ -110,7 +110,7 @@ export function Navbar() {
                     PRODUCTS
                   </NavigationMenuTrigger>
                   <NavigationMenuContent className="md:w-[600px]">
-                    <div className="grid grid-cols-2 gap-4 p-6">
+                    <div className="grid grid-cols-2 gap-2 p-4">
                       {rootCategories.map((c) => {
                         const subs = getSubcategories(c.id).slice(0, 3)
                         return (
@@ -118,13 +118,13 @@ export function Navbar() {
                             <NavigationMenuLink asChild>
                               <Link
                                 href={`/shop?category=${c.slug}`}
-                                className="group/item block space-y-3 p-5 hover:bg-primary transition-all duration-500 rounded-none border border-transparent hover:border-primary/20 shadow-none hover:shadow-xl hover:shadow-primary/5"
+                                className="group/item block space-y-2 p-3 hover:bg-primary transition-all duration-500 rounded-none border border-transparent hover:border-primary/20 shadow-none hover:shadow-xl hover:shadow-primary/5"
                               >
                                 <div className="text-[11px] font-black text-primary group-hover/item:text-black uppercase tracking-[0.2em] flex items-center gap-2 transition-colors">
                                   {c.name}
                                   <ChevronRight size={12} className="opacity-0 group-hover/item:opacity-100 group-hover/item:translate-x-1 transition-all" />
                                 </div>
-                                <div className="text-[10px] text-muted-foreground/90 group-hover/item:text-black/80 line-clamp-2 uppercase tracking-tight transition-colors leading-relaxed">
+                                <div className="text-[10px] text-muted-foreground/90 group-hover/item:text-black/80 line-clamp-2 uppercase tracking-tight transition-colors leading-tight">
                                   {c.description}
                                 </div>
                               </Link>

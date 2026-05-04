@@ -200,24 +200,35 @@ export default function ProductPage() {
                     <Star key={i} size={14} className={i < Math.floor(product.rating) ? 'fill-primary' : 'text-muted-foreground/20'} />
                   ))}
                 </div>
-                <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">
+                <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold font-body">
                   {product.rating} Rating / {product.reviews} Reviews
                 </span>
               </div>
             </div>
 
+            {/* Product Description — Fixed: Added missing section */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">The Overview</span>
+                <div className="flex-1 h-px bg-border/40" />
+              </div>
+              <p className="text-sm sm:text-base text-muted-foreground/80 leading-relaxed font-medium font-body max-w-xl">
+                {product.description}
+              </p>
+            </div>
+
             <div className="bg-muted/30 border border-border p-8 sm:p-12 space-y-10">
               <div className="flex items-baseline gap-4">
-                <span className="text-5xl font-black text-foreground">
+                <span className="text-5xl font-black text-foreground font-price">
                   ₹{displayPrice.toLocaleString('en-IN')}
                 </span>
                 {product.originalPrice && (
-                  <span className="text-2xl text-muted-foreground line-through font-light">
+                  <span className="text-2xl text-muted-foreground line-through font-light font-price">
                     ₹{Number(product.originalPrice).toLocaleString('en-IN')}
                   </span>
                 )}
               </div>
-              <p className="text-xs text-muted-foreground font-light tracking-wide italic">
+              <p className="text-[10px] text-muted-foreground font-medium tracking-wide uppercase font-body opacity-60">
                 * Prices inclusive of all taxes. Worldwide shipping available.
               </p>
             </div>
@@ -313,14 +324,14 @@ export default function ProductPage() {
                 <ShieldCheck className="text-primary shrink-0" size={20} />
                 <div className="space-y-1">
                   <p className="text-[10px] font-black uppercase tracking-widest">Secure Checkout</p>
-                  <p className="text-[10px] text-muted-foreground leading-relaxed font-light">Razorpay verified safe transactions.</p>
+                  <p className="text-[10px] text-muted-foreground leading-relaxed font-medium font-body">Razorpay verified safe transactions.</p>
                 </div>
               </div>
               <div className="flex gap-4 items-start">
                 <Share2 className="text-primary shrink-0" size={20} />
                 <div className="space-y-1">
                   <p className="text-[10px] font-black uppercase tracking-widest">Global Delivery</p>
-                  <p className="text-[10px] text-muted-foreground leading-relaxed font-light">Doorstep delivery across the universe.</p>
+                  <p className="text-[10px] text-muted-foreground leading-relaxed font-medium font-body">Doorstep delivery across the universe.</p>
                 </div>
               </div>
             </div>

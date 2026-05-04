@@ -80,6 +80,7 @@ interface CardInnerProps {
   href: string
   category: {
     name: string
+    slug: string
     image?: string
     color: string
     description: string
@@ -158,14 +159,46 @@ function SkeletonCard({ area, aspectRatio }: AreaConfig) {
 }
 
 export function BentoGridCategories() {
-  const { rootCategories: categories, isLoading, byCategory, getSubcategories } = useCatalog()
+  const { rootCategories: rawCategories, isLoading, byCategory, getSubcategories } = useCatalog()
+
+  // Custom ordering logic - deterministic and performance-optimized
+  const categories = useMemo(() => {
+    if (!rawCategories || rawCategories.length === 0) return []
+
+    // 1. Define the exact order you want by slug
+    const PREFERRED_ORDER = [
+      'aesthetic-items',
+      'anime-figures',
+      'chocolate-and-beverages',
+      'wall-posters',
+      'die-cast-cars-and-bikes',
+      'hot-wheels',
+      'keychains',
+      'perfumes',
+      'tote-bags'
+    ]
+
+    // 2. Build the ordered list
+    const ordered: any[] = []
+    const remaining = [...rawCategories]
+
+    PREFERRED_ORDER.forEach(slug => {
+      const idx = remaining.findIndex(c => c.slug === slug)
+      if (idx !== -1) {
+        ordered.push(remaining.splice(idx, 1)[0])
+      }
+    })
+
+    // 3. Add any categories that weren't in the preferred list (fallback)
+    return [...ordered, ...remaining]
+  }, [rawCategories])
 
   // Pre-calculate random images for categories that don't have one
   const categoryImages = useMemo(() => {
     if (!categories || categories.length === 0) return {}
-    
+
     const imageMap: Record<string, string> = {}
-    
+
     categories.forEach(cat => {
       // If category has a branding image, use it
       if (cat.image && !cat.image.includes('placeholder')) {
@@ -176,7 +209,7 @@ export function BentoGridCategories() {
       // Otherwise, gather all products in this category and its sub-categories
       const subs = getSubcategories(cat.id)
       const allCategoryIds = [cat.id, ...subs.map(s => s.id)]
-      
+
       const pool: string[] = []
       allCategoryIds.forEach(id => {
         const products = byCategory.get(id) || []
@@ -261,7 +294,7 @@ export function BentoGridCategories() {
         >
           {breakCategories.map((category) => {
             const displayImage = categoryImages[category.id] || category.image
-            
+
             return (
               <motion.div
                 key={category.id}

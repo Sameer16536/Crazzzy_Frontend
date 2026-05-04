@@ -6,7 +6,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { Search, ShoppingCart, Menu, LayoutDashboard, LogOut, User as UserIcon, ShieldCheck, ChevronRight } from 'lucide-react'
 import { useCatalog } from '@/lib/catalog/use-catalog'
@@ -37,7 +37,33 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { X } from 'lucide-react'
 
 export function Navbar() {
-  const { rootCategories, getSubcategories, data } = useCatalog()
+  const { rootCategories: rawCategories, getSubcategories, data } = useCatalog()
+
+  // Deterministic category order for the navbar
+  const categories = useMemo(() => {
+    if (!rawCategories) return []
+    const PREFERRED_ORDER = [
+      'wall-posters', // User requested: first
+      'aesthetic-items',
+      'anime-figures',
+      'chocolate-and-beverages',
+      'die-cast-cars-and-bikes',
+      'hot-wheels',
+      'keychains',
+      'perfumes',
+      'tote-bags'
+    ]
+
+    const ordered: any[] = []
+    const remaining = [...rawCategories]
+
+    PREFERRED_ORDER.forEach(slug => {
+      const idx = remaining.findIndex(c => c.slug === slug)
+      if (idx !== -1) ordered.push(remaining.splice(idx, 1)[0])
+    })
+
+    return [...ordered, ...remaining]
+  }, [rawCategories])
   const cartCount = useAppSelector((s) => s.cart.items.reduce((sum, i) => sum + i.quantity, 0))
   const { user, loading, logout, checkAdmin } = useAuth()
   const router = useRouter()
@@ -69,7 +95,7 @@ export function Navbar() {
     ? data.products.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase())).slice(0, 3)
     : []
 
-  const suggestedCategories = rootCategories
+  const suggestedCategories = categories
     .filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase()))
     .slice(0, 3)
 
@@ -111,7 +137,7 @@ export function Navbar() {
                   </NavigationMenuTrigger>
                   <NavigationMenuContent className="md:w-[600px]">
                     <div className="grid grid-cols-2 gap-2 p-4">
-                      {rootCategories.map((c) => {
+                      {categories.map((c) => {
                         const subs = getSubcategories(c.id).slice(0, 3)
                         return (
                           <div key={c.id} className="space-y-3">
@@ -304,7 +330,7 @@ export function Navbar() {
                       <div className="space-y-4">
                         <p className="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Collections</p>
                         <div className="space-y-1">
-                          {rootCategories.map((c) => {
+                          {categories.map((c) => {
                             const subs = getSubcategories(c.id)
                             const hasSubs = subs.length > 0
 

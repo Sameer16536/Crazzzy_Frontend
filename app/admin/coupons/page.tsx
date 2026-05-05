@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Ticket, Search, Plus, Trash2, Loader2, Tag, Calendar, Percent } from 'lucide-react'
 import { toast } from 'sonner'
 import { AdminLayout } from '@/components/admin/layout'
+import { ConfirmModal } from '@/components/admin/confirm-modal'
 
 export default function CouponsPage() {
   const [coupons, setCoupons] = useState<any[]>([])
@@ -14,6 +15,8 @@ export default function CouponsPage() {
   const [showAddModal, setShowAddModal] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [editingId, setEditingId] = useState<number | null>(null)
+  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null)
+  const [isRevoking, setIsRevoking] = useState(false)
 
   const [newCoupon, setNewCoupon] = useState({
     code: '',
@@ -96,14 +99,22 @@ export default function CouponsPage() {
     setShowAddModal(true)
   }
 
-  const handleDelete = async (id: number) => {
-    if (!confirm('Are you sure you want to revoke this coupon?')) return
+  const handleDelete = (id: number) => {
+    setConfirmDeleteId(id)
+  }
+
+  const confirmDelete = async () => {
+    if (!confirmDeleteId) return
+    setIsRevoking(true)
     try {
-      await api.delete(`/admin/coupons/${id}`)
+      await api.delete(`/admin/coupons/${confirmDeleteId}`)
       toast.success('Coupon revoked')
+      setConfirmDeleteId(null)
       fetchCoupons()
     } catch (error: any) {
       toast.error('Revocation failed')
+    } finally {
+      setIsRevoking(false)
     }
   }
 
@@ -321,6 +332,18 @@ export default function CouponsPage() {
           </div>
         )}
       </AnimatePresence>
+
+      <ConfirmModal
+        isOpen={confirmDeleteId !== null}
+        onClose={() => setConfirmDeleteId(null)}
+        onConfirm={confirmDelete}
+        isLoading={isRevoking}
+        title="Revoke Artifact"
+        description="Are you sure you want to revoke this coupon code? This action will immediately deactivate the discount artifact and prevent further usage across all universe nodes."
+        confirmText="Yes, Revoke"
+        cancelText="Abort"
+        isDestructive={true}
+      />
     </AdminLayout>
   )
 }

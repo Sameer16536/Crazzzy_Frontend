@@ -5,6 +5,8 @@ import { MoreVertical, Eye, Printer, Edit, X, RotateCcw, Truck, Loader2, Check }
 import { api } from '@/lib/api-client'
 import { toast } from 'sonner'
 import { motion, AnimatePresence } from 'framer-motion'
+import Link from 'next/link'
+import { ConfirmModal } from '@/components/admin/confirm-modal'
 
 interface OrderActionsProps {
   orderId: string
@@ -14,7 +16,9 @@ interface OrderActionsProps {
 export function OrderActions({ orderId, onUpdate }: OrderActionsProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [showShipModal, setShowShipModal] = useState(false)
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isCancelling, setIsCancelling] = useState(false)
 
   const [shipData, setShipData] = useState({
     status: 'SHIPPED',
@@ -37,7 +41,19 @@ export function OrderActions({ orderId, onUpdate }: OrderActionsProps) {
       setIsSubmitting(false)
     }
   }
-
+  const handleCancelOrder = async () => {
+    setIsCancelling(true)
+    try {
+      await api.post(`/admin/orders/${orderId}/cancel`)
+      toast.success('Order cancelled and stock restored')
+      setShowCancelConfirm(false)
+      if (onUpdate) onUpdate()
+    } catch (error: any) {
+      toast.error(error.message || 'Cancellation failed')
+    } finally {
+      setIsCancelling(false)
+    }
+  }
   return (
     <div className="relative">
       <button
@@ -74,10 +90,8 @@ export function OrderActions({ orderId, onUpdate }: OrderActionsProps) {
 
             <button
               onClick={() => {
-                if (window.confirm('Are you sure you want to cancel this order?')) {
-                  console.log('Cancel order', orderId)
-                }
                 setIsOpen(false)
+                setShowCancelConfirm(true)
               }}
               className="w-full flex items-center space-x-3 px-4 py-3 text-[10px] font-black uppercase tracking-widest hover:bg-red-500/10 transition-all text-red-500/60"
             >
@@ -189,8 +203,19 @@ export function OrderActions({ orderId, onUpdate }: OrderActionsProps) {
           </div>
         )}
       </AnimatePresence>
+
+      <ConfirmModal
+        isOpen={showCancelConfirm}
+        onClose={() => setShowCancelConfirm(false)}
+        onConfirm={handleCancelOrder}
+        isLoading={isCancelling}
+        title="Cancel Order"
+        description="Are you sure you want to cancel this order? This action will immediately terminate the fulfillment process, restore inventory supply, and initiate refund protocols if applicable."
+        confirmText="Yes, Cancel Order"
+        cancelText="Abort"
+        isDestructive={true}
+      />
     </div>
   )
 }
 
-import Link from 'next/link'

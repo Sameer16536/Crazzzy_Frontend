@@ -14,6 +14,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { ConfirmModal } from '@/components/admin/confirm-modal'
 
 interface Category {
   id: string
@@ -32,6 +33,8 @@ export function ProductsTable() {
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [totalProducts, setTotalProducts] = useState(0)
+  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null)
+  const [isDecommissioning, setIsDecommissioning] = useState(false)
   const limit = 10
 
   // Fetch real categories from the API
@@ -92,14 +95,22 @@ export function ProductsTable() {
     return () => clearTimeout(timer)
   }, [selectedCategory, searchQuery, currentPage, fetchProducts])
 
-  const handleDelete = async (id: number) => {
-    if (!confirm('Are you sure you want to decommission this artifact?')) return
+  const handleDelete = (id: number) => {
+    setConfirmDeleteId(id)
+  }
+
+  const confirmDelete = async () => {
+    if (!confirmDeleteId) return
+    setIsDecommissioning(true)
     try {
-      await api.delete(`/admin/products/${id}`)
+      await api.delete(`/admin/products/${confirmDeleteId}`)
       toast.success('Artifact decommissioned')
+      setConfirmDeleteId(null)
       fetchProducts(selectedCategory || undefined, searchQuery || undefined, currentPage)
     } catch (error: any) {
       toast.error(error.message || 'Decommission failed')
+    } finally {
+      setIsDecommissioning(false)
     }
   }
 
@@ -312,6 +323,18 @@ export function ProductsTable() {
           </div>
         )}
       </div>
+
+      <ConfirmModal
+        isOpen={confirmDeleteId !== null}
+        onClose={() => setConfirmDeleteId(null)}
+        onConfirm={confirmDelete}
+        isLoading={isDecommissioning}
+        title="Decommission Artifact"
+        description="Are you sure you want to decommission this product? This action will permanently remove the artifact from the registry and stop all supply chain operations."
+        confirmText="Yes, Decommission"
+        cancelText="Abort"
+        isDestructive={true}
+      />
     </div>
   )
 }

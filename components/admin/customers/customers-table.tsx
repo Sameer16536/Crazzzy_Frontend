@@ -6,11 +6,19 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Users, Search, MoreHorizontal, Shield, ShieldAlert, Ban, Trash2, Loader2, Check, X } from 'lucide-react'
 import { toast } from 'sonner'
 import Image from 'next/image'
+import { ConfirmModal } from '@/components/admin/confirm-modal'
 
 export function CustomersTable() {
   const [users, setUsers] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
+  const [confirmAction, setConfirmAction] = useState<{
+    title: string;
+    description: string;
+    onConfirm: () => Promise<void>;
+    isDestructive?: boolean;
+  } | null>(null)
+  const [isProcessing, setIsProcessing] = useState(false)
 
   const fetchUsers = async () => {
     try {
@@ -30,37 +38,56 @@ export function CustomersTable() {
     fetchUsers()
   }, [])
 
-  const handleRoleChange = async (userId: number, currentRole: string) => {
+  const handleRoleChange = (userId: number, currentRole: string) => {
     const newRole = currentRole === 'ADMIN' ? 'USER' : 'ADMIN'
-    if (!confirm(`Are you sure you want to ${newRole === 'ADMIN' ? 'PROMOTE' : 'DEMOTE'} this user?`)) return
-    try {
-      await api.patch(`/admin/users/${userId}/role`, { role: newRole })
-      toast.success(`User updated to ${newRole}`)
-      fetchUsers()
-    } catch (error: any) {
-      toast.error(error.message || 'Operation failed')
-    }
+    setConfirmAction({
+      title: `${newRole === 'ADMIN' ? 'Promote' : 'Demote'} Identity`,
+      description: `Are you sure you want to ${newRole === 'ADMIN' ? 'elevate' : 'restrict'} this user's access privileges to ${newRole} status?`,
+      isDestructive: newRole === 'USER',
+      onConfirm: async () => {
+        await api.patch(`/admin/users/${userId}/role`, { role: newRole })
+        toast.success(`User updated to ${newRole}`)
+        fetchUsers()
+      }
+    })
   }
 
-  const handleBanToggle = async (userId: number, isBanned: boolean) => {
-    if (!confirm(`Are you sure you want to ${isBanned ? 'UNBAN' : 'BAN'} this user?`)) return
-    try {
-      await api.patch(`/admin/users/${userId}/ban`, { is_banned: !isBanned })
-      toast.success(isBanned ? 'User restored' : 'User access revoked')
-      fetchUsers()
-    } catch (error: any) {
-      toast.error(error.message || 'Operation failed')
-    }
+  const handleBanToggle = (userId: number, isBanned: boolean) => {
+    setConfirmAction({
+      title: `${isBanned ? 'Restore' : 'Revoke'} Access`,
+      description: `Are you sure you want to ${isBanned ? 'unban' : 'ban'} this user? ${isBanned ? 'Access to all systems will be restored.' : 'Access to all systems will be immediately terminated.'}`,
+      isDestructive: !isBanned,
+      onConfirm: async () => {
+        await api.patch(`/admin/users/${userId}/ban`, { is_banned: !isBanned })
+        toast.success(isBanned ? 'User restored' : 'User access revoked')
+        fetchUsers()
+      }
+    })
   }
 
-  const handleDelete = async (userId: number) => {
-    if (!confirm('PERMANENT DELETION: Are you sure you want to purge this user account?')) return
+  const handleDelete = (userId: number) => {
+    setConfirmAction({
+      title: "Purge Identity",
+      description: "PERMANENT DELETION: Are you sure you want to purge this user account from the central registry? This action is irreversible and all associated data will be terminated.",
+      isDestructive: true,
+      onConfirm: async () => {
+        await api.delete(`/admin/users/${userId}`)
+        toast.success('User purged from registry')
+        fetchUsers()
+      }
+    })
+  }
+
+  const executeConfirm = async () => {
+    if (!confirmAction) return
+    setIsProcessing(true)
     try {
-      await api.delete(`/admin/users/${userId}`)
-      toast.success('User purged from registry')
-      fetchUsers()
+      await confirmAction.onConfirm()
+      setConfirmAction(null)
     } catch (error: any) {
-      toast.error(error.message || 'Purge failed')
+      toast.error(error.message || 'Operation failure')
+    } finally {
+      setIsProcessing(false)
     }
   }
 
@@ -172,6 +199,18 @@ export function CustomersTable() {
           </table>
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={confirmAction !== null}
+        onClose={() => setConfirmAction(null)}
+        onConfirm={executeConfirm}
+        isLoading={isProcessing}
+        title={confirmAction?.title || ''}
+        description={confirmAction?.description || ''}
+        isDestructive={confirmAction?.isDestructive}
+        confirmText="Confirm Operation"
+        cancelText="Abort"
+      />
     </div>
   )
 }

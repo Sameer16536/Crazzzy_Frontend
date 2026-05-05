@@ -120,7 +120,7 @@ export function Navbar() {
             <div className="w-8 h-8 bg-gradient-to-br from-primary to-accent flex items-center justify-center">
               <span className="text-primary-foreground font-black text-sm">C</span>
             </div>
-            <span className="text-foreground hidden sm:inline">crazzzy</span>
+            <span className="text-foreground inline">crazzzy</span>
           </Link>
 
           {/* ── Desktop Navigation ── */}
@@ -314,6 +314,9 @@ export function Navbar() {
                       <span className="inline-flex size-7 items-center justify-center bg-primary text-primary-foreground font-black text-sm">C</span>
                       <span className="font-black text-foreground">CRAZZZY</span>
                     </SheetTitle>
+                    <div className="absolute right-6 top-6">
+                      <ThemeToggle variant="outline" />
+                    </div>
                   </SheetHeader>
 
                   <div className="flex flex-col h-full overflow-y-auto">

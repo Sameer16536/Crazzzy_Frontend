@@ -18,13 +18,26 @@ export async function adminLogin(formData: FormData) {
   const password = formData.get('password')?.toString() || ''
 
   try {
-    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
+    let API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
     
-    const response = await fetch(`${API_URL}/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
-    });
+    // Server actions run in Node.js, which requires absolute URLs for fetch().
+    // If the configured URL is a relative proxy path (e.g. '/api-proxy'),
+    // we bypass the proxy and hit the real backend directly to avoid crashes.
+    if (API_URL.startsWith('/')) {
+      API_URL = process.env.BACKEND_API_URL || 'https://crazzzybackend-production.up.railway.app/api';
+    }
+
+    let response;
+    try {
+      response = await fetch(`${API_URL}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+    } catch (fetchError: any) {
+      console.error('[Admin Login] Server fetch error:', fetchError.message);
+      return { error: `Connection failed: ${fetchError.message}` }
+    }
 
     const data = await response.json();
 

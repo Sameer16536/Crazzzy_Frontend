@@ -59,8 +59,8 @@ interface CatalogContextType {
 
 const CatalogContext = createContext<CatalogContextType | undefined>(undefined)
 
-const API_BASE = (process.env.NEXT_PUBLIC_API_URL || '').startsWith('/')
-  ? '/backend-static'
+const API_BASE = (process.env.NEXT_PUBLIC_API_URL || '').startsWith('/') 
+  ? '/backend-static' 
   : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api').replace(/\/api$/, '')
 
 /**
@@ -68,7 +68,7 @@ const API_BASE = (process.env.NEXT_PUBLIC_API_URL || '').startsWith('/')
  */
 function resolveImageUrl(url: string | null | undefined): string {
   if (!url) return '/placeholder.jpg'
-
+  
   let finalUrl = url;
   if (!(url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:'))) {
     const base = API_BASE.endsWith('/') ? API_BASE.slice(0, -1) : API_BASE
@@ -103,7 +103,7 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
   const [isSyncing, setIsSyncing] = useState(false)
   const [error, setError] = useState<string | null>(null)
-
+  
   const pathname = usePathname()
   const lastPathname = useRef(pathname)
 

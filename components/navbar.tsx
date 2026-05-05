@@ -6,6 +6,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { Search, ShoppingCart, Menu, LayoutDashboard, LogOut, User as UserIcon, ShieldCheck, ChevronRight } from 'lucide-react'
@@ -91,7 +92,7 @@ export function Navbar() {
   }, [searchOpen])
 
   // Compute live search results for the dropdown
-  const searchResults = data?.products 
+  const searchResults = data?.products
     ? data.products.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase())).slice(0, 3)
     : []
 
@@ -115,12 +116,17 @@ export function Navbar() {
           {/* ── Logo ── */}
           <Link
             href="/"
-            className="flex items-center gap-2 font-bold text-lg sm:text-xl hover:opacity-80 transition-opacity flex-shrink-0"
+            className="flex items-center hover:opacity-80 transition-opacity flex-shrink-0"
           >
-            <div className="w-8 h-8 bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-              <span className="text-primary-foreground font-black text-sm">C</span>
+            <div className="relative w-48 sm:w-56 h-12 sm:h-16 flex items-center justify-center overflow-hidden">
+              <Image
+                src="/logo-light.png"
+                alt="Crazzzy Collectibles"
+                fill
+                className="object-contain mix-blend-multiply dark:invert dark:mix-blend-screen scale-[3] sm:scale-[3.5]"
+                priority
+              />
             </div>
-            <span className="text-foreground inline">crazzzy</span>
           </Link>
 
           {/* ── Desktop Navigation ── */}
@@ -156,8 +162,8 @@ export function Navbar() {
                               </Link>
                             </NavigationMenuLink>
 
-                             {/* Sub-categories preview */}
-                             {subs.length > 0 && (
+                            {/* Sub-categories preview */}
+                            {subs.length > 0 && (
                               <div className="flex flex-wrap gap-x-4 gap-y-2 px-1">
                                 {subs.map(sub => (
                                   <Link
@@ -311,8 +317,15 @@ export function Navbar() {
                 <SheetContent side="left" className="p-0 w-[280px] sm:w-[320px] bg-background border-border">
                   <SheetHeader className="border-b border-border px-6 py-6">
                     <SheetTitle className="flex items-center gap-2 text-left">
-                      <span className="inline-flex size-7 items-center justify-center bg-primary text-primary-foreground font-black text-sm">C</span>
-                      <span className="font-black text-foreground">CRAZZZY</span>
+                      <div className="relative w-56 h-16 flex items-center justify-center overflow-hidden">
+                        <Image
+                          src="/logo-light.png"
+                          alt="Crazzzy Collectibles"
+                          fill
+                          className="object-contain mix-blend-multiply dark:invert dark:mix-blend-screen scale-[3.5]"
+                          priority
+                        />
+                      </div>
                     </SheetTitle>
                     <div className="absolute right-6 top-6">
                       <ThemeToggle variant="outline" />
@@ -422,7 +435,7 @@ export function Navbar() {
             className="absolute top-full left-0 w-full bg-background border-b border-border shadow-2xl overflow-hidden z-40"
           >
             <div className="max-w-4xl mx-auto px-6 py-8">
-              
+
               {/* Search Input */}
               <form onSubmit={handleSearchSubmit} className="flex items-center justify-between border border-border bg-muted/20 px-6 py-4 rounded-none group hover:border-primary/50 focus-within:border-primary transition-colors">
                 <div className="flex flex-col flex-1">
@@ -451,14 +464,14 @@ export function Navbar() {
               {/* Two Column Layout */}
               {searchQuery.trim().length > 0 && (
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-12 mt-12">
-                  
+
                   {/* Left: Suggestions */}
                   <div className="md:col-span-4 space-y-6">
                     <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.4em] border-b border-border pb-3">Suggestions</h4>
                     <ul className="space-y-4">
                       {suggestedCategories.map(cat => (
                         <li key={cat.id}>
-                          <Link 
+                          <Link
                             href={`/shop?category=${cat.slug}`}
                             onClick={() => setSearchOpen(false)}
                             className="text-sm font-bold uppercase tracking-widest text-foreground hover:text-primary transition-colors block"
@@ -468,7 +481,7 @@ export function Navbar() {
                         </li>
                       ))}
                       <li>
-                        <button 
+                        <button
                           onClick={handleSearchSubmit}
                           className="text-sm font-bold uppercase tracking-widest text-primary hover:opacity-80 transition-opacity flex items-center gap-2 mt-4"
                         >

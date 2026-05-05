@@ -17,6 +17,7 @@
 import { Navbar } from '@/components/navbar'
 import { ProductCard } from '@/components/product-card'
 import Link from 'next/link'
+import Image from 'next/image'
 import { Mail, Instagram, Facebook, Youtube, Twitter, MapPin, ArrowRight, ChevronDown } from 'lucide-react'
 import { BentoGridCategories } from '@/components/bento-grid-categories'
 import { useCatalog } from '@/lib/catalog/use-catalog'
@@ -607,11 +608,13 @@ export default function Home() {
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
             >
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center">
-                  <span className="text-black font-black text-sm">C</span>
-                </div>
-                <span className="text-foreground font-black text-lg tracking-tight">CRAZZZY</span>
+              <div className="relative w-56 sm:w-64 h-16 flex items-center justify-center overflow-hidden">
+                <Image
+                  src="/logo-light.png"
+                  alt="Crazzzy Collectibles"
+                  fill
+                  className="object-contain mix-blend-multiply dark:invert dark:mix-blend-screen scale-[2.5]"
+                />
               </div>
               <p className="text-muted-foreground text-sm leading-relaxed">
                 Curating premium aesthetic pieces for modern spaces. New‑age meets vintage in every collection.

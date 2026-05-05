@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { X, LayoutDashboard, Package, ShoppingCart, Users, Settings, LogOut, ExternalLink, ShieldCheck, Ticket, Star, Zap } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -52,15 +53,16 @@ export function AdminSidebar({ open, onOpenChange }: AdminSidebarProps) {
       >
         {/* Sidebar Header */}
         <div className="h-24 flex items-center justify-between px-8 border-b border-border bg-muted/20">
-          <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 bg-primary flex items-center justify-center relative overflow-hidden">
-               <span className="text-primary-foreground font-black text-xl relative z-10">C</span>
-               <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+          <Link href="/" className="flex flex-col gap-2 group mt-2">
+            <div className="relative w-48 h-12 flex items-center justify-center overflow-hidden">
+              <Image
+                src="/logo-light.png"
+                alt="Crazzzy Collectibles"
+                fill
+                className="object-contain mix-blend-multiply dark:invert dark:mix-blend-screen scale-[2]"
+              />
             </div>
-            <div className="flex flex-col">
-              <span className="font-black text-lg tracking-tighter text-foreground">COCKPIT</span>
-              <span className="text-[8px] text-primary font-mono tracking-[0.4em] uppercase">Control Center</span>
-            </div>
+            <span className="text-[8px] text-primary font-mono tracking-[0.4em] uppercase">Cockpit Control Center</span>
           </Link>
 
           <button
@@ -84,15 +86,15 @@ export function AdminSidebar({ open, onOpenChange }: AdminSidebarProps) {
                 onClick={() => onOpenChange(false)}
                 className={cn(
                   'flex items-center gap-4 px-4 py-4 transition-all duration-300 relative group',
-                  active 
-                    ? 'text-primary bg-primary/5' 
+                  active
+                    ? 'text-primary bg-primary/5'
                     : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
                 )}
               >
                 {active && (
-                  <motion.div 
+                  <motion.div
                     layoutId="active-nav"
-                    className="absolute left-0 w-1 h-6 bg-primary" 
+                    className="absolute left-0 w-1 h-6 bg-primary"
                   />
                 )}
                 <Icon size={18} className={cn('transition-transform group-hover:scale-110', active ? 'text-primary' : 'text-muted-foreground/40')} />
@@ -102,20 +104,20 @@ export function AdminSidebar({ open, onOpenChange }: AdminSidebarProps) {
           })}
 
           <div className="pt-12">
-             <p className="px-4 text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground/40 mb-6">Universe</p>
-             <Link
-                href="/"
-                className="flex items-center gap-4 px-4 py-4 text-muted-foreground hover:text-foreground transition-all group"
-              >
-                <ExternalLink size={18} className="text-muted-foreground/40" />
-                <span className="font-bold text-[10px] uppercase tracking-widest">Live Store</span>
-              </Link>
+            <p className="px-4 text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground/40 mb-6">Universe</p>
+            <Link
+              href="/"
+              className="flex items-center gap-4 px-4 py-4 text-muted-foreground hover:text-foreground transition-all group"
+            >
+              <ExternalLink size={18} className="text-muted-foreground/40" />
+              <span className="font-bold text-[10px] uppercase tracking-widest">Live Store</span>
+            </Link>
           </div>
         </nav>
 
         {/* Footer */}
         <div className="p-4 border-t border-border bg-muted/20">
-          <button 
+          <button
             onClick={logout}
             className="w-full flex items-center gap-4 px-4 py-4 text-red-500/60 hover:text-red-500 transition-all group hover:bg-red-500/5"
           >

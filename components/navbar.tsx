@@ -123,7 +123,7 @@ export function Navbar() {
                 src="/logo-light.png"
                 alt="Crazzzy Collectibles"
                 fill
-                className="object-contain mix-blend-multiply dark:invert dark:mix-blend-screen scale-[3] sm:scale-[3.5]"
+                className="object-contain mix-blend-multiply dark:invert dark:mix-blend-screen scale-[3] sm:scale-[2.5]"
                 priority
               />
             </div>
@@ -317,12 +317,12 @@ export function Navbar() {
                 <SheetContent side="left" className="p-0 w-[280px] sm:w-[320px] bg-background border-border">
                   <SheetHeader className="border-b border-border px-6 py-6">
                     <SheetTitle className="flex items-center gap-2 text-left">
-                      <div className="relative w-56 h-16 flex items-center justify-center overflow-hidden">
+                      <div className="relative w-48 h-14 flex items-center justify-center overflow-hidden">
                         <Image
                           src="/logo-light.png"
                           alt="Crazzzy Collectibles"
                           fill
-                          className="object-contain mix-blend-multiply dark:invert dark:mix-blend-screen scale-[3.5]"
+                          className="object-contain mix-blend-multiply dark:invert dark:mix-blend-screen scale-[2.5]"
                           priority
                         />
                       </div>

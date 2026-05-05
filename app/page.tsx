@@ -454,7 +454,7 @@ export default function Home() {
         <div className="space-y-10">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <motion.h2
-              className="text-4xl sm:text-5xl lg:text-6xl font-black text-foreground leading-none"
+              className="text-3xl sm:text-5xl lg:text-6xl font-black text-foreground leading-[1.1] sm:leading-none tracking-tight"
               initial={{ opacity: 0, y: 24 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -502,7 +502,7 @@ export default function Home() {
           <div className="space-y-10">
             <div className="flex items-end justify-between">
               <motion.h2
-                className="text-4xl sm:text-5xl font-black text-foreground leading-none"
+                className="text-3xl sm:text-5xl font-black text-foreground leading-[1.1] sm:leading-none tracking-tight"
                 initial={{ opacity: 0, y: 24 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -598,7 +598,7 @@ export default function Home() {
           ════════════════════════════════════════════════════════════════════ */}
       <footer className="bg-card border-t border-border/20 mt-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-12 mb-12">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
             {/* Brand */}
             <motion.div
               className="space-y-4"
@@ -695,8 +695,8 @@ export default function Home() {
               <div className="space-y-2 pt-2 border-t border-border/20">
                 <div className="flex gap-2 items-center">
                   <Mail size={14} className="text-primary flex-shrink-0" />
-                  <a href="mailto:info@crazzzy.com" className="text-muted-foreground hover:text-primary transition-colors text-sm font-mono">
-                    info@crazzzy.com
+                  <a href="mailto:storecrazzzy@gmail.com" className="text-muted-foreground hover:text-primary transition-colors text-sm font-mono">
+                    storecrazzzy@gmail.com
                   </a>
                 </div>
                 <div className="flex gap-2 items-center">

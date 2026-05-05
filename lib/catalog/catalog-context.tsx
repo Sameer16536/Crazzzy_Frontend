@@ -110,7 +110,7 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
   const fetchWishlist = useCallback(async () => {
     try {
       const res = await api.get<any>('/users/wishlist')
-      const items = res?.data || []
+      const items = res?.wishlist || res?.data || []
       setWishlistIds(new Set(items.map((p: any) => String(p.id))))
     } catch (e) { /* silent fail for guests */ }
   }, [])

@@ -75,13 +75,15 @@ export default function AccountDashboardPage() {
   const fetchStats = async () => {
     try {
       setLoading(true)
-      const [orders, wishlist] = await Promise.all([
-        api.get<any[]>('/orders'),
-        api.get<any[]>('/users/wishlist')
+      const [orders, wishlistRes] = await Promise.all([
+        api.get<any>('/orders'),
+        api.get<any>('/users/wishlist')
       ])
+      const wishlistArr = wishlistRes?.wishlist || wishlistRes?.data || wishlistRes || []
+      const ordersArr = orders?.orders || orders?.data || orders || []
       setStats({
-        orders: orders.length,
-        wishlist: wishlist.length
+        orders: Array.isArray(ordersArr) ? ordersArr.length : 0,
+        wishlist: Array.isArray(wishlistArr) ? wishlistArr.length : 0
       })
     } catch (error) {
       console.error('Failed to fetch stats', error)

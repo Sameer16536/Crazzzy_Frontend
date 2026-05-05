@@ -22,6 +22,7 @@ import { motion, useMotionValue, useSpring } from 'framer-motion'
 export function CustomCursor() {
   const [isHovering, setIsHovering] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [isDesktop, setIsDesktop] = useState(false)
 
   // Raw mouse coordinates (updated on every mousemove, no re-render)
   const rawX = useMotionValue(-100)
@@ -33,6 +34,20 @@ export function CustomCursor() {
 
   useEffect(() => {
     setMounted(true)
+    const checkDevice = () => {
+      setIsDesktop(window.innerWidth >= 1024 && window.matchMedia('(pointer: fine)').matches)
+    }
+    
+    checkDevice()
+    window.addEventListener('resize', checkDevice)
+    return () => window.removeEventListener('resize', checkDevice)
+  }, [])
+
+  useEffect(() => {
+    if (!isDesktop) {
+      document.documentElement.style.cursor = ''
+      return
+    }
 
     /**
      * Track mouse position via MotionValues to avoid triggering React re-renders
@@ -64,10 +79,10 @@ export function CustomCursor() {
       document.removeEventListener('mousemove', onMove)
       document.documentElement.style.cursor = ''
     }
-  }, [rawX, rawY])
+  }, [rawX, rawY, isDesktop])
 
-  // Don't render on server (MotionValues are client-only)
-  if (!mounted) return null
+  // Don't render on server or mobile devices
+  if (!mounted || !isDesktop) return null
 
   return (
     <>

@@ -14,6 +14,9 @@
 
 import { useState } from 'react'
 import { MoreVertical, Edit, Trash2, Eye } from 'lucide-react'
+import { ConfirmModal } from '@/components/admin/confirm-modal'
+import { toast } from 'sonner'
+import { api } from '@/lib/api-client'
 
 interface ProductActionsProps {
   productId: string
@@ -22,7 +25,24 @@ interface ProductActionsProps {
 export function ProductActions({ productId }: ProductActionsProps) {
   // Dropdown menu state
   const [isOpen, setIsOpen] = useState(false)
-
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const handleConfirmDelete = async () => {
+    setIsDeleting(true)
+    try {
+      await api.delete(`/admin/products/${productId}`)
+      toast.success('Artifact decommissioned')
+      setShowDeleteConfirm(false)
+      // Since this is a simple action menu, we might need a way to refresh parent
+      // but the table usually handles its own state. 
+      // This component seems redundant if products-table.tsx exists, but let's keep it safe.
+      window.location.reload() 
+    } catch (error: any) {
+      toast.error(error.message || 'Decommission failed')
+    } finally {
+      setIsDeleting(false)
+    }
+  }
   return (
     <div className="relative">
       {/* Menu toggle button */}
@@ -74,15 +94,8 @@ export function ProductActions({ productId }: ProductActionsProps) {
             {/* Delete action - destructive */}
             <button
               onClick={() => {
-                // Show confirmation and delete
-                if (
-                  window.confirm(
-                    'Are you sure you want to delete this product?'
-                  )
-                ) {
-                  console.log('Delete product', productId)
-                }
                 setIsOpen(false)
+                setShowDeleteConfirm(true)
               }}
               className="w-full flex items-center space-x-3 px-4 py-2 text-sm hover:bg-destructive/10 transition-colors text-destructive"
             >
@@ -92,6 +105,18 @@ export function ProductActions({ productId }: ProductActionsProps) {
           </div>
         </>
       )}
+
+      <ConfirmModal
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={handleConfirmDelete}
+        isLoading={isDeleting}
+        title="Decommission Artifact"
+        description="Are you sure you want to delete this product? This action will permanently remove the artifact from the registry and stop all supply chain operations."
+        confirmText="Yes, Decommission"
+        cancelText="Abort"
+        isDestructive={true}
+      />
     </div>
   )
 }

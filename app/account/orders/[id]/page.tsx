@@ -24,6 +24,7 @@ import {
 } from 'lucide-react'
 import Image from 'next/image'
 import { toast } from 'sonner'
+import { ConfirmModal } from '@/components/admin/confirm-modal'
 
 const STATUS_MAP: Record<string, { label: string, icon: any, color: string, bg: string }> = {
   PENDING: { label: 'Pending', icon: Clock, color: 'text-yellow-500', bg: 'bg-yellow-500/10' },
@@ -41,6 +42,8 @@ export default function OrderDetailsPage() {
   const [order, setOrder] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [copied, setCopied] = useState(false)
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false)
+  const [isCancelling, setIsCancelling] = useState(false)
 
   const copyId = () => {
     if (!order) return
@@ -73,18 +76,21 @@ export default function OrderDetailsPage() {
     }
   }
 
-  const handleCancelOrder = async () => {
-    if (!window.confirm('Are you sure you want to cancel this order? If paid, a refund will be initiated.')) return
-    
+  const handleCancelOrder = () => {
+    setShowCancelConfirm(true)
+  }
+
+  const executeCancel = async () => {
     try {
-      setLoading(true)
+      setIsCancelling(true)
       await api.post(`/orders/${order.id}/cancel`, {})
       toast.success('Order cancelled successfully')
+      setShowCancelConfirm(false)
       fetchOrderDetails()
     } catch (error: any) {
       toast.error(error.message || 'Failed to cancel order')
     } finally {
-      setLoading(false)
+      setIsCancelling(false)
     }
   }
 
@@ -289,6 +295,19 @@ export default function OrderDetailsPage() {
 
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={showCancelConfirm}
+        onClose={() => setShowCancelConfirm(false)}
+        onConfirm={executeCancel}
+        isLoading={isCancelling}
+        title="Cancel Order"
+        description="Are you sure you want to cancel this order? If you've already paid, a full refund will be automatically initiated to your original payment method."
+        confirmText="Yes, Cancel Order"
+        cancelText="Keep Order"
+        isDestructive={true}
+        subtitle="Request Cancellation"
+      />
     </div>
   )
 }

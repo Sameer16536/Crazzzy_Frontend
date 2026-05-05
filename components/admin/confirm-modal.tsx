@@ -13,6 +13,7 @@ interface ConfirmModalProps {
   cancelText?: string
   isDestructive?: boolean
   isLoading?: boolean
+  subtitle?: string
 }
 
 export function ConfirmModal({
@@ -24,7 +25,8 @@ export function ConfirmModal({
   confirmText = 'Proceed',
   cancelText = 'Abort',
   isDestructive = true,
-  isLoading = false
+  isLoading = false,
+  subtitle = 'System Authorization Required'
 }: ConfirmModalProps) {
   return (
     <AnimatePresence>
@@ -67,7 +69,7 @@ export function ConfirmModal({
                 <h2 className="text-xl font-black uppercase tracking-tighter leading-none text-white">{title}</h2>
                 <div className="flex items-center gap-2">
                   <div className={`w-4 h-px ${isDestructive ? 'bg-red-500/40' : 'bg-primary/40'}`} />
-                  <span className={`text-[8px] font-mono tracking-[0.3em] uppercase ${isDestructive ? 'text-red-500/60' : 'text-primary/60'}`}>System Authorization Required</span>
+                  <span className={`text-[8px] font-mono tracking-[0.3em] uppercase ${isDestructive ? 'text-red-500/60' : 'text-primary/60'}`}>{subtitle}</span>
                 </div>
               </div>
             </div>

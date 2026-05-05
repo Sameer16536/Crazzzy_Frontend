@@ -1,12 +1,12 @@
 'use client'
 
-import { useState, useEffect, FormEvent, useCallback } from 'react'
+import { useState, useEffect, FormEvent, useCallback, useRef } from 'react'
 import { Button } from '@/components/ui/button'
-import { AlertCircle, Package, Layers, Info, Upload, X, Loader2 } from 'lucide-react'
+import { AlertCircle, Package, Layers, Info, Upload, X, Loader2, ImagePlus } from 'lucide-react'
 import { api } from '@/lib/api-client'
 import { toast } from 'sonner'
-import { motion } from 'framer-motion'
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
 
 interface Category {
   id: number
@@ -24,19 +24,28 @@ interface FormData {
   price: string
   originalPrice: string
   stock: string
-  images: string[]
   tags: string
   isFeatured: boolean
   isDealOfTheDay: boolean
   isActive: boolean
-  variants: { variantName: string, additionalPrice: string, stock: string }[]
+  variants: { variantName: string; additionalPrice: string; stock: string }[]
+}
+
+// Existing images from Cloudinary (URL based)
+interface ExistingImage {
+  id?: number
+  imageUrl: string
+  publicId?: string
 }
 
 export function ProductForm({ productId }: { productId?: string }) {
+  const router = useRouter()
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
-  
+
   const [formData, setFormData] = useState<FormData>({
     title: '',
     description: '',
@@ -45,7 +54,6 @@ export function ProductForm({ productId }: { productId?: string }) {
     price: '',
     originalPrice: '',
     stock: '',
-    images: [],
     tags: '',
     isFeatured: false,
     isDealOfTheDay: false,
@@ -53,18 +61,23 @@ export function ProductForm({ productId }: { productId?: string }) {
     variants: [],
   })
 
+  // Existing images (already uploaded to Cloudinary, shown in edit mode)
+  const [existingImages, setExistingImages] = useState<ExistingImage[]>([])
+  // New local files chosen by the admin (not yet uploaded)
+  const [newFiles, setNewFiles] = useState<File[]>([])
+  const [newFilePreviews, setNewFilePreviews] = useState<string[]>([])
+
   const fetchInitialData = useCallback(async () => {
     try {
       setLoading(true)
-      
+
       // 1. Fetch Categories
       const catRes = await api.get<any>('/categories')
       const allCats = Array.isArray(catRes?.data) ? catRes.data : (Array.isArray(catRes) ? catRes : [])
-      
       const mainCategories = allCats.filter((c: any) => !c.parentId)
       const categoriesWithSubs = mainCategories.map((main: any) => ({
         ...main,
-        subcategories: allCats.filter((c: any) => c.parentId === main.id)
+        subcategories: allCats.filter((c: any) => c.parentId === main.id),
       }))
       setCategories(categoriesWithSubs)
 
@@ -72,7 +85,7 @@ export function ProductForm({ productId }: { productId?: string }) {
       if (productId) {
         const prodRes = await api.get<any>(`/admin/products/${productId}`)
         const product = prodRes?.data || prodRes
-        
+
         setFormData({
           title: product.title || '',
           description: product.description || '',
@@ -81,21 +94,30 @@ export function ProductForm({ productId }: { productId?: string }) {
           price: String(product.price || ''),
           originalPrice: String(product.originalPrice || ''),
           stock: String(product.stock || ''),
-          images: Array.isArray(product.images) ? product.images.map((img: any) => img.imageUrl) : (product.imageUrl ? [product.imageUrl] : []),
           tags: Array.isArray(product.tags) ? product.tags.map((t: any) => t.name).join(', ') : '',
           isFeatured: !!product.isFeatured,
           isDealOfTheDay: !!product.isDealOfTheDay,
           isActive: product.isActive !== false,
-          variants: Array.isArray(product.variants) ? product.variants.map((v: any) => ({
-            variantName: v.variantName,
-            additionalPrice: String(v.additionalPrice || '0'),
-            stock: String(v.stock || '0'),
-          })) : [],
+          variants: Array.isArray(product.variants)
+            ? product.variants.map((v: any) => ({
+                variantName: v.variantName,
+                additionalPrice: String(v.additionalPrice || '0'),
+                stock: String(v.stock || '0'),
+              }))
+            : [],
         })
+
+        // Load existing images
+        const imgs: ExistingImage[] = Array.isArray(product.images) && product.images.length > 0
+          ? product.images.map((img: any) => ({ id: img.id, imageUrl: img.imageUrl, publicId: img.publicId }))
+          : product.imageUrl
+          ? [{ imageUrl: product.imageUrl, publicId: product.publicId }]
+          : []
+        setExistingImages(imgs)
       }
     } catch (error) {
       console.error('Error initializing form:', error)
-      toast.error('Failed to initialize product data')
+      toast.error('Failed to load product data')
     } finally {
       setLoading(false)
     }
@@ -105,18 +127,83 @@ export function ProductForm({ productId }: { productId?: string }) {
     fetchInitialData()
   }, [fetchInitialData])
 
+  // Clean up blob URLs when component unmounts
+  useEffect(() => {
+    return () => {
+      newFilePreviews.forEach(url => URL.revokeObjectURL(url))
+    }
+  }, [newFilePreviews])
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selected = Array.from(e.target.files || [])
+    if (!selected.length) return
+
+    const totalImages = existingImages.length + newFiles.length + selected.length
+    if (totalImages > 5) {
+      toast.error('Maximum 5 images allowed per product')
+      return
+    }
+
+    const previews = selected.map(f => URL.createObjectURL(f))
+    setNewFiles(prev => [...prev, ...selected])
+    setNewFilePreviews(prev => [...prev, ...previews])
+
+    // Reset input so same file can be re-selected if needed
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
+
+  const removeExistingImage = (index: number) => {
+    setExistingImages(prev => prev.filter((_, i) => i !== index))
+  }
+
+  const removeNewFile = (index: number) => {
+    URL.revokeObjectURL(newFilePreviews[index])
+    setNewFiles(prev => prev.filter((_, i) => i !== index))
+    setNewFilePreviews(prev => prev.filter((_, i) => i !== index))
+  }
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
+
+    if (existingImages.length === 0 && newFiles.length === 0) {
+      toast.error('Please upload at least one product image')
+      return
+    }
+
     setSubmitting(true)
     try {
+      // Build FormData — required for multipart file upload
+      const fd = new FormData()
+
+      // Text fields
+      fd.append('title', formData.title)
+      fd.append('description', formData.description)
+      fd.append('categoryId', formData.categoryId)
+      fd.append('price', formData.price)
+      if (formData.originalPrice) fd.append('originalPrice', formData.originalPrice)
+      fd.append('stock', formData.stock)
+      fd.append('tags', formData.tags)
+      fd.append('isFeatured', String(formData.isFeatured))
+      fd.append('isDealOfTheDay', String(formData.isDealOfTheDay))
+      fd.append('isActive', String(formData.isActive))
+      fd.append('variants', JSON.stringify(formData.variants))
+
+      // Attach new image files under field name "images" (matches backend: upload.array('images', 5))
+      newFiles.forEach(file => fd.append('images', file))
+
       if (productId) {
-        await api.patch(`/admin/products/${productId}`, formData)
-        toast.success('Product updated successfully')
+        // PUT /admin/products/:id — backend uses upload.array('images', 5) + productUpdateValidation
+        await api.uploadPut<any>(`/admin/products/${productId}`, fd)
+        toast.success('Product updated successfully!')
       } else {
-        await api.post('/admin/products', formData)
-        toast.success('Product created successfully')
+        // POST /admin/products — backend uses upload.array('images', 5) + productCreateValidation
+        await api.upload<any>('/admin/products', fd)
+        toast.success('Product created successfully!')
       }
+
+      router.push('/admin/products')
     } catch (error: any) {
+      console.error('Submit error:', error)
       toast.error(error.message || 'Failed to save product')
     } finally {
       setSubmitting(false)
@@ -133,6 +220,34 @@ export function ProductForm({ productId }: { productId?: string }) {
     }
   }
 
+  const isPosterCategory = () => {
+    if (!formData.categoryId) return false
+    const mainCat = categories.find(
+      c => c.id === Number(formData.categoryId) || c.subcategories?.some(sub => sub.id === Number(formData.categoryId))
+    )
+    return mainCat?.slug === 'wall-posters' || mainCat?.slug === 'sports'
+  }
+
+  const addVariant = () => {
+    setFormData(prev => ({
+      ...prev,
+      variants: [...prev.variants, { variantName: '', additionalPrice: '0', stock: '100' }],
+    }))
+  }
+
+  const removeVariant = (index: number) => {
+    setFormData(prev => ({ ...prev, variants: prev.variants.filter((_, i) => i !== index) }))
+  }
+
+  const updateVariant = (index: number, field: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      variants: prev.variants.map((v, i) => (i === index ? { ...v, [field]: value } : v)),
+    }))
+  }
+
+  const totalImageCount = existingImages.length + newFiles.length
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -141,52 +256,26 @@ export function ProductForm({ productId }: { productId?: string }) {
     )
   }
 
-  // Find if selected category is a poster category
-  const isPosterCategory = () => {
-    if (!formData.categoryId) return false
-    const mainCat = categories.find(c => c.id === Number(formData.categoryId) || c.subcategories?.some(sub => sub.id === Number(formData.categoryId)))
-    return mainCat?.slug === 'wall-posters' || mainCat?.slug === 'sports' // Just in case sports poster falls under sports category, but normally wall-posters is the main
-  }
-
-  const addVariant = () => {
-    setFormData(prev => ({
-      ...prev,
-      variants: [...prev.variants, { variantName: '', additionalPrice: '0', stock: '100' }]
-    }))
-  }
-
-  const removeVariant = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      variants: prev.variants.filter((_, i) => i !== index)
-    }))
-  }
-
-  const updateVariant = (index: number, field: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      variants: prev.variants.map((v, i) => i === index ? { ...v, [field]: value } : v)
-    }))
-  }
-
   return (
     <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-8 pb-20">
-      {/* Main Stats */}
+      {/* Main Fields */}
       <div className="lg:col-span-2 space-y-8">
+
+        {/* Basic Information */}
         <div className="bg-card border border-border p-8 space-y-8 rounded-xl shadow-sm">
           <div className="flex items-center gap-4 border-b border-border pb-6">
-             <div className="w-10 h-10 bg-primary/10 border border-primary/20 flex items-center justify-center rounded-lg">
-                <Info size={20} className="text-primary" />
-             </div>
-             <div>
-                <h2 className="text-sm font-black uppercase tracking-widest text-foreground">Basic Information</h2>
-                <p className="text-[10px] text-muted-foreground uppercase tracking-[0.2em]">Product name, description and category</p>
-             </div>
+            <div className="w-10 h-10 bg-primary/10 border border-primary/20 flex items-center justify-center rounded-lg">
+              <Info size={20} className="text-primary" />
+            </div>
+            <div>
+              <h2 className="text-sm font-black uppercase tracking-widest text-foreground">Basic Information</h2>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-[0.2em]">Product name, description and category</p>
+            </div>
           </div>
 
           <div className="space-y-6">
             <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground pl-1">Product Title</label>
+              <label className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground pl-1">Product Title *</label>
               <input
                 name="title"
                 value={formData.title}
@@ -222,18 +311,7 @@ export function ProductForm({ productId }: { productId?: string }) {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground pl-1">SKU (Unique ID)</label>
-                <input
-                  name="sku"
-                  value={formData.sku}
-                  onChange={handleInputChange}
-                  required
-                  placeholder="SKU-001"
-                  className="w-full bg-background border border-border px-6 py-4 text-xs font-mono font-bold focus:border-primary/40 transition-all outline-none rounded-lg text-foreground"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground pl-1">Category</label>
+                <label className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground pl-1">Category *</label>
                 <select
                   name="categoryId"
                   value={formData.categoryId}
@@ -246,9 +324,7 @@ export function ProductForm({ productId }: { productId?: string }) {
                     <optgroup key={main.id} label={main.name.toUpperCase()} className="bg-background text-foreground">
                       <option value={main.id}>{main.name} (Parent)</option>
                       {main.subcategories?.map(sub => (
-                        <option key={sub.id} value={sub.id}>
-                          └─ {sub.name}
-                        </option>
+                        <option key={sub.id} value={sub.id}>└─ {sub.name}</option>
                       ))}
                     </optgroup>
                   ))}
@@ -258,21 +334,21 @@ export function ProductForm({ productId }: { productId?: string }) {
           </div>
         </div>
 
-        {/* Financials & Inventory */}
+        {/* Pricing & Inventory */}
         <div className="bg-card border border-border p-8 space-y-8 rounded-xl shadow-sm">
-           <div className="flex items-center gap-4 border-b border-border pb-6">
-             <div className="w-10 h-10 bg-primary/10 border border-primary/20 flex items-center justify-center rounded-lg">
-                <Package size={20} className="text-primary" />
-             </div>
-             <div>
-                <h2 className="text-sm font-black uppercase tracking-widest text-foreground">Pricing & Inventory</h2>
-                <p className="text-[10px] text-muted-foreground uppercase tracking-[0.2em]">Manage your margins and stock</p>
-             </div>
+          <div className="flex items-center gap-4 border-b border-border pb-6">
+            <div className="w-10 h-10 bg-primary/10 border border-primary/20 flex items-center justify-center rounded-lg">
+              <Package size={20} className="text-primary" />
+            </div>
+            <div>
+              <h2 className="text-sm font-black uppercase tracking-widest text-foreground">Pricing & Inventory</h2>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-[0.2em]">Manage your margins and stock</p>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground pl-1">Sale Price</label>
+              <label className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground pl-1">Sale Price *</label>
               <div className="relative">
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-primary font-mono font-bold">₹</span>
                 <input
@@ -281,6 +357,7 @@ export function ProductForm({ productId }: { productId?: string }) {
                   value={formData.price}
                   onChange={handleInputChange}
                   required
+                  min={0}
                   className="w-full bg-background border border-border pl-10 pr-6 py-4 text-xs font-mono font-bold focus:border-primary/40 transition-all outline-none rounded-lg text-foreground"
                 />
               </div>
@@ -294,40 +371,42 @@ export function ProductForm({ productId }: { productId?: string }) {
                   type="number"
                   value={formData.originalPrice}
                   onChange={handleInputChange}
+                  min={0}
                   className="w-full bg-background border border-border pl-10 pr-6 py-4 text-xs font-mono font-bold focus:border-primary/40 transition-all outline-none rounded-lg text-foreground"
                 />
               </div>
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground pl-1">Stock Level</label>
+              <label className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground pl-1">Stock Level *</label>
               <input
                 name="stock"
                 type="number"
                 value={formData.stock}
                 onChange={handleInputChange}
                 required
+                min={0}
                 className="w-full bg-background border border-border px-6 py-4 text-xs font-mono font-bold focus:border-primary/40 transition-all outline-none rounded-lg text-foreground"
               />
             </div>
           </div>
         </div>
 
-        {/* Variant Manager (Conditional) */}
+        {/* Variant Manager */}
         {isPosterCategory() && (
           <div className="bg-card border border-border p-8 space-y-8 rounded-xl shadow-sm">
-             <div className="flex items-center justify-between border-b border-border pb-6">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 bg-primary/10 border border-primary/20 flex items-center justify-center rounded-lg">
-                      <Layers size={20} className="text-primary" />
-                  </div>
-                  <div>
-                      <h2 className="text-sm font-black uppercase tracking-widest text-foreground">Variants Manager</h2>
-                      <p className="text-[10px] text-muted-foreground uppercase tracking-[0.2em]">Manage size options and pricing</p>
-                  </div>
+            <div className="flex items-center justify-between border-b border-border pb-6">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 bg-primary/10 border border-primary/20 flex items-center justify-center rounded-lg">
+                  <Layers size={20} className="text-primary" />
                 </div>
-                <Button type="button" onClick={addVariant} variant="outline" className="text-[10px] font-black uppercase tracking-widest border-primary/50 text-primary hover:bg-primary/10">
-                  + Add Variant
-                </Button>
+                <div>
+                  <h2 className="text-sm font-black uppercase tracking-widest text-foreground">Variants Manager</h2>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-[0.2em]">Manage size options and pricing</p>
+                </div>
+              </div>
+              <Button type="button" onClick={addVariant} variant="outline" className="text-[10px] font-black uppercase tracking-widest border-primary/50 text-primary hover:bg-primary/10">
+                + Add Variant
+              </Button>
             </div>
 
             <div className="space-y-4">
@@ -337,7 +416,7 @@ export function ProductForm({ productId }: { productId?: string }) {
                 </div>
               ) : (
                 formData.variants.map((variant, index) => (
-                  <div key={index} className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 border border-border bg-muted/20 relative group">
+                  <div key={index} className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 border border-border bg-muted/20 relative group rounded-lg">
                     <div className="space-y-2 md:col-span-2">
                       <label className="text-[9px] font-black uppercase tracking-[0.3em] text-muted-foreground">Variant Name</label>
                       <input
@@ -345,7 +424,7 @@ export function ProductForm({ productId }: { productId?: string }) {
                         onChange={(e) => updateVariant(index, 'variantName', e.target.value)}
                         placeholder="e.g. Size: A3"
                         required
-                        className="w-full bg-background border border-border px-4 py-2 text-xs font-bold uppercase tracking-widest focus:border-primary/40 outline-none text-foreground"
+                        className="w-full bg-background border border-border px-4 py-2 text-xs font-bold uppercase tracking-widest focus:border-primary/40 outline-none text-foreground rounded"
                       />
                     </div>
                     <div className="space-y-2">
@@ -355,7 +434,7 @@ export function ProductForm({ productId }: { productId?: string }) {
                         value={variant.additionalPrice}
                         onChange={(e) => updateVariant(index, 'additionalPrice', e.target.value)}
                         required
-                        className="w-full bg-background border border-border px-4 py-2 text-xs font-mono font-bold focus:border-primary/40 outline-none text-foreground"
+                        className="w-full bg-background border border-border px-4 py-2 text-xs font-mono font-bold focus:border-primary/40 outline-none text-foreground rounded"
                       />
                     </div>
                     <div className="space-y-2">
@@ -365,11 +444,11 @@ export function ProductForm({ productId }: { productId?: string }) {
                         value={variant.stock}
                         onChange={(e) => updateVariant(index, 'stock', e.target.value)}
                         required
-                        className="w-full bg-background border border-border px-4 py-2 text-xs font-mono font-bold focus:border-primary/40 outline-none text-foreground"
+                        className="w-full bg-background border border-border px-4 py-2 text-xs font-mono font-bold focus:border-primary/40 outline-none text-foreground rounded"
                       />
                     </div>
-                    <button 
-                      type="button" 
+                    <button
+                      type="button"
                       onClick={() => removeVariant(index)}
                       className="absolute -top-3 -right-3 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
                     >
@@ -384,114 +463,141 @@ export function ProductForm({ productId }: { productId?: string }) {
 
         {/* Visibility & Status */}
         <div className="bg-card border border-border p-8 space-y-8 rounded-xl shadow-sm">
-           <div className="flex items-center gap-4 border-b border-border pb-6">
-             <div className="w-10 h-10 bg-primary/10 border border-primary/20 flex items-center justify-center rounded-lg">
-                <Layers size={20} className="text-primary" />
-             </div>
-             <div>
-                <h2 className="text-sm font-black uppercase tracking-widest text-foreground">Visibility & Marketing</h2>
-                <p className="text-[10px] text-muted-foreground uppercase tracking-[0.2em]">Control how the product appears</p>
-             </div>
+          <div className="flex items-center gap-4 border-b border-border pb-6">
+            <div className="w-10 h-10 bg-primary/10 border border-primary/20 flex items-center justify-center rounded-lg">
+              <Layers size={20} className="text-primary" />
+            </div>
+            <div>
+              <h2 className="text-sm font-black uppercase tracking-widest text-foreground">Visibility & Marketing</h2>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-[0.2em]">Control how the product appears</p>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <label className="flex items-center gap-4 p-4 bg-background border border-border rounded-xl cursor-pointer hover:border-primary/20 transition-all group">
-              <input
-                type="checkbox"
-                name="isActive"
-                checked={formData.isActive}
-                onChange={handleInputChange}
-                className="w-4 h-4 accent-primary"
-              />
-              <div className="flex flex-col">
-                <span className="text-[10px] font-black uppercase tracking-widest text-foreground group-hover:text-primary transition-colors">Published</span>
-                <span className="text-[8px] text-muted-foreground uppercase tracking-widest">Available to buy</span>
-              </div>
-            </label>
-
-            <label className="flex items-center gap-4 p-4 bg-background border border-border rounded-xl cursor-pointer hover:border-primary/20 transition-all group">
-              <input
-                type="checkbox"
-                name="isFeatured"
-                checked={formData.isFeatured}
-                onChange={handleInputChange}
-                className="w-4 h-4 accent-primary"
-              />
-              <div className="flex flex-col">
-                <span className="text-[10px] font-black uppercase tracking-widest text-foreground group-hover:text-primary transition-colors">Featured</span>
-                <span className="text-[8px] text-muted-foreground uppercase tracking-widest">Home page spotlight</span>
-              </div>
-            </label>
-
-            <label className="flex items-center gap-4 p-4 bg-background border border-border rounded-xl cursor-pointer hover:border-primary/20 transition-all group">
-              <input
-                type="checkbox"
-                name="isDealOfTheDay"
-                checked={formData.isDealOfTheDay}
-                onChange={handleInputChange}
-                className="w-4 h-4 accent-primary"
-              />
-              <div className="flex flex-col">
-                <span className="text-[10px] font-black uppercase tracking-widest text-foreground group-hover:text-primary transition-colors">Deal</span>
-                <span className="text-[8px] text-muted-foreground uppercase tracking-widest">Show as limited deal</span>
-              </div>
-            </label>
+            {[
+              { name: 'isActive', label: 'Published', sub: 'Available to buy' },
+              { name: 'isFeatured', label: 'Featured', sub: 'Home page spotlight' },
+              { name: 'isDealOfTheDay', label: 'Deal', sub: 'Show as limited deal' },
+            ].map(({ name, label, sub }) => (
+              <label key={name} className="flex items-center gap-4 p-4 bg-background border border-border rounded-xl cursor-pointer hover:border-primary/20 transition-all group">
+                <input
+                  type="checkbox"
+                  name={name}
+                  checked={formData[name as keyof FormData] as boolean}
+                  onChange={handleInputChange}
+                  className="w-4 h-4 accent-primary"
+                />
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-foreground group-hover:text-primary transition-colors">{label}</span>
+                  <span className="text-[8px] text-muted-foreground uppercase tracking-widest">{sub}</span>
+                </div>
+              </label>
+            ))}
           </div>
         </div>
       </div>
 
-      {/* Sidebar: Visuals & Actions */}
+      {/* Sidebar: Image Upload & Actions */}
       <div className="space-y-8">
         <div className="bg-card border border-border p-8 space-y-6 rounded-xl shadow-sm sticky top-28">
           <div className="flex items-center gap-4 border-b border-border pb-6">
-             <div className="w-10 h-10 bg-primary/10 border border-primary/20 flex items-center justify-center rounded-lg">
-                <Upload size={20} className="text-primary" />
-             </div>
-             <div>
-                <h2 className="text-sm font-black uppercase tracking-widest text-foreground">Media Uplink</h2>
-                <p className="text-[10px] text-muted-foreground uppercase tracking-[0.2em]">Product imagery</p>
-             </div>
+            <div className="w-10 h-10 bg-primary/10 border border-primary/20 flex items-center justify-center rounded-lg">
+              <Upload size={20} className="text-primary" />
+            </div>
+            <div>
+              <h2 className="text-sm font-black uppercase tracking-widest text-foreground">Product Images</h2>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-[0.2em]">{totalImageCount}/5 uploaded</p>
+            </div>
           </div>
 
-          <div className="aspect-square border-2 border-dashed border-border bg-muted/20 rounded-xl flex flex-col items-center justify-center group hover:border-primary/20 transition-all cursor-pointer">
-            <Upload className="text-muted-foreground/20 group-hover:text-primary transition-colors mb-4" size={32} />
-            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/30 group-hover:text-foreground transition-colors text-center px-4">
-              Upload visuals coming soon
-            </p>
-          </div>
-
-          <div className="grid grid-cols-3 gap-2">
-            {formData.images.map((img, i) => (
-              <div key={i} className="aspect-square bg-white border border-border rounded-lg relative overflow-hidden group p-2">
-                <Image src={img} alt="preview" fill className="object-contain" />
-                <button 
-                  type="button"
-                  className="absolute inset-0 bg-red-500/80 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
-                >
-                  <X size={14} className="text-white" />
-                </button>
+          {/* Drop zone / click to upload */}
+          {totalImageCount < 5 && (
+            <div
+              onClick={() => fileInputRef.current?.click()}
+              className="border-2 border-dashed border-border bg-muted/10 rounded-xl flex flex-col items-center justify-center gap-3 p-8 group hover:border-primary/40 hover:bg-primary/5 transition-all cursor-pointer"
+            >
+              <ImagePlus className="text-muted-foreground/40 group-hover:text-primary transition-colors" size={32} />
+              <div className="text-center">
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground group-hover:text-foreground transition-colors">
+                  Click to upload images
+                </p>
+                <p className="text-[9px] text-muted-foreground/50 uppercase tracking-widest mt-1">
+                  JPEG, PNG, WebP · Max 5MB each · Up to 5 total
+                </p>
               </div>
-            ))}
-          </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
+                multiple
+                onChange={handleFileChange}
+                className="hidden"
+              />
+            </div>
+          )}
 
-          <button 
+          {/* Image grid */}
+          {totalImageCount > 0 && (
+            <div className="grid grid-cols-3 gap-2">
+              {/* Existing images (edit mode) */}
+              {existingImages.map((img, i) => (
+                <div key={`existing-${i}`} className="aspect-square bg-white border border-border rounded-lg relative overflow-hidden group">
+                  <Image src={img.imageUrl} alt={`Product image ${i + 1}`} fill className="object-contain p-1" />
+                  <button
+                    type="button"
+                    onClick={() => removeExistingImage(i)}
+                    className="absolute inset-0 bg-red-500/80 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
+                    title="Remove image"
+                  >
+                    <X size={18} className="text-white" />
+                  </button>
+                  <div className="absolute bottom-1 left-1 bg-black/60 text-white text-[8px] px-1 rounded">saved</div>
+                </div>
+              ))}
+
+              {/* New files (local preview) */}
+              {newFilePreviews.map((preview, i) => (
+                <div key={`new-${i}`} className="aspect-square bg-white border border-primary/30 rounded-lg relative overflow-hidden group">
+                  <Image src={preview} alt={`New image ${i + 1}`} fill className="object-contain p-1" />
+                  <button
+                    type="button"
+                    onClick={() => removeNewFile(i)}
+                    className="absolute inset-0 bg-red-500/80 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
+                    title="Remove image"
+                  >
+                    <X size={18} className="text-white" />
+                  </button>
+                  <div className="absolute bottom-1 left-1 bg-primary/80 text-white text-[8px] px-1 rounded">new</div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {totalImageCount === 0 && (
+            <p className="text-[10px] text-red-400/80 uppercase tracking-widest text-center font-bold">
+              ⚠ At least 1 image required
+            </p>
+          )}
+
+          {/* Submit */}
+          <button
             type="submit"
             disabled={submitting}
             className="w-full bg-primary py-6 text-primary-foreground font-black uppercase tracking-[0.4em] rounded-xl hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 disabled:scale-100 shadow-lg shadow-primary/20"
           >
             {submitting ? (
               <div className="flex items-center justify-center gap-3">
-                 <Loader2 className="animate-spin" size={20} />
-                 Saving...
+                <Loader2 className="animate-spin" size={20} />
+                Saving...
               </div>
-            ) : productId ? 'Recalibrate' : 'Deploy'}
+            ) : productId ? 'Update Product' : 'Create Product'}
           </button>
 
-          <div className="bg-primary/5 border border-primary/10 p-6 rounded-xl flex gap-4">
-             <AlertCircle className="text-primary shrink-0" size={20} />
-             <p className="text-[10px] font-bold text-primary/60 uppercase tracking-widest leading-relaxed">
-               Verified changes will be pushed to the global registry immediately.
-             </p>
+          <div className="bg-primary/5 border border-primary/10 p-4 rounded-xl flex gap-3">
+            <AlertCircle className="text-primary shrink-0" size={16} />
+            <p className="text-[10px] font-bold text-primary/60 uppercase tracking-widest leading-relaxed">
+              Images are uploaded to Cloudinary. Changes go live immediately on save.
+            </p>
           </div>
         </div>
       </div>

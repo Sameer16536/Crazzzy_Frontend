@@ -19,11 +19,14 @@ function onRerfreshed(token: string) {
   refreshSubscribers = [];
 }
 
-async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+async function request<T>(endpoint: string, options: RequestInit = {}, isMultipart = false): Promise<T> {
   const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
 
   const headers = new Headers(options.headers);
-  headers.set('Content-Type', 'application/json');
+  // Do NOT set Content-Type for multipart (FormData) — browser sets it with boundary
+  if (!isMultipart) {
+    headers.set('Content-Type', 'application/json');
+  }
   if (token) {
     headers.set('Authorization', `Bearer ${token}`);
   }
@@ -54,7 +57,7 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
           onRerfreshed(refreshData.accessToken);
           
           // Retry original request
-          return request<T>(endpoint, options);
+          return request<T>(endpoint, options, isMultipart);
         }
       } catch (e) {
         isRefreshing = false;
@@ -67,7 +70,7 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
       // Wait for refresh to complete then retry
       return new Promise<T>((resolve) => {
         subscribeTokenRefresh((newToken) => {
-          resolve(request<T>(endpoint, options));
+          resolve(request<T>(endpoint, options, isMultipart));
         });
       });
     }
@@ -91,4 +94,9 @@ export const api = {
   patch: <T>(endpoint: string, body: any, options?: RequestInit) =>
     request<T>(endpoint, { ...options, method: 'PATCH', body: JSON.stringify(body) }),
   delete: <T>(endpoint: string, options?: RequestInit) => request<T>(endpoint, { ...options, method: 'DELETE' }),
+  // For multipart/form-data uploads (images, files) — DO NOT JSON.stringify, pass FormData directly
+  upload: <T>(endpoint: string, formData: FormData, options?: RequestInit) =>
+    request<T>(endpoint, { ...options, method: 'POST', body: formData }, true),
+  uploadPut: <T>(endpoint: string, formData: FormData, options?: RequestInit) =>
+    request<T>(endpoint, { ...options, method: 'PUT', body: formData }, true),
 };

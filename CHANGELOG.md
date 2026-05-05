@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2026-05-05] - Admin Product Image Upload (Critical Fix)
+
+### Fixed
+- **Product Image Upload Not Working (Client-Reported)**: Completely replaced the non-functional "Upload visuals coming soon" placeholder in the admin product form with a fully working multi-image upload UI. Root causes were:
+  1. **`api-client.ts` always forced `Content-Type: application/json`** — this corrupted `FormData` payloads, making file uploads impossible. Fixed by adding `api.upload()` and `api.uploadPut()` methods that detect `FormData` and skip the JSON header so the browser sets `multipart/form-data; boundary=...` automatically.
+  2. **`product-form.tsx` had no actual `<input type="file">` element** — the image panel was a static placeholder. Replaced with a real click-to-upload zone supporting up to 5 files (JPEG/PNG/WebP/GIF, max 5 MB each).
+  3. **HTTP method mismatch** — the edit form used `api.patch()` but the backend route is `PUT /admin/products/:id`. Fixed to use `api.uploadPut()`.
+  4. **Form submission used `JSON.stringify`** — product create/update now builds a `FormData` object with all text fields + image file attachments, matching the backend's `upload.array('images', 5)` middleware expectation.
+- **Product Form UX improvements**:
+  - Live image previews with "new" / "saved" badges
+  - Per-image remove buttons (with Cloudinary URL revocation for blob previews)
+  - Total image count guard (max 5)
+  - Validation requiring at least 1 image before submit
+  - Redirects to `/admin/products` list after successful save
+
+---
+
 ## [2026-05-05] - Bug Fixes & Responsiveness Improvements
 
 ### Fixed

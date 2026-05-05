@@ -2,6 +2,39 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2026-05-05] - Full Security & Functionality Audit
+
+### Fixed (Backend)
+- **[CRITICAL] Coupon `/apply-coupon` Route Unreachable** (`orderRoutes.ts`): `POST /orders/apply-coupon` was registered *after* `GET /:id` and `POST /:id/cancel`. Express matched the string `"apply-coupon"` as the `:id` param, making the coupon validation endpoint completely dead. Moved `/apply-coupon` before all `/:id` routes.
+- **[MEDIUM] Coupon Creation – No Input Validation** (`couponController.ts`): `createCoupon` accepted any raw body without validation — could insert invalid `discountType` enum values or negative `discountValue`. Added full guards: non-empty code, enum check (`PERCENTAGE`/`FIXED`), positive numeric value, percentage ≤ 100. Coupon codes are now normalized to uppercase.
+
+### Security Findings Noted (Action Required by Developer)
+- **[CRITICAL] Weak JWT_SECRET in `.env`**: `JWT_SECRET` is set to the placeholder string `your_super_secret_jwt_key_min_32_chars`. This must be changed to a strong random secret (32+ chars) before production. Anyone who knows this value can forge admin tokens.
+- **[LOW] `updateProfile` allows email change without re-verification**: A logged-in user can change their account email without OTP confirmation. This is an account takeover vector if an attacker gains a short-lived session. Consider requiring OTP for email changes.
+
+### Audit Passed – No Issues Found
+- ✅ **JWT auth** — `authenticate` middleware verifies token, checks user exists in DB, and checks `isBanned` on every request. Cannot use deleted or banned accounts.
+- ✅ **Admin guard** — `requireAdmin` always runs after `authenticate`. All `/api/admin/*` routes double-protected.
+- ✅ **Frontend admin guard** — `AdminLayout` checks `user` and `checkAdmin()` client-side; redirects to `/admin-login` if not authenticated/admin.
+- ✅ **Refresh token security** — Hashed with SHA-256 before storage (never stored raw). Token reuse detection: replaying a revoked token revokes ALL sessions for that user (token rotation).
+- ✅ **Password hashing** — bcrypt with 10 salt rounds. Password change invalidates all refresh tokens.
+- ✅ **Forgot password** — Does not leak whether email exists (same response for registered/unregistered).
+- ✅ **Order ownership** — `getOrderById` and `cancelOrder` both filter by `userId: req.user!.id` — users cannot view/cancel other users' orders.
+- ✅ **Payment verification** — Uses `crypto.timingSafeEqual` (constant-time comparison) for Razorpay HMAC signature verification. Prevents timing attacks.
+- ✅ **Address ownership** — `updateAddress` and `deleteAddress` verify `address.userId === req.user.id`.
+- ✅ **Stock depletion race** — Stock is decremented inside a Prisma `$transaction`. Cancellation restores stock in the same transaction.
+- ✅ **Coupon double-spend** — `usedCount` increment is inside the order creation transaction. Checks `usedCount >= usageLimit` before applying.
+- ✅ **Review gating** — Only users with a DELIVERED order for the product can submit a review. One review per user/product (upsert).
+- ✅ **CORS** — Restricts to explicit allowlist from `ALLOWED_ORIGINS` env var.
+- ✅ **Helmet** — HTTP security headers enabled.
+- ✅ **Rate limiting** — Applied on signup (5/15min), OTP (3/10min), login (10/15min), forgot-password (3/15min), token refresh (20/15min).
+- ✅ **Body size limit** — JSON body capped at `10kb`.
+- ✅ **Cloudinary cleanup** — `deleteProduct` and `updateCategory` call `removeFile()` to delete old images from Cloudinary on delete/replace.
+- ✅ **File upload validation** — Multer restricts to `jpeg,jpg,png,gif,webp` and `MAX_FILE_SIZE_MB` (default 5MB).
+- ✅ **`api-client.ts` token refresh** — On 401, silently refreshes token and retries original request. Queues concurrent requests during refresh. Works for both JSON and multipart (new `upload`/`uploadPut` methods).
+
+---
+
 ## [2026-05-05] - Admin Product Image Upload (Critical Fix)
 
 ### Fixed

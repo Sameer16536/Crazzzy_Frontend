@@ -126,7 +126,11 @@ export default function DealOfTheDayAdminPage() {
       if (search) params.set('search', search)
       const res = await api.get<any>(`/products?${params.toString()}`)
       const list = Array.isArray(res?.data) ? res.data : []
-      setAvailableProducts(list.filter((p: any) => !p.isDealOfTheDay))
+      setAvailableProducts(list.filter((p: any) => {
+        // A product is available if it's NOT a deal, OR if it IS a deal but has expired
+        const isCurrentlyActiveDeal = p.isDealOfTheDay && (!p.dealEndTime || new Date(p.dealEndTime).getTime() > Date.now())
+        return !isCurrentlyActiveDeal
+      }))
       if (res?.meta) setTotalPages(res.meta.totalPages || 1)
     } catch {
       toast.error('Failed to load products')
@@ -246,7 +250,7 @@ export default function DealOfTheDayAdminPage() {
                         initial={{ opacity: 0, y: 12 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95 }}
-                        className={`flex items-start gap-4 p-4 border rounded-none relative overflow-hidden group transition-colors ${
+                        className={`flex flex-col sm:flex-row items-start sm:items-center gap-4 p-3 sm:p-4 border rounded-none relative overflow-hidden group transition-colors ${
                           isExpired
                             ? 'border-red-500/30 bg-red-500/5'
                             : isUrgent
@@ -282,12 +286,12 @@ export default function DealOfTheDayAdminPage() {
 
                         {/* Info */}
                         <div className="flex-1 min-w-0 pr-8">
-                          <h3 className="text-sm font-black uppercase tracking-widest line-clamp-1">{deal.title}</h3>
+                          <h3 className="text-[10px] sm:text-sm font-black uppercase tracking-widest line-clamp-1">{deal.title}</h3>
 
                           <div className="flex items-end gap-2 mt-1.5">
-                            <span className="text-base font-mono font-bold text-primary">₹{parseFloat(deal.price).toLocaleString('en-IN')}</span>
+                            <span className="text-sm sm:text-base font-mono font-bold text-primary">₹{parseFloat(deal.price).toLocaleString('en-IN')}</span>
                             {deal.originalPrice && (
-                              <span className="text-xs font-mono text-muted-foreground line-through mb-0.5">
+                              <span className="text-[9px] sm:text-xs font-mono text-muted-foreground line-through mb-0.5">
                                 ₹{parseFloat(deal.originalPrice).toLocaleString('en-IN')}
                               </span>
                             )}
@@ -479,10 +483,10 @@ export default function DealOfTheDayAdminPage() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <input
                   type="text"
-                  placeholder="Search products to add as deal..."
+                  placeholder="Search products..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-background border border-border pl-10 pr-4 py-3 text-xs font-bold uppercase tracking-widest focus:outline-none focus:border-primary transition-colors"
+                  className="w-full bg-background border border-border pl-10 pr-4 py-3 text-[10px] sm:text-xs font-bold uppercase tracking-widest focus:outline-none focus:border-primary transition-colors"
                 />
               </div>
 
@@ -494,16 +498,16 @@ export default function DealOfTheDayAdminPage() {
                 ) : availableProducts.length > 0 ? (
                   <div className="divide-y divide-border">
                     {availableProducts.map(product => (
-                      <div key={product.id} className="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors">
-                        <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 bg-muted relative flex-shrink-0">
+                      <div key={product.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 hover:bg-muted/30 transition-colors gap-3 sm:gap-4">
+                        <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-muted relative flex-shrink-0 border border-border">
                             {product.imageUrl && (
                               <Image src={product.imageUrl} alt="" fill className="object-cover" />
                             )}
                           </div>
-                          <div>
-                            <p className="text-xs font-black uppercase tracking-widest line-clamp-1">{product.title}</p>
-                            <p className="text-[10px] font-mono text-muted-foreground">₹{parseFloat(product.price).toLocaleString('en-IN')}</p>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-[9px] sm:text-xs font-black uppercase tracking-widest truncate">{product.title}</p>
+                            <p className="text-[8px] sm:text-[10px] font-mono text-muted-foreground mt-0.5">₹{parseFloat(product.price).toLocaleString('en-IN')}</p>
                           </div>
                         </div>
                         <button
@@ -511,8 +515,9 @@ export default function DealOfTheDayAdminPage() {
                             setSelectedProduct(product)
                             setNewPrice('')
                             setDealEndTime(toDatetimeLocal(new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()))
+                            setSelectedPreset(null)
                           }}
-                          className="px-4 py-2 text-[10px] font-black uppercase tracking-widest border border-border hover:border-primary hover:text-primary transition-colors flex items-center gap-2 whitespace-nowrap"
+                          className="w-full sm:w-auto px-4 py-2.5 text-[8px] sm:text-[10px] font-black uppercase tracking-widest border border-border hover:border-primary hover:text-primary transition-all flex items-center justify-center gap-2 whitespace-nowrap bg-background"
                         >
                           Set as Deal <ArrowRight size={12} />
                         </button>

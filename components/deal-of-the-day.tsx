@@ -275,14 +275,19 @@ export function DealOfTheDay() {
     return () => clearInterval(interval)
   }, [])
 
-  // Auto-advance carousel every 8s
-  useEffect(() => {
+  // Auto-advance carousel every 10s
+  const startAutoPlay = useCallback(() => {
+    if (autoPlayRef.current) clearInterval(autoPlayRef.current)
     if (activeDeals.length <= 1) return
     autoPlayRef.current = setInterval(() => {
       setActiveIdx(i => (i + 1) % activeDeals.length)
-    }, 8000)
-    return () => { if (autoPlayRef.current) clearInterval(autoPlayRef.current) }
+    }, 10000)
   }, [activeDeals.length])
+
+  useEffect(() => {
+    startAutoPlay()
+    return () => { if (autoPlayRef.current) clearInterval(autoPlayRef.current) }
+  }, [startAutoPlay])
 
   // Keep activeIdx in bounds when deals expire
   useEffect(() => {
@@ -293,8 +298,8 @@ export function DealOfTheDay() {
 
   const goTo = useCallback((idx: number) => {
     setActiveIdx(idx)
-    if (autoPlayRef.current) clearInterval(autoPlayRef.current)
-  }, [])
+    startAutoPlay() // Restart timer on manual click
+  }, [startAutoPlay])
 
   const prev = () => goTo((activeIdx - 1 + activeDeals.length) % activeDeals.length)
   const next = () => goTo((activeIdx + 1) % activeDeals.length)

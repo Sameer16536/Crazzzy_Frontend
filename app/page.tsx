@@ -332,7 +332,7 @@ export default function Home() {
                 className="flex items-center gap-3 mb-6 sm:mb-8"
               >
                 <div className="w-6 sm:w-8 h-px bg-primary flex-shrink-0" />
-                <span className="text-primary text-[10px] sm:text-xs font-mono tracking-[0.2em] sm:tracking-[0.25em] uppercase truncate">
+                <span className="text-black/60 dark:text-primary/90 text-[10px] sm:text-xs font-mono tracking-[0.2em] sm:tracking-[0.25em] uppercase truncate">
                   Curated Collectibles • Premium Aesthetic
                 </span>
               </motion.div>
@@ -346,7 +346,7 @@ export default function Home() {
                 variants={lineReveal}
                 initial="hidden"
                 animate="visible"
-                className="mt-5 text-base sm:text-lg text-muted-foreground dark:text-white/70 max-w-lg leading-relaxed font-light"
+                className="mt-5 text-base sm:text-lg text-black/80 dark:text-white/70 max-w-lg leading-relaxed font-light"
               >
                 From anime figures to die-cast legends — discover premium pieces that turn any space into a personal gallery.
               </motion.p>
@@ -713,7 +713,7 @@ export default function Home() {
           {/* Bottom bar */}
           <div className="border-t border-border/20 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
             <p className="text-muted-foreground text-xs font-mono">
-              © {new Date().getFullYear()} CRAZZZY STORE. Handcrafted with intention.
+              © {new Date().getFullYear()} CRAZZZY STORE. Curating the extraordinary.
             </p>
             <span className="text-xs text-muted-foreground font-mono">India 🇮🇳</span>
           </div>

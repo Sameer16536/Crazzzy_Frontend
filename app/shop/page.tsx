@@ -44,15 +44,14 @@ function FilterPanel({
         <div className="space-y-1">
           <button
             onClick={() => onCategoryChange(null)}
-            className={`block w-full text-left px-3 py-3 text-xs font-bold uppercase tracking-widest transition-all ${
-              selectedCategoryId === null
+            className={`block w-full text-left px-3 py-3 text-xs font-bold uppercase tracking-widest transition-all ${selectedCategoryId === null
                 ? 'text-primary'
                 : 'text-muted-foreground hover:text-foreground'
-            }`}
+              }`}
           >
             All Droplets
           </button>
-          
+
           {rootCategories.map((root) => {
             const subs = getSubcategories(root.id)
             const isSelected = selectedCategoryId === root.slug
@@ -63,18 +62,17 @@ function FilterPanel({
               <div key={root.id} className="space-y-1">
                 <button
                   onClick={() => onCategoryChange(root.slug)}
-                  className={`flex items-center justify-between w-full text-left px-3 py-3 text-xs font-bold uppercase tracking-widest transition-all ${
-                    isSelected || hasSelectedSub
+                  className={`flex items-center justify-between w-full text-left px-3 py-3 text-xs font-bold uppercase tracking-widest transition-all ${isSelected || hasSelectedSub
                       ? 'text-primary'
                       : 'text-muted-foreground hover:text-foreground'
-                  }`}
+                    }`}
                 >
                   {root.name}
                   {subs.length > 0 && (
                     <ChevronDown size={14} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
                   )}
                 </button>
-                
+
                 {/* Sub-categories (Collapsible) */}
                 <AnimatePresence>
                   {isOpen && subs.length > 0 && (
@@ -88,11 +86,10 @@ function FilterPanel({
                         <button
                           key={sub.id}
                           onClick={() => onCategoryChange(sub.slug)}
-                          className={`block w-full text-left px-3 py-2 text-[10px] font-bold uppercase tracking-widest transition-all ${
-                            selectedCategoryId === sub.slug
+                          className={`block w-full text-left px-3 py-2 text-[10px] font-bold uppercase tracking-widest transition-all ${selectedCategoryId === sub.slug
                               ? 'text-primary'
                               : 'text-muted-foreground/60 hover:text-foreground'
-                          }`}
+                            }`}
                         >
                           {sub.name}
                         </button>
@@ -134,11 +131,11 @@ function FilterPanel({
           Status
         </h3>
         <label className="flex items-center gap-3 px-3 cursor-pointer group">
-          <input 
-            type="checkbox" 
+          <input
+            type="checkbox"
             checked={inStockOnly}
             onChange={(e) => onInStockChange(e.target.checked)}
-            className="w-4 h-4 rounded-none border-border bg-muted accent-primary" 
+            className="w-4 h-4 rounded-none border-border bg-muted accent-primary"
           />
           <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground group-hover:text-foreground transition-colors">In Stock Only</span>
         </label>
@@ -207,12 +204,12 @@ export default function ShopPage() {
 
       const matchesPrice = p.price >= priceRange[0] && p.price <= priceRange[1]
       const category = allCategories.find(c => c.id === p.categoryId)
-      const matchesSearch = !searchQuery || 
-        p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      const matchesSearch = !searchQuery ||
+        p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         p.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
         category?.name.toLowerCase().includes(searchQuery.toLowerCase())
       const matchesStock = !inStockOnly || p.inStock
-      
+
       return matchesCategory && matchesPrice && matchesSearch && matchesStock
     })
   }, [products, selectedCategorySlug, priceRange, searchQuery, inStockOnly, allCategories, getSubcategories])
@@ -241,13 +238,13 @@ export default function ShopPage() {
   return (
     <div className="min-h-screen bg-background text-foreground selection:bg-primary selection:text-primary-foreground">
       <Navbar />
-      
+
       {/* Header Section */}
       <section className="pt-32 pb-16 border-b border-border relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary/20 via-transparent to-transparent" />
         </div>
-        
+
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div className="space-y-4">
@@ -259,18 +256,18 @@ export default function ShopPage() {
                 THE SHOP
               </h1>
               <p className="text-muted-foreground text-sm max-w-md font-light italic">
-                {selectedCategorySlug 
+                {selectedCategorySlug
                   ? `Exploring ${allCategories.find(c => c.slug === selectedCategorySlug)?.name}`
                   : `Discover ${products.length} exclusive droplets curated for your premium aesthetic.`
                 }
               </p>
             </div>
-            
+
             {/* Search Bar */}
             <div className="relative group w-full md:w-80">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={18} />
-              <input 
-                type="text" 
+              <input
+                type="text"
                 placeholder="Search Universe..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -283,11 +280,11 @@ export default function ShopPage() {
 
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="flex flex-col lg:flex-row gap-12">
-          
+
           {/* Desktop Sidebar */}
           <aside className="hidden lg:block w-64 flex-shrink-0">
             <div className="sticky top-24">
-               <FilterPanel {...filterProps} />
+              <FilterPanel {...filterProps} />
             </div>
           </aside>
 
@@ -296,7 +293,7 @@ export default function ShopPage() {
             {/* Toolbar */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5 pb-6">
               <div className="flex items-center justify-between w-full sm:w-auto gap-4">
-                <button 
+                <button
                   onClick={() => setMobileFilterOpen(true)}
                   className="lg:hidden flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary border border-primary/20 px-3 py-2 rounded-lg"
                 >
@@ -311,7 +308,7 @@ export default function ShopPage() {
 
               <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
                 <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest whitespace-nowrap">Sort:</span>
-                <select 
+                <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
                   className="flex-1 sm:flex-none bg-muted border border-border px-3 py-2 text-[10px] font-black uppercase tracking-widest focus:outline-none focus:border-primary/50 cursor-pointer min-w-[140px]"
@@ -326,13 +323,13 @@ export default function ShopPage() {
 
             {/* Grid */}
             {isLoading || isSyncing ? (
-               <div className="grid grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-8">
-                 {[...Array(6)].map((_, i) => (
-                   <div key={i} className="aspect-square bg-muted animate-pulse border border-border" />
-                 ))}
-               </div>
+              <div className="grid grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-8">
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className="aspect-square bg-muted animate-pulse border border-border" />
+                ))}
+              </div>
             ) : sortedProducts.length > 0 ? (
-              <motion.div 
+              <motion.div
                 className="grid grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-8"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -355,7 +352,7 @@ export default function ShopPage() {
             ) : (
               <div className="py-32 text-center border border-dashed border-border">
                 <p className="text-muted-foreground text-xs uppercase tracking-[0.3em] mb-6 font-light">No artifacts match your search parameters.</p>
-                <button 
+                <button
                   onClick={() => { setSelectedCategorySlug(null); setPriceRange([0, 5000]); setSearchQuery(''); setInStockOnly(false); }}
                   className="text-primary text-[10px] font-black uppercase tracking-widest hover:underline"
                 >
@@ -371,14 +368,14 @@ export default function ShopPage() {
       <AnimatePresence>
         {mobileFilterOpen && (
           <>
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setMobileFilterOpen(false)}
               className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm"
             />
-            <motion.div 
+            <motion.div
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
@@ -391,7 +388,7 @@ export default function ShopPage() {
                 </button>
               </div>
               <FilterPanel {...filterProps} />
-              <button 
+              <button
                 onClick={() => setMobileFilterOpen(false)}
                 className="w-full bg-primary text-black font-black py-4 uppercase tracking-widest text-xs mt-12"
               >

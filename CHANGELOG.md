@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2026-05-06] - Catalog System Type Fix
+
+### Fixed
+- **CatalogProduct 'imageUrl' Missing Error**: Fixed a TypeScript error in the Navbar search where `imageUrl` was reported as non-existent on the `CatalogProduct` type.
+  - Added `imageUrl: string` to the `CatalogProduct` type definition in `catalog-context.tsx` for cross-component compatibility.
+  - Updated the product mapping logic in `CatalogProvider` to explicitly resolve and populate the `imageUrl` property for every product.
+  - Verified and synchronized usage in `components/navbar.tsx` search results to ensure proper thumbnail rendering.
+
+---
+
 ## [2026-05-05] - Full Security & Functionality Audit
 
 ### Fixed (Backend)

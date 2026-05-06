@@ -29,6 +29,7 @@ export type CatalogProduct = {
   originalPrice?: number
   rating: number
   reviews: number
+  imageUrl: string // Added for compatibility
   images: string[]
   description: string
   inStock: boolean
@@ -176,6 +177,7 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
         originalPrice: p.originalPrice ? parseFloat(p.originalPrice) : undefined,
         rating: parseFloat(p.ratingAvg || 0),
         reviews: p.reviewCount || 0,
+        imageUrl: resolveImageUrl(p.imageUrl),
         images: p.images?.length > 0
           ? p.images.map((img: any) => resolveImageUrl(img.imageUrl))
           : [resolveImageUrl(p.imageUrl)],

@@ -2,7 +2,31 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2026-05-06] - Deal of the Day — Real Timer & Multi-Product Admin Control
+
+### Added
+- **`dealEndTime` Field on Product (Backend)**: Added a new `dealEndTime DateTime?` column to the `products` table via a new Prisma migration (`add_deal_end_time`). This is the single source of truth for deal expiry — stored in the database, not client-side.
+- **Backend Auto-Expiry Logic** (`productController.ts`): `GET /products?isDealOfTheDay=true` now filters out products whose `dealEndTime` has already passed, server-side. The DB is authoritative, like Amazon flash sales.
+- **`dealEndTime` Validation** (`productController.ts`): Added ISO 8601 validation to both `productCreateValidation` and `productUpdateValidation`. `updateProduct` also explicitly clears `dealEndTime` when `isDealOfTheDay` is set to `false`.
+- **Multi-Product Deal Carousel** (`components/deal-of-the-day.tsx`): Completely rewrote the Deal of the Day section. Now supports multiple simultaneous deals shown in an animated carousel with prev/next navigation and dot indicators.
+- **Real Flip-Card Countdown** (`components/deal-of-the-day.tsx`): Each deal card has an individual countdown timer that counts down to its own `dealEndTime` from the backend. Uses animated flip-card digits (like Amazon/Flipkart flash sale clocks).
+- **Auto-Expiry on Consumer UI** (`components/deal-of-the-day.tsx`): When a deal's countdown hits zero, it is automatically removed from the carousel. The entire section disappears when all deals have expired.
+- **Admin Deal Panel Overhaul** (`app/admin/deal/page.tsx`):
+  - Added a **`datetime-local` picker** for the admin to set the exact deal end date & time.
+  - Added **Quick Preset buttons**: 5m / 15m / 30m / 1h / 3h / 6h / 12h / 24h / 48h from now.
+  - Active deals now show a **live ticking countdown** in the admin panel.
+  - **EXPIRED badge** displayed on deals whose `dealEndTime` has passed.
+  - Duration preview shown while the admin is picking the end time.
+  - `dealEndTime` and reverted `originalPrice` are now both sent to the backend on deal removal.
+- **`dealEndTime` in Catalog Type** (`lib/catalog/catalog-context.tsx`): Added `dealEndTime?: string | null` to `CatalogProduct` and mapped it in `fetchCatalog`.
+
+### Changed
+- `updateProduct` now correctly handles `originalPrice: null` (explicit clear) vs `undefined` (no change), fixing a subtle bug where the original price wasn't being reverted on deal removal.
+
+---
+
 ## [2026-05-06] - Catalog System Type Fix
+
 
 ### Fixed
 - **CatalogProduct 'imageUrl' Missing Error**: Fixed a TypeScript error in the Navbar search where `imageUrl` was reported as non-existent on the `CatalogProduct` type.

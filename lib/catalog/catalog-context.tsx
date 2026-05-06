@@ -36,6 +36,7 @@ export type CatalogProduct = {
   soldOut?: boolean
   featured?: boolean
   dealOfTheDay?: boolean
+  dealEndTime?: string | null
   slug: string
   variants?: {
     id: number
@@ -186,6 +187,7 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
         soldOut: p.stock === 0,
         featured: p.isFeatured,
         dealOfTheDay: p.isDealOfTheDay,
+        dealEndTime: p.dealEndTime ? new Date(p.dealEndTime).toISOString() : null,
         slug: p.slug,
         variants: p.variants,
       }))

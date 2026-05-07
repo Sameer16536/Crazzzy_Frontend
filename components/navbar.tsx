@@ -8,8 +8,8 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useState, useEffect, useMemo } from 'react'
-import { useRouter } from 'next/navigation'
-import { Search, ShoppingCart, Menu, LayoutDashboard, LogOut, User as UserIcon, ShieldCheck, ChevronRight } from 'lucide-react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { Search, ShoppingCart, Menu, LayoutDashboard, LogOut, User as UserIcon, ShieldCheck, ChevronRight, Plus, Minus } from 'lucide-react'
 import { useCatalog } from '@/lib/catalog/use-catalog'
 import { useAppSelector } from '@/lib/store/hooks'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
@@ -36,6 +36,11 @@ import {
 import { cn } from '@/lib/utils'
 import { AnimatePresence, motion } from 'framer-motion'
 import { X } from 'lucide-react'
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible"
 
 export function Navbar() {
   const { rootCategories: rawCategories, getSubcategories, data } = useCatalog()
@@ -73,6 +78,9 @@ export function Navbar() {
 
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const searchParams = useSearchParams()
+  const activeCategory = searchParams.get('category')
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -308,7 +316,7 @@ export function Navbar() {
 
             {/* Mobile menu trigger */}
             <div className="md:hidden">
-              <Sheet>
+              <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
                 <SheetTrigger asChild>
                   <Button variant="outline" size="icon" aria-label="Open menu" className="w-9 h-9">
                     <Menu size={16} />
@@ -335,10 +343,18 @@ export function Navbar() {
                   <div className="flex flex-col h-full overflow-y-auto">
                     <div className="p-6 space-y-6">
                       <div className="space-y-3">
-                        <Link href="/" className="block text-xs font-black uppercase tracking-[0.2em] text-muted-foreground hover:text-primary transition-colors">
+                        <Link 
+                          href="/" 
+                          onClick={() => setMobileMenuOpen(false)}
+                          className="block text-xs font-black uppercase tracking-[0.2em] text-muted-foreground hover:text-primary transition-colors"
+                        >
                           HOME
                         </Link>
-                        <Link href="/shop" className="block text-xs font-black uppercase tracking-[0.2em] text-muted-foreground hover:text-primary transition-colors">
+                        <Link 
+                          href="/shop" 
+                          onClick={() => setMobileMenuOpen(false)}
+                          className="block text-xs font-black uppercase tracking-[0.2em] text-muted-foreground hover:text-primary transition-colors"
+                        >
                           EXPLORE ALL
                         </Link>
                       </div>
@@ -349,30 +365,53 @@ export function Navbar() {
                           {categories.map((c) => {
                             const subs = getSubcategories(c.id)
                             const hasSubs = subs.length > 0
+                            const isActive = activeCategory === c.slug
+                            const isChildActive = subs.some(s => s.slug === activeCategory)
 
                             return (
                               <div key={c.id} className="space-y-1">
-                                <div className="flex items-center justify-between">
-                                  <Link
-                                    href={`/shop?category=${c.slug}`}
-                                    className="block py-2 text-sm font-bold text-foreground hover:text-primary transition-colors uppercase tracking-widest"
-                                  >
-                                    {c.name}
-                                  </Link>
-                                </div>
-                                {hasSubs && (
-                                  <div className="pl-4 border-l border-border/50 space-y-1 ml-1">
-                                    {subs.map((sub) => (
-                                      <Link
-                                        key={sub.id}
-                                        href={`/shop?category=${sub.slug}`}
-                                        className="block py-1.5 text-[11px] font-medium text-muted-foreground hover:text-primary transition-colors uppercase tracking-wider"
-                                      >
-                                        {sub.name}
-                                      </Link>
-                                    ))}
+                                <Collapsible defaultOpen={isActive || isChildActive}>
+                                  <div className="flex items-center justify-between group">
+                                    <Link
+                                      href={`/shop?category=${c.slug}`}
+                                      onClick={() => setMobileMenuOpen(false)}
+                                      className={cn(
+                                        "flex-1 py-2 text-sm font-bold transition-colors uppercase tracking-widest",
+                                        isActive || isChildActive ? "text-primary" : "text-foreground hover:text-primary"
+                                      )}
+                                    >
+                                      {c.name}
+                                    </Link>
+                                    {hasSubs && (
+                                      <CollapsibleTrigger asChild>
+                                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-primary/5 group/trigger">
+                                          <Plus className="h-3 w-3 transition-transform duration-300 group-data-[state=open]/trigger:rotate-45" />
+                                          <span className="sr-only">Toggle {c.name}</span>
+                                        </Button>
+                                      </CollapsibleTrigger>
+                                    )}
                                   </div>
-                                )}
+                                  
+                                  {hasSubs && (
+                                    <CollapsibleContent className="space-y-1">
+                                      <div className="pl-4 border-l border-border/50 space-y-1 ml-1 mt-1">
+                                        {subs.map((sub) => (
+                                          <Link
+                                            key={sub.id}
+                                            href={`/shop?category=${sub.slug}`}
+                                            onClick={() => setMobileMenuOpen(false)}
+                                            className={cn(
+                                              "block py-1.5 text-[11px] font-medium transition-colors uppercase tracking-wider",
+                                              activeCategory === sub.slug ? "text-primary" : "text-muted-foreground hover:text-primary"
+                                            )}
+                                          >
+                                            {sub.name}
+                                          </Link>
+                                        ))}
+                                      </div>
+                                    </CollapsibleContent>
+                                  )}
+                                </Collapsible>
                               </div>
                             )
                           })}
@@ -380,10 +419,18 @@ export function Navbar() {
                       </div>
 
                       <div className="pt-6 border-t border-border space-y-3">
-                        <Link href="/track" className="block text-[10px] font-bold text-muted-foreground hover:text-foreground uppercase tracking-widest">
+                        <Link 
+                          href="/track" 
+                          onClick={() => setMobileMenuOpen(false)}
+                          className="block text-[10px] font-bold text-muted-foreground hover:text-foreground uppercase tracking-widest"
+                        >
                           Track Order
                         </Link>
-                        <Link href="/contact" className="block text-[10px] font-bold text-muted-foreground hover:text-foreground uppercase tracking-widest">
+                        <Link 
+                          href="/contact" 
+                          onClick={() => setMobileMenuOpen(false)}
+                          className="block text-[10px] font-bold text-muted-foreground hover:text-foreground uppercase tracking-widest"
+                        >
                           Contact
                         </Link>
                       </div>
@@ -404,13 +451,37 @@ export function Navbar() {
                               </div>
                             </div>
                             <div className="grid grid-cols-2 gap-2">
-                              <Link href="/account" className="bg-muted p-3 text-[10px] font-bold text-center uppercase tracking-widest hover:bg-muted/80 transition-all">Profile</Link>
-                              <Link href="/account/orders" className="bg-muted p-3 text-[10px] font-bold text-center uppercase tracking-widest hover:bg-muted/80 transition-all">Orders</Link>
+                              <Link 
+                                href="/account" 
+                                onClick={() => setMobileMenuOpen(false)}
+                                className="bg-muted p-3 text-[10px] font-bold text-center uppercase tracking-widest hover:bg-muted/80 transition-all"
+                              >
+                                Profile
+                              </Link>
+                              <Link 
+                                href="/account/orders" 
+                                onClick={() => setMobileMenuOpen(false)}
+                                className="bg-muted p-3 text-[10px] font-bold text-center uppercase tracking-widest hover:bg-muted/80 transition-all"
+                              >
+                                Orders
+                              </Link>
                             </div>
-                            <button onClick={logout} className="w-full bg-red-500/10 text-red-500 p-3 text-[10px] font-black uppercase tracking-widest">Sign Out</button>
+                            <button 
+                              onClick={() => {
+                                logout()
+                                setMobileMenuOpen(false)
+                              }} 
+                              className="w-full bg-red-500/10 text-red-500 p-3 text-[10px] font-black uppercase tracking-widest"
+                            >
+                              Sign Out
+                            </button>
                           </div>
                         ) : (
-                          <Link href="/login" className="block bg-primary text-primary-foreground p-4 text-center text-xs font-black uppercase tracking-[0.2em]">
+                          <Link 
+                            href="/login" 
+                            onClick={() => setMobileMenuOpen(false)}
+                            className="block bg-primary text-primary-foreground p-4 text-center text-xs font-black uppercase tracking-[0.2em]"
+                          >
                             Sign In
                           </Link>
                         )}

@@ -67,8 +67,8 @@ function FilterPanel({
           <button
             onClick={() => onCategoryChange(null)}
             className={`block w-full text-left px-3 py-3 text-xs font-bold uppercase tracking-widest transition-all ${selectedCategoryId === null
-                ? 'text-primary'
-                : 'text-muted-foreground hover:text-foreground'
+              ? 'text-primary'
+              : 'text-muted-foreground hover:text-foreground'
               }`}
           >
             All Droplets
@@ -82,7 +82,7 @@ function FilterPanel({
 
             return (
               <div key={root.id} className="space-y-1">
-                <div 
+                <div
                   className={`flex items-center justify-between w-full group cursor-pointer px-3 py-3 ${isSelected || hasSelectedSub ? 'text-primary' : 'text-muted-foreground'}`}
                   onClick={() => onCategoryChange(root.slug)}
                 >
@@ -114,8 +114,8 @@ function FilterPanel({
                           key={sub.id}
                           onClick={() => onCategoryChange(sub.slug)}
                           className={`block w-full text-left px-3 py-2 text-[10px] font-bold uppercase tracking-widest transition-all ${selectedCategoryId === sub.slug
-                              ? 'text-primary'
-                              : 'text-muted-foreground/60 hover:text-foreground'
+                            ? 'text-primary'
+                            : 'text-muted-foreground/60 hover:text-foreground'
                             }`}
                         >
                           {sub.name}
@@ -179,12 +179,12 @@ export default function ShopPage() {
   const products = data?.products ?? []
   const allCategories = data?.categories ?? []
 
-  const { 
-    category: selectedCategorySlug, 
-    search: searchQuery, 
-    priceRange, 
-    inStockOnly, 
-    sortBy 
+  const {
+    category: selectedCategorySlug,
+    search: searchQuery,
+    priceRange,
+    inStockOnly,
+    sortBy
   } = shopFilters
 
   const setSelectedCategorySlug = (category: string | null) => setShopFilter({ category })
@@ -192,7 +192,7 @@ export default function ShopPage() {
   const setPriceRange = (range: [number, number]) => setShopFilter({ priceRange: range })
   const setSortBy = (sort: string) => setShopFilter({ sortBy: sort })
   const setInStockOnly = (val: boolean) => setShopFilter({ inStockOnly: val })
-  
+
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false)
 
   // Infinite Scroll Observer
@@ -288,153 +288,142 @@ export default function ShopPage() {
     <div className="min-h-screen bg-background text-foreground selection:bg-primary selection:text-primary-foreground">
       <Navbar />
 
-      {/* Header Section */}
-      <section className="pt-32 pb-16 border-b border-border relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary/20 via-transparent to-transparent" />
-        </div>
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-px bg-primary" />
-                <span className="text-primary text-[10px] font-mono tracking-[0.3em] uppercase">Universe</span>
-              </div>
-              <h1 className="text-5xl sm:text-7xl font-black uppercase tracking-tighter leading-none text-foreground">
-                THE SHOP
-              </h1>
-              <p className="text-muted-foreground text-sm max-w-md font-light italic">
-                {selectedCategorySlug
-                  ? `Exploring ${allCategories.find(c => c.slug === selectedCategorySlug)?.name}`
-                  : `Discover ${products.length} exclusive droplets curated for your premium aesthetic.`
-                }
-              </p>
-            </div>
-
-            {/* Search Bar */}
-            <div className="relative group w-full md:w-80">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={18} />
-              <input
-                type="text"
-                placeholder="Search Universe..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-muted/30 border border-border px-12 py-4 text-sm font-bold uppercase tracking-widest focus:outline-none focus:border-primary/50 transition-all placeholder:text-muted-foreground/30"
-              />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="flex flex-col lg:flex-row gap-12">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-18 lg:h-[calc(100vh-64px)] lg:overflow-hidden">
+        <div className="flex flex-col lg:flex-row gap-12 h-full">
 
           {/* Desktop Sidebar */}
-          <aside className="hidden lg:block w-64 flex-shrink-0">
-            <div className="sticky top-24">
+          <aside
+            data-lenis-prevent
+            className="hidden lg:block w-64 flex-shrink-0 h-full pb-16 overflow-y-auto scrollbar-hide"
+          >
+            <div className="py-4">
               <FilterPanel {...filterProps} />
             </div>
           </aside>
 
           {/* Main List */}
-          <div className="flex-1 space-y-12">
-            {/* Toolbar */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5 pb-6">
-              <div className="flex items-center justify-between w-full sm:w-auto gap-4">
-                <button
-                  onClick={() => setMobileFilterOpen(true)}
-                  className="lg:hidden flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary border border-primary/20 px-3 py-2 rounded-lg"
-                >
-                  <SlidersHorizontal size={14} />
-                  Filters
-                </button>
+          <div className="flex-1 flex flex-col h-full min-w-0">
+            {/* Toolbar - Fixed at top of this column on PC */}
+            <div className="flex-shrink-0 bg-background/80 backdrop-blur-md z-30">
+              <div className="flex flex-col gap-6 border-b border-white/5 pb-8 pt-4">
+                {/* Row 1: Search */}
+                <div className="relative group w-full">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={18} />
+                  <input
+                    type="text"
+                    placeholder="Search Universe..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full bg-muted/10 border border-border/50 px-12 py-4 text-sm font-bold uppercase tracking-widest focus:outline-none focus:border-primary/50 transition-all placeholder:text-muted-foreground/30 rounded-lg"
+                  />
+                </div>
 
-                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] whitespace-nowrap">
-                  {isLoading || isSyncing ? 'Scanning...' : `${sortedProducts.length} Items`}
-                </p>
-              </div>
+                {/* Row 2: Stats, Sort, Mobile Filter */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="flex items-center justify-between w-full sm:w-auto gap-4">
+                    <button
+                      onClick={() => setMobileFilterOpen(true)}
+                      className="lg:hidden flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary border border-primary/20 px-3 py-2 rounded-lg"
+                    >
+                      <SlidersHorizontal size={14} />
+                      Filters
+                    </button>
 
-              <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
-                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest whitespace-nowrap">Sort:</span>
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  className="flex-1 sm:flex-none bg-muted border border-border px-3 py-2 text-[10px] font-black uppercase tracking-widest focus:outline-none focus:border-primary/50 cursor-pointer min-w-[140px]"
-                >
-                  <option value="newest">Newest</option>
-                  <option value="price_asc">Price: Low</option>
-                  <option value="price_desc">Price: High</option>
-                  <option value="popularity">Popular</option>
-                </select>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] whitespace-nowrap">
+                      {isLoading || isSyncing ? 'Scanning...' : `${sortedProducts.length} Items`}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest whitespace-nowrap">Sort:</span>
+                    <select
+                      value={sortBy}
+                      onChange={(e) => setSortBy(e.target.value)}
+                      className="flex-1 sm:flex-none bg-muted border border-border px-3 py-2 text-[10px] font-black uppercase tracking-widest focus:outline-none focus:border-primary/50 cursor-pointer min-w-[140px]"
+                    >
+                      <option value="newest">Newest</option>
+                      <option value="price_asc">Price: Low</option>
+                      <option value="price_desc">Price: High</option>
+                      <option value="popularity">Popular</option>
+                    </select>
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* Grid */}
-            {isLoading || (isSyncing && sortedProducts.length === 0) ? (
-              <div className="grid grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-8">
-                {[...Array(6)].map((_, i) => (
-                  <div key={i} className="aspect-square bg-muted animate-pulse border border-border" />
-                ))}
-              </div>
-            ) : sortedProducts.length > 0 ? (
-              <motion.div
-                className="grid grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-8"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-              >
-                <AnimatePresence mode="popLayout">
-                  {sortedProducts.map((p, i) => (
-                    <motion.div
-                      key={p.id}
-                      layout
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.95 }}
-                      transition={{ duration: 0.3 }}
+            {/* Grid Area - Independently scrollable on PC */}
+            <div
+              data-lenis-prevent
+              className="flex-1 overflow-y-auto scrollbar-hide lg:pr-4 pb-32"
+            >
+              <div className="pt-8">
+                {/* Grid */}
+                {isLoading || (isSyncing && sortedProducts.length === 0) ? (
+                  <div className="grid grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-8">
+                    {[...Array(6)].map((_, i) => (
+                      <div key={i} className="aspect-square bg-muted animate-pulse border border-border" />
+                    ))}
+                  </div>
+                ) : sortedProducts.length > 0 ? (
+                  <motion.div
+                    className="grid grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-8"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                  >
+                    <AnimatePresence mode="popLayout">
+                      {sortedProducts.map((p, i) => (
+                        <motion.div
+                          key={p.id}
+                          layout
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.95 }}
+                          transition={{ duration: 0.3 }}
+                        >
+                          <ProductCard product={p} />
+                        </motion.div>
+                      ))}
+                    </AnimatePresence>
+                  </motion.div>
+                ) : (
+                  <div className="py-32 text-center border border-dashed border-border">
+                    <p className="text-muted-foreground text-xs uppercase tracking-[0.3em] mb-6 font-light">No artifacts match your search parameters.</p>
+                    <button
+                      onClick={() => { setSelectedCategorySlug(null); setPriceRange([0, 5000]); setSearchQuery(''); setInStockOnly(false); }}
+                      className="text-primary text-[10px] font-black uppercase tracking-widest hover:underline"
                     >
-                      <ProductCard product={p} />
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
-              </motion.div>
-            ) : (
-              <div className="py-32 text-center border border-dashed border-border">
-                <p className="text-muted-foreground text-xs uppercase tracking-[0.3em] mb-6 font-light">No artifacts match your search parameters.</p>
-                <button
-                  onClick={() => { setSelectedCategorySlug(null); setPriceRange([0, 5000]); setSearchQuery(''); setInStockOnly(false); }}
-                  className="text-primary text-[10px] font-black uppercase tracking-widest hover:underline"
-                >
-                  Reset Universe
-                </button>
-              </div>
-            )}
+                      Reset Universe
+                    </button>
+                  </div>
+                )}
 
-            {/* Infinite Scroll Sentinel */}
-            {sortedProducts.length > 0 && pagination.hasMore && (
-              <div
-                ref={lastElementRef}
-                className="py-12 flex flex-col items-center justify-center gap-4 border-t border-white/5 mt-12"
-              >
-                <div className="flex items-center gap-2">
-                  <div className="w-1 h-1 bg-primary rounded-full animate-ping" />
-                  <div className="w-1 h-1 bg-primary rounded-full animate-ping [animation-delay:0.2s]" />
-                  <div className="w-1 h-1 bg-primary rounded-full animate-ping [animation-delay:0.4s]" />
-                </div>
-                <p className="text-[10px] font-mono text-muted-foreground uppercase tracking-[0.4em] animate-pulse">
-                  Syncing more droplets...
-                </p>
-              </div>
-            )}
+                {/* Infinite Scroll Sentinel */}
+                {sortedProducts.length > 0 && pagination.hasMore && (
+                  <div
+                    ref={lastElementRef}
+                    className="py-12 flex flex-col items-center justify-center gap-4 border-t border-white/5 mt-12"
+                  >
+                    <div className="flex items-center gap-2">
+                      <div className="w-1 h-1 bg-primary rounded-full animate-ping" />
+                      <div className="w-1 h-1 bg-primary rounded-full animate-ping [animation-delay:0.2s]" />
+                      <div className="w-1 h-1 bg-primary rounded-full animate-ping [animation-delay:0.4s]" />
+                    </div>
+                    <p className="text-[10px] font-mono text-muted-foreground uppercase tracking-[0.4em] animate-pulse">
+                      Syncing more droplets...
+                    </p>
+                  </div>
+                )}
 
-            {/* End of results indicator */}
-            {sortedProducts.length > 0 && !pagination.hasMore && (
-              <div className="py-12 text-center border-t border-white/5 mt-12">
-                <p className="text-[10px] font-mono text-muted-foreground/30 uppercase tracking-[0.4em]">
-                  — Universe Boundary Reached —
-                </p>
+                {/* End of results indicator */}
+                {sortedProducts.length > 0 && !pagination.hasMore && (
+                  <div className="py-12 text-center border-t border-white/5 mt-12">
+                    <p className="text-[10px] font-mono text-muted-foreground/30 uppercase tracking-[0.4em]">
+                      — Universe Boundary Reached —
+                    </p>
+                  </div>
+                )}
               </div>
-            )}
+            </div>
           </div>
         </div>
       </section>

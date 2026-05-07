@@ -634,9 +634,9 @@ export default function Home() {
                 {[
                   { label: 'Track Order', href: '/track' },
                   { label: 'Support', href: '/contact' },
-                  { label: 'Shipping Info', href: '#' },
-                  { label: 'B2B Enquiries', href: '/contact' },
-                  { label: 'Returns', href: '#' },
+                  { label: 'Shipping Info', href: '/shipping' },
+                  { label: 'FAQs', href: '/faqs' },
+                  { label: 'Returns', href: '/refund-policy' },
                 ].map((item) => (
                   <li key={item.label}>
                     <Link href={item.href} className="text-muted-foreground hover:text-primary transition-colors">
@@ -657,10 +657,15 @@ export default function Home() {
             >
               <h3 className="text-xs font-mono text-muted-foreground tracking-[0.2em] uppercase">Legal</h3>
               <ul className="space-y-2.5 text-sm">
-                {['Terms & Conditions', 'Privacy Policy', 'Refund Policy', 'Cookies'].map((item) => (
-                  <li key={item}>
-                    <Link href="#" className="text-muted-foreground hover:text-primary transition-colors">
-                      {item}
+                {[
+                  { label: 'Terms & Conditions', href: '/terms' },
+                  { label: 'Privacy Policy', href: '/privacy' },
+                  { label: 'Refund Policy', href: '/refund-policy' },
+                  { label: 'Cookies', href: '/cookies' },
+                ].map((item) => (
+                  <li key={item.label}>
+                    <Link href={item.href} className="text-muted-foreground hover:text-primary transition-colors">
+                      {item.label}
                     </Link>
                   </li>
                 ))}

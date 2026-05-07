@@ -214,6 +214,22 @@ html::before {
   transform: translateZ(0);
 }
 
+/* ── Global Custom Scrollbar ── */
+::-webkit-scrollbar {
+  width: 5px;
+}
+::-webkit-scrollbar-track {
+  background: var(--background);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 100px;
+  transition: background 0.3s ease;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
+}
+
 /* ── Custom Scrollbar Utility ── */
 .custom-scrollbar::-webkit-scrollbar {
   width: 4px;
@@ -234,7 +250,7 @@ html::before {
   display: none;
 }
 .scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
 }
 

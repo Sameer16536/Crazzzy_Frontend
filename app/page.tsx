@@ -96,7 +96,7 @@ function HeroHeadline() {
   ]
   let wordIdx = 0
   return (
-    <h1 className="text-[clamp(3rem,7vw,5rem)] font-black leading-[0.88] tracking-tight text-foreground">
+    <h1 className="text-[clamp(2.5rem,7vw,5rem)] font-black leading-[0.88] tracking-tight text-foreground">
       {lines.map((line, li) => (
         <div key={li} className="overflow-hidden">
           <div className="flex flex-wrap gap-x-[0.18em]">
@@ -312,7 +312,7 @@ export default function Home() {
         <div className="absolute inset-0 bg-gradient-to-r from-background/40 dark:from-black/50 via-transparent to-transparent" style={{ zIndex: 1 }} />
 
         {/* ── Two-column content grid ── */}
-        <div className="relative z-10 max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 w-full h-full flex items-center">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 w-full h-full flex items-center">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-16 items-center w-full">
 
             {/* ── LEFT COLUMN: Text ── */}
@@ -329,10 +329,10 @@ export default function Home() {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.6 }}
-                className="flex items-center gap-3 mb-6 sm:mb-8"
+                className="flex items-center gap-3 mb-4 sm:mb-8"
               >
-                <div className="w-6 sm:w-8 h-px bg-primary flex-shrink-0" />
-                <span className="text-black/60 dark:text-primary/90 text-[10px] sm:text-xs font-mono tracking-[0.2em] sm:tracking-[0.25em] uppercase truncate">
+                <div className="w-4 sm:w-8 h-px bg-primary flex-shrink-0" />
+                <span className="text-black/60 dark:text-primary/90 text-[9px] sm:text-xs font-mono tracking-[0.15em] sm:tracking-[0.25em] uppercase truncate">
                   Curated Collectibles • Premium Aesthetic
                 </span>
               </motion.div>

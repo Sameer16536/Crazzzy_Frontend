@@ -63,6 +63,23 @@ interface CatalogContextType {
   refresh: (category?: string, limit?: number) => Promise<void>
   loadMore: (category?: string) => Promise<void>
   toggleWishlist: (productId: string) => Promise<void>
+  
+  // Persistence States
+  adminFilters: {
+    products: { category: string; search: string; page: number }
+    orders: { search: string }
+    customers: { search: string }
+  }
+  setAdminFilter: (area: 'products' | 'orders' | 'customers', filters: any) => void
+  
+  shopFilters: {
+    category: string | null
+    search: string
+    priceRange: [number, number]
+    inStockOnly: boolean
+    sortBy: string
+  }
+  setShopFilter: (filters: Partial<CatalogContextType['shopFilters']>) => void
 }
 
 const CatalogContext = createContext<CatalogContextType | undefined>(undefined)
@@ -113,7 +130,33 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<string | null>(null)
   const [pagination, setPagination] = useState({ page: 1, totalPages: 1, hasMore: false })
   const fetchingRef = useRef(false)
-  
+
+  // Persistent Filter States
+  const [adminFilters, setAdminFilters] = useState<CatalogContextType['adminFilters']>({
+    products: { category: '', search: '', page: 1 },
+    orders: { search: '' },
+    customers: { search: '' }
+  })
+
+  const [shopFilters, setShopFilters] = useState<CatalogContextType['shopFilters']>({
+    category: null,
+    search: '',
+    priceRange: [0, 5000],
+    inStockOnly: false,
+    sortBy: 'newest'
+  })
+
+  const setAdminFilter = useCallback((area: keyof CatalogContextType['adminFilters'], filters: any) => {
+    setAdminFilters(prev => ({
+      ...prev,
+      [area]: { ...prev[area], ...filters }
+    }))
+  }, [])
+
+  const setShopFilter = useCallback((filters: Partial<CatalogContextType['shopFilters']>) => {
+    setShopFilters(prev => ({ ...prev, ...filters }))
+  }, [])
+
   const pathname = usePathname()
   const lastPathname = useRef(pathname)
 
@@ -144,7 +187,7 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
-  const fetchCatalog = async (categorySlug?: string, page = 1, limit = 20, append = false) => {
+  const fetchCatalog = async (categorySlug?: string, page = 1, limit = 50, append = false) => {
     if (fetchingRef.current) return
     fetchingRef.current = true
 
@@ -242,10 +285,10 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
 
   const loadMore = async (categorySlug?: string) => {
     if (!pagination.hasMore || isSyncing) return
-    await fetchCatalog(categorySlug, pagination.page + 1, 20, true)
+    await fetchCatalog(categorySlug, pagination.page + 1, 50, true)
   }
 
-  const refresh = async (categorySlug?: string, limit = 20) => {
+  const refresh = async (categorySlug?: string, limit = 50) => {
     await fetchCatalog(categorySlug, 1, limit, false)
   }
 
@@ -270,8 +313,12 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
     pagination,
     refresh,
     loadMore,
-    toggleWishlist
-  }), [data, wishlistIds, isLoading, isSyncing, error, pagination, toggleWishlist])
+    toggleWishlist,
+    adminFilters,
+    setAdminFilter,
+    shopFilters,
+    setShopFilter
+  }), [data, wishlistIds, isLoading, isSyncing, error, pagination, toggleWishlist, adminFilters, setAdminFilter, shopFilters, setShopFilter])
 
   return (
     <CatalogContext.Provider value={value}>

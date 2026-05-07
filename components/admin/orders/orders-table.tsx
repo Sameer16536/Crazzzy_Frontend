@@ -6,13 +6,17 @@ import { Card } from '@/components/ui/card'
 import { StatusBadge } from '../status-badge'
 import { OrderActions } from './order-actions'
 import { Loader2, Package, Search, Filter, Copy, Check, Truck } from 'lucide-react'
+import { useCatalog } from '@/lib/catalog/use-catalog'
 import { toast } from 'sonner'
 
 
 export function OrdersTable() {
+  const { adminFilters, setAdminFilter } = useCatalog()
+  const searchQuery = adminFilters.orders.search
+  const setSearchQuery = (search: string) => setAdminFilter('orders', { search })
+
   const [orders, setOrders] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [searchQuery, setSearchQuery] = useState('')
   const [copiedId, setCopiedId] = useState<string | null>(null)
 
   const copyToClipboard = (id: string) => {

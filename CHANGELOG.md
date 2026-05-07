@@ -1,6 +1,27 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
+
+## [2026-05-07] - Filter Persistence Across Navigations
+
+### Added
+- **Global Filter State** (`lib/catalog/catalog-context.tsx`):
+  - Implemented persistent storage for admin and shop filters in `CatalogProvider`.
+  - Added `adminFilters` for Products, Orders, and Customers registries.
+  - Added `shopFilters` for the consumer-facing shop page.
+  - Added `setAdminFilter` and `setShopFilter` methods to update selections globally.
+- **Persistent Admin Tables**:
+  - `ProductsTable`: Category, search, and pagination state now survive navigation (e.g., after editing a product).
+  - `OrdersTable`: Search queries are preserved when navigating between orders.
+  - `CustomersTable`: Search queries are preserved when managing user accounts.
+- **Persistent Shop Experience**:
+  - `ShopPage`: Integrated with global context to ensure selected categories, price ranges, and search terms stay active during the session.
+
+### Changed
+- Filter states now only reset on a hard page refresh or manual change, as requested.
+
+---
+
 5: 
 6: ## [2026-05-07] - Infinite Scrolling for Shop Page
 7: 

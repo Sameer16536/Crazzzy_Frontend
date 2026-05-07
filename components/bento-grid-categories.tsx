@@ -199,6 +199,12 @@ export function BentoGridCategories() {
 
     const imageMap: Record<string, string> = {}
 
+    // Helper to recursively get all category IDs under a parent
+    const getAllCategoryIds = (parentId: string): string[] => {
+      const subs = getSubcategories(parentId)
+      return [parentId, ...subs.flatMap(s => getAllCategoryIds(s.id))]
+    }
+
     categories.forEach(cat => {
       // If category has a branding image, use it
       if (cat.image && !cat.image.includes('placeholder')) {
@@ -206,9 +212,8 @@ export function BentoGridCategories() {
         return
       }
 
-      // Otherwise, gather all products in this category and its sub-categories
-      const subs = getSubcategories(cat.id)
-      const allCategoryIds = [cat.id, ...subs.map(s => s.id)]
+      // Gather all products in this category and ALL its descendants
+      const allCategoryIds = getAllCategoryIds(cat.id)
 
       const pool: string[] = []
       allCategoryIds.forEach(id => {
@@ -219,9 +224,9 @@ export function BentoGridCategories() {
       })
 
       if (pool.length > 0) {
-        // Pick a random image from the top 10 products for variety but quality
-        const randomIndex = Math.floor(Math.random() * Math.min(pool.length, 10))
-        imageMap[cat.id] = pool[randomIndex]
+        // Pick a stable image (first one) or random for variety
+        // Using index 0 for stability across renders if desired
+        imageMap[cat.id] = pool[0]
       }
     })
 

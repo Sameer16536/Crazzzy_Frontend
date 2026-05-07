@@ -145,18 +145,27 @@ function FilterPanel({
 }
 
 export default function ShopPage() {
-  const { data, isLoading, isSyncing, refresh, loadMore, pagination, rootCategories, getSubcategories } = useCatalog()
+  const { data, isLoading, isSyncing, refresh, loadMore, pagination, rootCategories, getSubcategories, shopFilters, setShopFilter } = useCatalog()
   const searchParams = useSearchParams()
   const router = useRouter()
 
   const products = data?.products ?? []
   const allCategories = data?.categories ?? []
 
-  const [selectedCategorySlug, setSelectedCategorySlug] = useState<string | null>(null)
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 5000])
-  const [sortBy, setSortBy] = useState('newest')
-  const [searchQuery, setSearchQuery] = useState('')
-  const [inStockOnly, setInStockOnly] = useState(false)
+  const { 
+    category: selectedCategorySlug, 
+    search: searchQuery, 
+    priceRange, 
+    inStockOnly, 
+    sortBy 
+  } = shopFilters
+
+  const setSelectedCategorySlug = (category: string | null) => setShopFilter({ category })
+  const setSearchQuery = (search: string) => setShopFilter({ search })
+  const setPriceRange = (range: [number, number]) => setShopFilter({ priceRange: range })
+  const setSortBy = (sort: string) => setShopFilter({ sortBy: sort })
+  const setInStockOnly = (val: boolean) => setShopFilter({ inStockOnly: val })
+  
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false)
 
   // Infinite Scroll Observer

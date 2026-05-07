@@ -7,11 +7,15 @@ import { Users, Search, MoreHorizontal, Shield, ShieldAlert, Ban, Trash2, Loader
 import { toast } from 'sonner'
 import Image from 'next/image'
 import { ConfirmModal } from '@/components/admin/confirm-modal'
+import { useCatalog } from '@/lib/catalog/use-catalog'
 
 export function CustomersTable() {
+  const { adminFilters, setAdminFilter } = useCatalog()
+  const searchQuery = adminFilters.customers.search
+  const setSearchQuery = (search: string) => setAdminFilter('customers', { search })
+
   const [users, setUsers] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [searchQuery, setSearchQuery] = useState('')
   const [confirmAction, setConfirmAction] = useState<{
     title: string;
     description: string;

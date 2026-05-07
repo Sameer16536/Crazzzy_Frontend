@@ -15,6 +15,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { ConfirmModal } from '@/components/admin/confirm-modal'
+import { useCatalog } from '@/lib/catalog/use-catalog'
 
 interface Category {
   id: string
@@ -23,14 +24,21 @@ interface Category {
 }
 
 export function ProductsTable() {
+  const { adminFilters, setAdminFilter } = useCatalog()
+  const { category: selectedCategory, search: searchQuery, page: currentPage } = adminFilters.products
+
+  const setSelectedCategory = (category: string) => setAdminFilter('products', { category })
+  const setSearchQuery = (search: string) => setAdminFilter('products', { search })
+  const setCurrentPage = (page: number | ((p: number) => number)) => {
+    const next = typeof page === 'function' ? page(currentPage) : page
+    setAdminFilter('products', { page: next })
+  }
+
   const [products, setProducts] = useState<any[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
-  const [searchQuery, setSearchQuery] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState('')
   
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1)
+  // Pagination metadata
   const [totalPages, setTotalPages] = useState(1)
   const [totalProducts, setTotalProducts] = useState(0)
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null)

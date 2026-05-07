@@ -110,7 +110,7 @@ export function Navbar() {
 
   return (
     <nav className="fixed top-0 w-full z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border/10">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between gap-4 md:gap-8">
 
           {/* ── Logo ── */}
@@ -118,12 +118,12 @@ export function Navbar() {
             href="/"
             className="flex items-center hover:opacity-80 transition-opacity flex-shrink-0"
           >
-            <div className="relative w-48 sm:w-56 h-12 sm:h-16 flex items-center justify-center overflow-hidden">
+            <div className="relative w-36 sm:w-56 h-12 sm:h-16 flex items-center justify-center overflow-hidden pl-1 sm:pl-0">
               <Image
                 src="/logo-light.png"
                 alt="Crazzzy Collectibles"
                 fill
-                className="object-contain mix-blend-multiply dark:invert dark:mix-blend-screen scale-[3] sm:scale-[2.5]"
+                className="object-contain mix-blend-multiply dark:invert dark:mix-blend-screen scale-[2] sm:scale-[2.5]"
                 priority
               />
             </div>
@@ -202,7 +202,7 @@ export function Navbar() {
           </div>
 
           {/* ── Right: Actions ── */}
-          <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">
             <div className="hidden sm:block">
               <ThemeToggle />
             </div>

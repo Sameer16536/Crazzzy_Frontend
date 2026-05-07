@@ -199,7 +199,7 @@ function DealCard({ product, isActive }: { product: any; isActive: boolean }) {
 
         {/* Title */}
         <div className="space-y-3">
-          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white leading-tight uppercase tracking-tight">
+          <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white leading-tight uppercase tracking-tight">
             {product.name}
           </h2>
           <p className="text-white/60 text-sm sm:text-base max-w-md leading-relaxed">
@@ -209,7 +209,7 @@ function DealCard({ product, isActive }: { product: any; isActive: boolean }) {
 
         {/* Price */}
         <div className="flex items-end gap-4 flex-wrap">
-          <span className="text-5xl font-black text-primary font-mono">
+          <span className="text-4xl sm:text-5xl font-black text-primary font-mono">
             ₹{product.price.toLocaleString('en-IN')}
           </span>
           {originalPrice && (

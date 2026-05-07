@@ -34,6 +34,28 @@ function FilterPanel({
   inStockOnly,
   onInStockChange,
 }: FilterPanelProps) {
+  // Local state to track which categories are expanded
+  const [expandedCats, setExpandedCats] = useState<Record<string, boolean>>({})
+
+  // Auto-expand if the selected category is within this root
+  useEffect(() => {
+    if (selectedCategoryId) {
+      const rootToExpand = rootCategories.find(root => {
+        if (root.slug === selectedCategoryId) return true
+        const subs = getSubcategories(root.id)
+        return subs.some(s => s.slug === selectedCategoryId)
+      })
+      if (rootToExpand) {
+        setExpandedCats(prev => ({ ...prev, [rootToExpand.id]: true }))
+      }
+    }
+  }, [selectedCategoryId, rootCategories, getSubcategories])
+
+  const toggleExpand = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation() // Prevent category selection when just toggling
+    setExpandedCats(prev => ({ ...prev, [id]: !prev[id] }))
+  }
+
   return (
     <div className="space-y-10">
       {/* Category Filter */}
@@ -56,22 +78,26 @@ function FilterPanel({
             const subs = getSubcategories(root.id)
             const isSelected = selectedCategoryId === root.slug
             const hasSelectedSub = subs.some(s => s.slug === selectedCategoryId)
-            const isOpen = isSelected || hasSelectedSub
+            const isOpen = expandedCats[root.id] || false
 
             return (
               <div key={root.id} className="space-y-1">
-                <button
+                <div 
+                  className={`flex items-center justify-between w-full group cursor-pointer px-3 py-3 ${isSelected || hasSelectedSub ? 'text-primary' : 'text-muted-foreground'}`}
                   onClick={() => onCategoryChange(root.slug)}
-                  className={`flex items-center justify-between w-full text-left px-3 py-3 text-xs font-bold uppercase tracking-widest transition-all ${isSelected || hasSelectedSub
-                      ? 'text-primary'
-                      : 'text-muted-foreground hover:text-foreground'
-                    }`}
                 >
-                  {root.name}
+                  <span className="text-xs font-bold uppercase tracking-widest transition-all group-hover:text-foreground">
+                    {root.name}
+                  </span>
                   {subs.length > 0 && (
-                    <ChevronDown size={14} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                    <button
+                      onClick={(e) => toggleExpand(e, root.id)}
+                      className="p-1 hover:bg-muted/50 rounded transition-colors"
+                    >
+                      <ChevronDown size={14} className={`transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
+                    </button>
                   )}
-                </button>
+                </div>
 
                 {/* Sub-categories (Collapsible) */}
                 <AnimatePresence>
@@ -80,6 +106,7 @@ function FilterPanel({
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: 'auto', opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.3, ease: 'easeInOut' }}
                       className="overflow-hidden pl-4 border-l border-border ml-3 space-y-1"
                     >
                       {subs.map(sub => (

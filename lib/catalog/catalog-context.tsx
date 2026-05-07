@@ -55,7 +55,13 @@ interface CatalogContextType {
   isLoading: boolean
   isSyncing: boolean // Added to track background category switches
   error: string | null
-  refresh: (category?: string) => Promise<void>
+  pagination: {
+    page: number
+    totalPages: number
+    hasMore: boolean
+  }
+  refresh: (category?: string, limit?: number) => Promise<void>
+  loadMore: (category?: string) => Promise<void>
   toggleWishlist: (productId: string) => Promise<void>
 }
 
@@ -105,6 +111,8 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
   const [isSyncing, setIsSyncing] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [pagination, setPagination] = useState({ page: 1, totalPages: 1, hasMore: false })
+  const fetchingRef = useRef(false)
   
   const pathname = usePathname()
   const lastPathname = useRef(pathname)
@@ -136,21 +144,29 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
-  const fetchCatalog = async (categorySlug?: string) => {
-    try {
-      if (!data) setIsLoading(true)
-      else setIsSyncing(true)
+  const fetchCatalog = async (categorySlug?: string, page = 1, limit = 20, append = false) => {
+    if (fetchingRef.current) return
+    fetchingRef.current = true
 
-      // If categorySlug is provided, we use the backend's superior hierarchical filter
-      const productQuery = categorySlug ? `/products?category=${categorySlug}&limit=250` : '/products?limit=250'
+    try {
+      if (page === 1) {
+        if (!data) setIsLoading(true)
+        else setIsSyncing(true)
+      } else {
+        setIsSyncing(true)
+      }
+
+      // Build query params
+      const params = new URLSearchParams({ limit: String(limit), page: String(page) })
+      if (categorySlug) params.set('category', categorySlug)
 
       const [categoriesData, productsData] = await Promise.all([
-        api.get<any>('/categories'),
-        api.get<any>(productQuery),
+        page === 1 ? api.get<any>('/categories') : Promise.resolve({ data: data?.categories }),
+        api.get<any>(`/products?${params.toString()}`),
       ])
 
       const rawCategories = categoriesData.data || []
-      const categories: CatalogCategory[] = rawCategories.map((c: any) => {
+      const categories: CatalogCategory[] = page === 1 ? rawCategories.map((c: any) => {
         const designSlug = c.parentId ? rawCategories.find((pc: any) => pc.id === c.parentId)?.slug : c.slug
         const design = CATEGORY_DESIGN_DATA[designSlug || ''] || {
           color: '#d4af37',
@@ -165,14 +181,12 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
           color: design.color,
           parentId: c.parentId ? String(c.parentId) : null,
         }
-      })
+      }) : (data?.categories || [])
 
       const rawProducts = productsData.data || []
       const products: CatalogProduct[] = rawProducts.map((p: any) => ({
         id: String(p.id),
         name: p.title,
-        // CRITICAL FIX: Backend sometimes uses 'category_id' or nested 'category.id'
-        // Using p.categoryId || p.category_id || p.category?.id for maximum robustness
         categoryId: String(p.categoryId || p.category_id || p.category?.id || ''),
         price: parseFloat(p.price),
         originalPrice: p.originalPrice ? parseFloat(p.originalPrice) : undefined,
@@ -192,7 +206,29 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
         variants: p.variants,
       }))
 
-      setData({ categories, products })
+      if (append) {
+        setData(prev => {
+          if (!prev) return { categories, products }
+          const existingIds = new Set(prev.products.map(p => p.id))
+          const uniqueNew = products.filter(p => !existingIds.has(p.id))
+          return { ...prev, products: [...prev.products, ...uniqueNew] }
+        })
+      } else {
+        setData({ categories, products })
+      }
+
+      if (productsData.meta) {
+        const meta = productsData.meta
+        setPagination({
+          page: meta.page || page,
+          totalPages: meta.totalPages || 1,
+          hasMore: (meta.page || page) < (meta.totalPages || 1)
+        })
+      } else {
+        // Fallback if meta is missing
+        setPagination(prev => ({ ...prev, hasMore: false }))
+      }
+
       setError(null)
     } catch (e) {
       console.error('Catalog Sync Error:', e)
@@ -200,7 +236,17 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoading(false)
       setIsSyncing(false)
+      fetchingRef.current = false
     }
+  }
+
+  const loadMore = async (categorySlug?: string) => {
+    if (!pagination.hasMore || isSyncing) return
+    await fetchCatalog(categorySlug, pagination.page + 1, 20, true)
+  }
+
+  const refresh = async (categorySlug?: string, limit = 20) => {
+    await fetchCatalog(categorySlug, 1, limit, false)
   }
 
   useEffect(() => {
@@ -221,9 +267,11 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
     isLoading,
     isSyncing,
     error,
-    refresh: fetchCatalog,
+    pagination,
+    refresh,
+    loadMore,
     toggleWishlist
-  }), [data, wishlistIds, isLoading, isSyncing, error, toggleWishlist])
+  }), [data, wishlistIds, isLoading, isSyncing, error, pagination, toggleWishlist])
 
   return (
     <CatalogContext.Provider value={value}>

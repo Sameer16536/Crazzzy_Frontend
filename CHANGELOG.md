@@ -1,6 +1,36 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
+5: 
+6: ## [2026-05-07] - Infinite Scrolling for Shop Page
+7: 
+8: ### Added
+9: - **Infinite Scroll Support in Catalog** (`lib/catalog/catalog-context.tsx`):
+10:   - Added `pagination` state to track `page`, `totalPages`, and `hasMore`.
+11:   - Updated `fetchCatalog` to support appending products for seamless loading.
+12:   - Added `loadMore` function to simplify fetching the next page of items.
+13:   - Synchronized `refresh` to support custom limits (defaulting to 250 for broad searches).
+14: - **IntersectionObserver Integration** (`app/shop/page.tsx`):
+15:   - Implemented a "sentinel" element at the bottom of the product grid.
+16:   - Automatically triggers `loadMore` when the user scrolls to the bottom of the visible items.
+17:   - Added cinematic loading animations ("Syncing more droplets...") while fetching.
+18:   - Added "Universe Boundary Reached" indicator when all items are loaded.
+19: 
+20: ### Fixed
+21: - **Product Duplication**: Fixed an issue where the same products were appended multiple times during infinite scroll.
+22:   - Implemented a fetch-lock mechanism (`fetchingRef`) to prevent overlapping requests.
+23:   - Added explicit deduplication logic in the catalog state to filter out redundant product IDs.
+24:   - Ensured `isSyncing` state is correctly updated for all paginated fetches, properly throttling the scroll observer.
+25:   - Fixed a critical syntax error (missing `try` block) that caused unpredictable behavior and duplication.
+26: 
+27: ### Changed
+28: - Standardized initial page limit to 20 for consistency with infinite scroll batches, ensuring smooth transitions without overlapping IDs.
+22: - **Performance Optimization**: 
+23:   - Removed staggered animation delays (`delay: i * 0.05`) to ensure appended items appear instantly.
+24:   - Added `rootMargin: 400px` to the `IntersectionObserver` to trigger pre-fetching before the user reaches the bottom.
+25:   - Refined loading state logic to prevent existing products from being replaced by skeletons during "load more" cycles.
+26: 
+27: ---
 
 ## [2026-05-06] - Deal of the Day — Real Timer & Multi-Product Admin Control
 

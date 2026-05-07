@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { Navbar } from '@/components/navbar'
 import { ProductCard } from '@/components/product-card'
@@ -145,7 +145,7 @@ function FilterPanel({
 }
 
 export default function ShopPage() {
-  const { data, isLoading, isSyncing, refresh, rootCategories, getSubcategories } = useCatalog()
+  const { data, isLoading, isSyncing, refresh, loadMore, pagination, rootCategories, getSubcategories } = useCatalog()
   const searchParams = useSearchParams()
   const router = useRouter()
 
@@ -158,6 +158,19 @@ export default function ShopPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [inStockOnly, setInStockOnly] = useState(false)
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false)
+
+  // Infinite Scroll Observer
+  const observer = useRef<IntersectionObserver | null>(null)
+  const lastElementRef = useCallback((node: HTMLDivElement | null) => {
+    if (isLoading || isSyncing) return
+    if (observer.current) observer.current.disconnect()
+    observer.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && pagination.hasMore) {
+        loadMore(selectedCategorySlug || undefined)
+      }
+    }, { rootMargin: '400px' })
+    if (node) observer.current.observe(node)
+  }, [isLoading, isSyncing, pagination.hasMore, loadMore, selectedCategorySlug])
 
   // Initialize from URL
   useEffect(() => {
@@ -322,7 +335,7 @@ export default function ShopPage() {
             </div>
 
             {/* Grid */}
-            {isLoading || isSyncing ? (
+            {isLoading || (isSyncing && sortedProducts.length === 0) ? (
               <div className="grid grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-8">
                 {[...Array(6)].map((_, i) => (
                   <div key={i} className="aspect-square bg-muted animate-pulse border border-border" />
@@ -339,10 +352,10 @@ export default function ShopPage() {
                     <motion.div
                       key={p.id}
                       layout
-                      initial={{ opacity: 0, y: 20 }}
+                      initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, scale: 0.95 }}
-                      transition={{ delay: i * 0.05 }}
+                      transition={{ duration: 0.3 }}
                     >
                       <ProductCard product={p} />
                     </motion.div>
@@ -358,6 +371,32 @@ export default function ShopPage() {
                 >
                   Reset Universe
                 </button>
+              </div>
+            )}
+
+            {/* Infinite Scroll Sentinel */}
+            {sortedProducts.length > 0 && pagination.hasMore && (
+              <div
+                ref={lastElementRef}
+                className="py-12 flex flex-col items-center justify-center gap-4 border-t border-white/5 mt-12"
+              >
+                <div className="flex items-center gap-2">
+                  <div className="w-1 h-1 bg-primary rounded-full animate-ping" />
+                  <div className="w-1 h-1 bg-primary rounded-full animate-ping [animation-delay:0.2s]" />
+                  <div className="w-1 h-1 bg-primary rounded-full animate-ping [animation-delay:0.4s]" />
+                </div>
+                <p className="text-[10px] font-mono text-muted-foreground uppercase tracking-[0.4em] animate-pulse">
+                  Syncing more droplets...
+                </p>
+              </div>
+            )}
+
+            {/* End of results indicator */}
+            {sortedProducts.length > 0 && !pagination.hasMore && (
+              <div className="py-12 text-center border-t border-white/5 mt-12">
+                <p className="text-[10px] font-mono text-muted-foreground/30 uppercase tracking-[0.4em]">
+                  — Universe Boundary Reached —
+                </p>
               </div>
             )}
           </div>

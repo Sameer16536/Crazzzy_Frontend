@@ -34,6 +34,12 @@ interface ProductCardProps {
     inStock: boolean
     soldOut?: boolean
     limited?: boolean
+    variants?: {
+      id: number
+      variantName: string
+      additionalPrice: string
+      stock: number
+    }[]
   }
   /** Pass true for the first 1-2 cards visible above the fold (LCP optimization) */
   priority?: boolean
@@ -185,7 +191,13 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
           {/* Price Section */}
           <div className="flex items-baseline gap-1.5 md:gap-2 py-0.5 md:py-1">
             <span className="text-sm md:text-lg font-bold text-foreground">
-              ₹{product.price.toLocaleString('en-IN')}
+              ₹{(() => {
+                const allPrices = [
+                  product.price,
+                  ...(product.variants || []).map(v => product.price + (Number(v.additionalPrice) || 0))
+                ]
+                return Math.max(...allPrices).toLocaleString('en-IN')
+              })()}
             </span>
             {product.originalPrice && product.originalPrice > product.price && (
               <>
@@ -213,16 +225,40 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
               onClick={(e) => {
                 e.preventDefault()
                 if (product.inStock) {
+                  // Find default variant for Wall Posters (13 x 19)
+                  let finalPrice = product.price
+                  let variantId = undefined
+                  let variantName = undefined
+
+                  // Check if it's a Wall Poster (by name or searching category)
+                  const isPoster = product.name.toLowerCase().includes('poster')
+                  
+                  if (isPoster && product.variants && product.variants.length > 0) {
+                    // Match '13x19', '13 x 19', etc. by removing spaces
+                    const defaultVariant = product.variants.find(v => 
+                      v.variantName.replace(/\s+/g, '').toLowerCase() === '13x19'
+                    )
+                    
+                    if (defaultVariant) {
+                      variantId = defaultVariant.id
+                      variantName = defaultVariant.variantName
+                      // Correctly handles negative additionalPrice: 180 + (-60) = 120
+                      finalPrice = product.price + (Number(defaultVariant.additionalPrice) || 0)
+                    }
+                  }
+
                   dispatch(
                     addToCart({
                       productId: product.id,
                       name: product.name,
                       image: product.images?.[0],
-                      price: product.price,
+                      price: finalPrice,
                       quantity: 1,
+                      variantId,
+                      variantName,
                     }),
                   )
-                  toast.success('Added to cart')
+                  toast.success(`Added ${variantName ? `${product.name} (${variantName})` : product.name} to cart`)
                 }
               }}
               className={cn(

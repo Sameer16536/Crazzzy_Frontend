@@ -159,7 +159,7 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
         <div className="flex flex-1 flex-col gap-1.5 md:gap-2.5">
           {/* Product Name */}
           <div className="min-h-[36px] md:min-h-[44px]">
-            <h3 className="text-[13px] md:text-base font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-2 leading-tight md:leading-snug">
+            <h3 className="text-[13px] md:text-base font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-2 leading-tight md:leading-snug uppercase">
               {product.name}
             </h3>
           </div>

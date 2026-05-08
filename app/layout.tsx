@@ -31,6 +31,8 @@ export const metadata: Metadata = {
   },
 }
 
+import { Footer } from '@/components/footer'
+
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -56,6 +58,7 @@ export default async function RootLayout({
       <body className="font-sans antialiased">
         <Providers>
           {children}
+          <Footer />
         </Providers>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>

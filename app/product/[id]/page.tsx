@@ -71,7 +71,7 @@ export default function ProductPage() {
         <Navbar />
         <div className="pt-32 max-w-7xl mx-auto px-4 text-center">
           <div className="flex flex-col items-center gap-4 py-20">
-            <motion.div 
+            <motion.div
               animate={{ rotate: 360 }}
               transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
               className="w-12 h-12 border-2 border-primary border-t-transparent rounded-full"
@@ -135,7 +135,7 @@ export default function ProductPage() {
   return (
     <div className="min-h-screen bg-background text-foreground selection:bg-primary selection:text-primary-foreground" style={{ isolation: 'isolate' }}>
       <Navbar />
-      
+
       {/* Breadcrumbs — z-index ensures they are above any ghost animations */}
       <div className="relative z-10 pt-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-8">
@@ -143,13 +143,13 @@ export default function ProductPage() {
           <ChevronRight size={10} />
           <Link href="/shop" className="hover:text-primary transition-colors">Shop</Link>
           <ChevronRight size={10} />
-          <span className="text-foreground">{product.name}</span>
+          <span className="text-foreground uppercase">{product.name}</span>
         </nav>
       </div>
 
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
-          
+
           <div className="lg:col-span-7 space-y-6">
             <div className="relative aspect-square bg-muted/30 border border-border overflow-hidden group p-10">
               <Image
@@ -160,7 +160,7 @@ export default function ProductPage() {
                 priority
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/5 via-transparent to-transparent pointer-events-none" />
-              
+
               {!product.inStock && (
                 <div className="absolute inset-0 bg-background/60 backdrop-blur-sm flex items-center justify-center">
                   <span className="text-foreground font-black text-4xl uppercase tracking-[0.2em] border-2 border-foreground px-8 py-4">Sold Out</span>
@@ -193,7 +193,7 @@ export default function ProductPage() {
               <h1 className="text-4xl sm:text-5xl font-black uppercase tracking-tighter leading-[0.9]">
                 {product.name}
               </h1>
-              
+
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-1 text-primary">
                   {[...Array(5)].map((_, i) => (
@@ -245,8 +245,8 @@ export default function ProductPage() {
                       onClick={() => setSelectedVariant(v)}
                       className={`
                         px-6 py-2 text-[10px] font-bold border rounded-full transition-all duration-300 uppercase tracking-widest
-                        ${selectedVariant?.id === v.id 
-                          ? 'bg-foreground text-background border-foreground scale-[1.02]' 
+                        ${selectedVariant?.id === v.id
+                          ? 'bg-foreground text-background border-foreground scale-[1.02]'
                           : 'bg-transparent text-foreground border-border hover:border-foreground/30'}
                       `}
                     >
@@ -264,14 +264,14 @@ export default function ProductPage() {
               {product.inStock && (
                 <div className="flex items-center gap-6 mb-8">
                   <div className="flex items-center border border-border bg-muted overflow-hidden">
-                    <button 
+                    <button
                       onClick={() => setQuantity(Math.max(1, quantity - 1))}
                       className="px-5 py-4 hover:bg-muted/80 transition-colors text-muted-foreground"
                     >
                       −
                     </button>
                     <span className="w-12 text-center font-black text-sm">{quantity}</span>
-                    <button 
+                    <button
                       onClick={() => setQuantity(quantity + 1)}
                       className="px-5 py-4 hover:bg-muted/80 transition-colors text-muted-foreground"
                     >
@@ -330,7 +330,7 @@ export default function ProductPage() {
               <div className="flex gap-4 items-start">
                 <Share2 className="text-primary shrink-0" size={20} />
                 <div className="space-y-1">
-                  <p className="text-[10px] font-black uppercase tracking-widest">Global Delivery</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest">All Over India Delivery</p>
                   <p className="text-[10px] text-muted-foreground leading-relaxed font-medium font-body">Doorstep delivery across the universe.</p>
                 </div>
               </div>
@@ -370,13 +370,13 @@ export default function ProductPage() {
             </div>
             <h2 className="text-4xl font-black uppercase tracking-tighter">Collector Reviews</h2>
             <div className="flex items-center gap-4">
-               <div className="flex items-center gap-1 text-primary text-xl font-black">
-                 {product.rating} <Star size={20} className="fill-primary" />
-               </div>
-               <span className="text-muted-foreground text-xs uppercase tracking-widest">Based on {reviews.length} experiences</span>
+              <div className="flex items-center gap-1 text-primary text-xl font-black">
+                {product.rating} <Star size={20} className="fill-primary" />
+              </div>
+              <span className="text-muted-foreground text-xs uppercase tracking-widest">Based on {reviews.length} experiences</span>
             </div>
           </div>
-          <button 
+          <button
             onClick={handleWriteReview}
             className="bg-background hover:bg-muted text-foreground border border-border px-8 py-4 font-black uppercase tracking-widest text-[10px] transition-all"
           >
@@ -386,7 +386,7 @@ export default function ProductPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {reviews.length > 0 ? reviews.map((r, i) => (
-              <div key={r.id} className="bg-background border border-border p-8 space-y-6 relative group overflow-hidden">
+            <div key={r.id} className="bg-background border border-border p-8 space-y-6 relative group overflow-hidden">
               <div className="flex justify-between items-start relative z-10">
                 <div className="space-y-1">
                   <div className="flex items-center gap-3">

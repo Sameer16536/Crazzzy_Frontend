@@ -70,7 +70,7 @@ export default function CartPage() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
-                          <p className="font-semibold text-foreground truncate">{item.name}</p>
+                          <p className="font-semibold text-foreground truncate uppercase">{item.name}</p>
                           {item.variantName && (
                             <p className="text-[10px] uppercase tracking-widest text-muted-foreground mt-0.5">{item.variantName}</p>
                           )}

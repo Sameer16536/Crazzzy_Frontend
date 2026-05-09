@@ -224,9 +224,9 @@ export function BentoGridCategories() {
       })
 
       if (pool.length > 0) {
-        // Pick a stable image (first one) or random for variety
-        // Using index 0 for stability across renders if desired
-        imageMap[cat.id] = pool[0]
+        // Pick a random image (better aesthetics)
+        const randomIndex = Math.floor(Math.random() * pool.length)
+        imageMap[cat.id] = pool[randomIndex]
       }
     })
 

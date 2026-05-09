@@ -8,7 +8,7 @@ import { Card } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { useAppDispatch, useAppSelector } from '@/lib/store/hooks'
 import { clearCart, removeFromCart, setQuantity, selectComboOffer } from '@/lib/store/slices/cart-slice'
-import { Minus, Plus, Trash2, Gift, Tag } from 'lucide-react'
+import { Minus, Plus, Trash2, Gift, Tag, Sparkles } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 function formatINR(value: number) {
@@ -74,12 +74,16 @@ export default function CartPage() {
           </div>
         )}
 
-        {/* Promo hint when posters are in cart but not yet eligible */}
-        {comboOffer.totalFreeUnits === 0 && items.some(i => i.categorySlug === 'wall-posters') && (
-          <div className="mt-6 flex items-center gap-3 bg-muted/40 border border-border/50 rounded-lg px-5 py-3">
-            <Tag size={16} className="text-primary/60 flex-shrink-0" />
-            <p className="text-xs text-muted-foreground">
-              <span className="font-bold text-foreground">Buy 2 Get 1 Free</span> on Wall Posters (same size). Add more to unlock!
+        {/* ── Combo Offer Upsell Banner ── */}
+        {comboOffer.upsell && (
+          <div className="mt-6 flex items-center gap-4 bg-primary/[0.03] border border-primary/10 rounded-xl px-6 py-5 group hover:bg-primary/[0.06] transition-all cursor-default">
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 animate-pulse">
+              <Sparkles size={20} className="text-primary" />
+            </div>
+            <p className="text-sm md:text-base text-foreground/80 font-medium leading-relaxed tracking-tight">
+              Psst! Add <span className="text-primary font-black uppercase tracking-widest bg-primary/10 px-2 py-0.5 rounded ml-1 mr-1">{comboOffer.upsell.needed} more</span> 
+              {" "}poster{comboOffer.upsell.needed > 1 ? 's' : ''} of size <span className="text-foreground font-black underline decoration-primary/40 underline-offset-4">{comboOffer.upsell.variantName}</span> 
+              {" "}to unlock your next <span className="text-primary font-black uppercase tracking-[0.1em] drop-shadow-[0_0_8px_rgba(212,175,55,0.3)]">FREE</span> item!
             </p>
           </div>
         )}

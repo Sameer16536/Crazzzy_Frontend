@@ -106,6 +106,11 @@ export interface ComboOfferResult {
   freeByKey: Record<string, number>
   /** Total savings from the Buy-2-Get-1-Free offer (in ₹) */
   totalSavings: number
+  /** Upsell message: how many more items needed for next free unit */
+  upsell?: {
+    needed: number
+    variantName: string
+  }
 }
 
 /**
@@ -133,19 +138,23 @@ export function selectComboOffer(state: RootState): ComboOfferResult {
   const freeByKey: Record<string, number> = {}
   let totalFreeUnits = 0
   let totalSavings = 0
+  let upsell: ComboOfferResult['upsell'] = undefined
 
   for (const variantKey in groups) {
     const { totalQuantity, items: groupItems } = groups[variantKey]
     const freeCount = Math.floor(totalQuantity / 3)
     
+    // Upsell logic: how many more to next multiple of 3?
+    const needed = 3 - (totalQuantity % 3)
+    if (needed > 0 && needed < 3) {
+      if (!upsell || needed < upsell.needed) {
+        upsell = { needed, variantName: groupItems[0].variantName || 'Wall Posters' }
+      }
+    }
+
     if (freeCount > 0) {
       totalFreeUnits += freeCount
-      // Calculate savings based on the actual items in the group
-      // For simplicity, we assume same variant posters have similar prices, 
-      // but we apply the discount to the items we mark as free.
       let remainingFree = freeCount
-      
-      // Sort items by price ascending to ensure the cheapest ones are "free"
       const sortedItems = [...groupItems].sort((a, b) => a.price - b.price)
       
       for (const item of sortedItems) {
@@ -159,7 +168,7 @@ export function selectComboOffer(state: RootState): ComboOfferResult {
     }
   }
 
-  return { totalFreeUnits, freeByKey, totalSavings }
+  return { totalFreeUnits, freeByKey, totalSavings, upsell }
 }
 
 /** Returns true if this specific cart item has at least 1 free unit from the combo offer */

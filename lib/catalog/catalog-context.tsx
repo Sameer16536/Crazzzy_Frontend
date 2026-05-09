@@ -25,6 +25,8 @@ export type CatalogProduct = {
   id: string
   name: string
   categoryId: string
+  /** Slug of the category — used for combo offer eligibility (e.g. 'wall-posters') */
+  categorySlug?: string
   price: number
   originalPrice?: number
   rating: number
@@ -115,11 +117,19 @@ const CATEGORY_DESIGN_DATA: Record<string, { color: string, description: string,
   'die-cast-cars-and-bikes': { color: '#f97316', description: 'Premium 1:24 scale die-cast models' },
   'perfumes': { color: '#d4af37', description: 'Premium imported fragrances' },
   'wall-posters': { color: '#06b6d4', description: 'High-quality wall art and posters' },
-  'anime-figures': { color: '#f43f5e', description: 'Detailed anime and manga collectibles' },
+  'anime-figures': { color: '#f43f5e', description: 'Detailed anime & superhero collectibles' },
   'hot-wheels': { color: '#ef4444', description: '1:64 scale Hot Wheels collectibles' },
   'keychains': { color: '#10b981', description: 'Unique collectible keychains' },
   'chocolate-and-beverages': { color: '#92400e', description: 'Imported chocolates and exotic drinks' },
   'aesthetic-items': { color: '#8b5cf6', description: 'Curated décor for modern spaces' },
+}
+
+/**
+ * DISPLAY_NAME_OVERRIDES — changes ONLY what users see in the UI.
+ * Slugs, URLs, backend category names and all filtering logic are unaffected.
+ */
+const DISPLAY_NAME_OVERRIDES: Record<string, string> = {
+  'anime-figures': 'Anime/Superhero Figures',
 }
 
 export function CatalogProvider({ children }: { children: React.ReactNode }) {
@@ -217,7 +227,8 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
         }
         return {
           id: String(c.id),
-          name: c.name,
+          // Apply display name override — slug stays unchanged for URL/filter compatibility
+          name: DISPLAY_NAME_OVERRIDES[c.slug] ?? c.name,
           slug: c.slug,
           image: resolveImageUrl(design.imageOverride || c.imageUrl),
           description: design.description,
@@ -231,6 +242,7 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
         id: String(p.id),
         name: p.title,
         categoryId: String(p.categoryId || p.category_id || p.category?.id || ''),
+        categorySlug: p.category?.slug || undefined,
         price: parseFloat(p.price),
         originalPrice: p.originalPrice ? parseFloat(p.originalPrice) : undefined,
         rating: parseFloat(p.ratingAvg || 0),

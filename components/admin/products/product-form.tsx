@@ -204,7 +204,12 @@ export function ProductForm({ productId }: { productId?: string }) {
       router.push('/admin/products')
     } catch (error: any) {
       console.error('Submit error:', error)
-      toast.error(error.message || 'Failed to save product')
+      const msg = error.message || ''
+      if (msg.toLowerCase().includes('slug') || msg.toLowerCase().includes('unique') || msg.toLowerCase().includes('similar title')) {
+        toast.error('A product with a very similar title already exists. Try using a slightly different name.')
+      } else {
+        toast.error(msg || 'Failed to save product')
+      }
     } finally {
       setSubmitting(false)
     }

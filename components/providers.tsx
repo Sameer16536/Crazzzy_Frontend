@@ -1,7 +1,7 @@
 'use client'
 
 import { Provider as ReduxProvider } from 'react-redux'
-import { useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { makeStore, type AppStore } from '@/lib/store/store'
 import { CustomCursor } from '@/components/custom-cursor'
 import { LenisProvider } from '@/components/lenis-provider'
@@ -12,6 +12,15 @@ import { Toaster } from '@/components/ui/sonner'
 export function Providers({ children }: { children: React.ReactNode }) {
   const storeRef = useRef<AppStore | null>(null)
   if (!storeRef.current) storeRef.current = makeStore()
+
+  useEffect(() => {
+    if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+      const preventRightClick = (e: MouseEvent) => e.preventDefault()
+      document.addEventListener('contextmenu', preventRightClick)
+      document.documentElement.classList.add('production-mode')
+      return () => document.removeEventListener('contextmenu', preventRightClick)
+    }
+  }, [])
 
   return (
     <ReduxProvider store={storeRef.current}>

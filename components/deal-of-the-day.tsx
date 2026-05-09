@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useCatalog } from '@/lib/catalog/use-catalog'
+import { useCatalog } from '@/lib/catalog/catalog-context'
 import { useMagneticButton } from '@/hooks/use-animations'
 import { ChevronLeft, ChevronRight, Zap, Clock } from 'lucide-react'
 

@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
-import { X, LayoutDashboard, Package, ShoppingCart, Users, Settings, LogOut, ExternalLink, ShieldCheck, Ticket, Star, Zap } from 'lucide-react'
+import { X, LayoutDashboard, Package, ShoppingCart, Users, Settings, LogOut, ExternalLink, ShieldCheck, Ticket, Star, Zap, Tags, Gift } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/lib/auth/auth-context'
 
@@ -19,8 +19,10 @@ export function AdminSidebar({ open, onOpenChange }: AdminSidebarProps) {
   const navItems = [
     { label: 'Dashboard', href: '/admin', icon: LayoutDashboard },
     { label: 'Products', href: '/admin/products', icon: Package },
+    { label: 'Categories', href: '/admin/categories', icon: Tags },
     { label: 'Featured', href: '/admin/featured', icon: Star },
     { label: 'Deal of the Day', href: '/admin/deal', icon: Zap },
+    { label: 'Combo Deals', href: '/admin/combo-deals', icon: Gift },
     { label: 'Orders', href: '/admin/orders', icon: ShoppingCart },
     { label: 'Customers', href: '/admin/customers', icon: Users },
     { label: 'Coupons', href: '/admin/coupons', icon: Ticket },

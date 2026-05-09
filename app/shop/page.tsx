@@ -5,9 +5,9 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import { Navbar } from '@/components/navbar'
 import { ProductCard } from '@/components/product-card'
 import { Filter, X, Search, ChevronDown, SlidersHorizontal, ChevronRight } from 'lucide-react'
-import { useCatalog } from '@/lib/catalog/use-catalog'
+import { useCatalog, CatalogCategory } from '@/lib/catalog/catalog-context'
 import { motion, AnimatePresence } from 'framer-motion'
-import { CatalogCategory } from '@/lib/catalog/use-catalog'
+import { useCustomFilters } from '@/hooks/use-custom-filters'
 
 interface FilterPanelProps {
   rootCategories: CatalogCategory[]
@@ -18,6 +18,8 @@ interface FilterPanelProps {
   onPriceChange: (range: [number, number]) => void
   inStockOnly: boolean
   onInStockChange: (val: boolean) => void
+  currentSearchQuery: string
+  onSearchChange: (search: string) => void
 }
 
 /**
@@ -33,9 +35,12 @@ function FilterPanel({
   onPriceChange,
   inStockOnly,
   onInStockChange,
+  currentSearchQuery,
+  onSearchChange,
 }: FilterPanelProps) {
   // Local state to track which categories are expanded
   const [expandedCats, setExpandedCats] = useState<Record<string, boolean>>({})
+  const { getFilters, mounted } = useCustomFilters()
 
   // Auto-expand if the selected category is within this root
   useEffect(() => {
@@ -124,6 +129,31 @@ function FilterPanel({
                     </motion.div>
                   )}
                 </AnimatePresence>
+
+                {/* Custom Filter Chips (Admin defined via localStorage) */}
+                {mounted && selectedCategoryId === root.slug && getFilters(root.slug).length > 0 && (
+                  <div className="mt-3 pl-2 pr-2">
+                    <p className="text-[9px] uppercase tracking-[0.2em] text-muted-foreground/50 mb-2 font-bold">Quick Filters</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {getFilters(root.slug).map(tag => {
+                        const isActive = currentSearchQuery.toLowerCase() === tag.toLowerCase()
+                        return (
+                          <button
+                            key={tag}
+                            onClick={() => onSearchChange(isActive ? '' : tag)}
+                            className={`px-2.5 py-1 rounded text-[9px] font-bold uppercase tracking-widest transition-colors ${
+                              isActive 
+                                ? 'bg-primary text-primary-foreground' 
+                                : 'bg-muted/50 text-muted-foreground hover:bg-primary/10 hover:text-primary'
+                            }`}
+                          >
+                            {tag}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
             )
           })}
@@ -282,6 +312,8 @@ export default function ShopPage() {
     onPriceChange: setPriceRange,
     inStockOnly,
     onInStockChange: setInStockOnly,
+    currentSearchQuery: searchQuery,
+    onSearchChange: setSearchQuery,
   }
 
   return (

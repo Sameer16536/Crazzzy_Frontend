@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2026-05-09] - Shop Features & Stability Hotfixes
+
+### Added
+- **Frontend Override for Categories**: Implemented a map in `catalog-context.tsx` to override the "anime-figures" category display name to "Anime/Superhero Figures" without breaking functional API routing.
+- **Continuous Combo Offer**: Added Redux cart logic (`selectComboOffer`) to automatically apply a "Buy 2 Get 1 Free" discount for same-variant wall posters. Applies continuous scaling (e.g. buy 4 get 2 free, buy 6 get 3 free) on the cart and checkout page.
+- **Admin Combo Deals**: Added `useComboDeals` custom hook and `/admin/combo-deals` page to allow admins to create flexible "Buy X for ₹Y" bundles. Deals are persisted in `localStorage`.
+- **Custom Shop Filters**: Added `useCustomFilters` hook and `/admin/categories` page for admins to define custom search tags per category. These render as quick-filter chips on the Shop page sidebar and interact directly with the client-side search query.
+
+### Fixed
+- **SMTP Connection Timeout in Production**: Updated the backend `.env` configuration to force the use of `smtp4.gmail.com` to prevent `ENETUNREACH` IPv6 networking errors on environments blocking outbound IPv6 ports.
+- **Prisma Unique Constraint Violation**: Fixed product updates failing when the newly generated title slug conflicts with an existing product. Added fallback logic in `productController.ts` to append the product's ID to the slug to guarantee uniqueness. Improved frontend error handling in `product-form.tsx` to show a user-friendly message on slug collisions.
+
 ## [2026-05-07] - Filter Persistence Across Navigations
 
 ### Added

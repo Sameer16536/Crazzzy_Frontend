@@ -26,6 +26,7 @@ import { useRef, useState, useEffect, useCallback } from 'react'
 import { useMouseParallax } from '@/hooks/use-mouse-parallax'
 import { useMagneticButton } from '@/hooks/use-animations'
 import { DealOfTheDay } from '@/components/deal-of-the-day'
+import { ComboDealsSection } from '@/components/combo-deals-section'
 
 // ─── Local video sources (both loop; switch every 10 s) ─────────────────────
 
@@ -441,6 +442,7 @@ export default function Home() {
           DEAL OF THE DAY
           ════════════════════════════════════════════════════════════════════ */}
       <DealOfTheDay />
+      <ComboDealsSection />
 
       {/* ════════════════════════════════════════════════════════════════════
           SHOP BY CATEGORIES — Bento Grid

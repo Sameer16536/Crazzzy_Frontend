@@ -34,6 +34,9 @@ interface ProductCardProps {
     inStock: boolean
     soldOut?: boolean
     limited?: boolean
+    categoryId?: string
+    /** Used for combo offer eligibility (e.g. 'wall-posters') */
+    categorySlug?: string
     variants?: {
       id: number
       variantName: string
@@ -256,6 +259,7 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
                       quantity: 1,
                       variantId,
                       variantName,
+                      categorySlug: product.categorySlug,
                     }),
                   )
                   toast.success(`Added ${variantName ? `${product.name} (${variantName})` : product.name} to cart`)

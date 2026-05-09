@@ -44,16 +44,6 @@ export default async function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className={theme === 'dark' ? 'dark' : undefined}>
       <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-                document.addEventListener('contextmenu', (e) => e.preventDefault());
-                document.documentElement.classList.add('production-mode');
-              }
-            `,
-          }}
-        />
       </head>
       <body className="font-sans antialiased">
         <Providers>

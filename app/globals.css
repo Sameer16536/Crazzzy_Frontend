@@ -40,6 +40,7 @@
 }
 
 .dark {
+  color-scheme: dark;
   /* Dark mode - Deep charcoal base (#080808) with refined accents */
   --background: #080808;
   --foreground: #f0f0eb;

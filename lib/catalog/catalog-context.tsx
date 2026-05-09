@@ -18,6 +18,14 @@ export type CatalogCategory = {
   parentId: string | null
 }
 
+export type CategoryOffer = {
+  id: number
+  categorySlug: string
+  buyQuantity: number
+  getQuantity: number
+  isActive: boolean
+}
+
 /**
  * Represents a product in the catalog.
  */
@@ -52,6 +60,7 @@ interface CatalogContextType {
   data: {
     categories: CatalogCategory[]
     products: CatalogProduct[]
+    categoryOffers: CategoryOffer[]
   } | null
   wishlistIds: Set<string>
   isLoading: boolean
@@ -213,9 +222,10 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
       const params = new URLSearchParams({ limit: String(limit), page: String(page) })
       if (categorySlug) params.set('category', categorySlug)
 
-      const [categoriesData, productsData] = await Promise.all([
-        page === 1 ? api.get<any>('/categories') : Promise.resolve({ data: data?.categories }),
-        api.get<any>(`/products?${params.toString()}`),
+      const [categoriesData, productsData, offersData] = await Promise.all([
+        page === 1 ? api.get<any>('/categories').catch(() => ({ data: [] })) : Promise.resolve({ data: data?.categories }),
+        api.get<any>(`/products?${params.toString()}`).catch(() => ({ data: [] })),
+        page === 1 ? api.get<any>('/category-offers').catch(() => []) : Promise.resolve(data?.categoryOffers || [])
       ])
 
       const rawCategories = categoriesData.data || []
@@ -261,15 +271,19 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
         variants: p.variants,
       }))
 
+      const categoryOffers = page === 1 
+        ? (Array.isArray(offersData) ? offersData : offersData?.data || [])
+        : (data?.categoryOffers || [])
+
       if (append) {
         setData(prev => {
-          if (!prev) return { categories, products }
+          if (!prev) return { categories, products, categoryOffers }
           const existingIds = new Set(prev.products.map(p => p.id))
           const uniqueNew = products.filter(p => !existingIds.has(p.id))
-          return { ...prev, products: [...prev.products, ...uniqueNew] }
+          return { ...prev, products: [...prev.products, ...uniqueNew], categoryOffers }
         })
       } else {
-        setData({ categories, products })
+        setData({ categories, products, categoryOffers })
       }
 
       if (productsData.meta) {

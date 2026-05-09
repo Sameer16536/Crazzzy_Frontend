@@ -100,11 +100,13 @@ function comboKey(item: CartItem) {
 }
 
 export interface ComboOfferResult {
-  /** Total free units across all wall-poster variant groups */
+  /** Total free units across all variant groups */
   totalFreeUnits: number
-  /** How many ₹0 units apply per variant key */
+  /** How many ₹0 units apply per item key */
   freeByKey: Record<string, number>
-  /** Total savings from the Buy-2-Get-1-Free offer (in ₹) */
+  /** Metadata about the offer applied to each item key */
+  itemOffers: Record<string, { buy: number; get: number; label: string }>
+  /** Total savings from all offers (in ₹) */
   totalSavings: number
   /** Upsell message: how many more items needed for next free unit */
   upsell?: {
@@ -113,42 +115,78 @@ export interface ComboOfferResult {
   }
 }
 
-/**
- * selectComboOffer — Buy 2 same-variant Wall Posters, Get 1 FREE.
- * Continuous: buy 4 → 2 free, buy 6 → 3 free, etc.
- * Only applies to Wall Posters (categorySlug === 'wall-posters').
+/** 
+ * Actual implementation that takes offers and category metadata as arguments
  */
-export function selectComboOffer(state: RootState): ComboOfferResult {
-  const items = state.cart.items
-  const wallPosters = items.filter(i => 
-    (i.categorySlug === 'wall-posters' || i.name.toLowerCase().includes('poster')) && 
-    !i.bundleId
-  )
-  
-  // Group by variant (e.g. "13 x 19") normalized
-  const groups: Record<string, { totalQuantity: number, items: CartItem[] }> = {}
-  
-  for (const item of wallPosters) {
-    const key = (item.variantName || 'base').replace(/\s+/g, '').toUpperCase()
-    if (!groups[key]) groups[key] = { totalQuantity: 0, items: [] }
-    groups[key].totalQuantity += item.quantity
-    groups[key].items.push(item)
-  }
-
+export function calculateComboOffer(
+  items: CartItem[], 
+  offers: CategoryOffer[],
+  categories: CatalogCategory[]
+): ComboOfferResult {
   const freeByKey: Record<string, number> = {}
+  const itemOffers: Record<string, { buy: number; get: number; label: string }> = {}
   let totalFreeUnits = 0
   let totalSavings = 0
   let upsell: ComboOfferResult['upsell'] = undefined
 
-  for (const variantKey in groups) {
-    const { totalQuantity, items: groupItems } = groups[variantKey]
-    const freeCount = Math.floor(totalQuantity / 3)
+  // Active offers mapped by category slug
+  const offerMap: Record<string, CategoryOffer> = {}
+  offers.filter(o => o.isActive).forEach(o => {
+    offerMap[o.categorySlug] = o
+  })
+
+  // Helper to find best matching offer (self or ancestor)
+  const getOfferForCategory = (slug: string | undefined): CategoryOffer | null => {
+    if (!slug) return null
     
-    // Upsell logic: how many more to next multiple of 3?
-    const needed = 3 - (totalQuantity % 3)
-    if (needed > 0 && needed < 3) {
-      if (!upsell || needed < upsell.needed) {
-        upsell = { needed, variantName: groupItems[0].variantName || 'Wall Posters' }
+    // 1. Direct match
+    if (offerMap[slug]) return offerMap[slug]
+    
+    // 2. Ancestor match
+    let currentCat = categories.find(c => c.slug === slug)
+    while (currentCat?.parentId) {
+      const parent = categories.find(c => c.id === currentCat?.parentId)
+      if (parent && offerMap[parent.slug]) return offerMap[parent.slug]
+      currentCat = parent
+    }
+    
+    return null
+  }
+
+  // Group items by Category-with-Offer + Variant
+  const groupMap: Record<string, { totalQuantity: number, items: CartItem[], offer: CategoryOffer }> = {}
+
+  for (const item of items) {
+    if (item.bundleId) continue
+    
+    // Find matching offer (including inheritance)
+    const offer = getOfferForCategory(item.categorySlug)
+    
+    if (!offer) continue
+
+    const variantKey = (item.variantName || 'base').replace(/\s+/g, '').toUpperCase()
+    const groupKey = `${offer.categorySlug}__${variantKey}`
+
+    if (!groupMap[groupKey]) {
+      groupMap[groupKey] = { totalQuantity: 0, items: [], offer }
+    }
+    groupMap[groupKey].totalQuantity += item.quantity
+    groupMap[groupKey].items.push(item)
+  }
+
+  for (const key in groupMap) {
+    const { totalQuantity, items: groupItems, offer } = groupMap[key]
+    const cycle = offer.buyQuantity + offer.getQuantity
+    const freeCount = Math.floor(totalQuantity / cycle) * offer.getQuantity
+    
+    // Upsell logic
+    const needed = cycle - (totalQuantity % cycle)
+    if (needed > 0 && needed < cycle) {
+      if (!upsell || (needed / cycle) < (upsell.needed / 3)) { // Prioritize closer milestones
+        upsell = { 
+          needed, 
+          variantName: `${groupItems[0].variantName || 'Standard'} ${offer.categorySlug.replace('-', ' ').toUpperCase()}` 
+        }
       }
     }
 
@@ -162,14 +200,20 @@ export function selectComboOffer(state: RootState): ComboOfferResult {
         const take = Math.min(item.quantity, remainingFree)
         const itemKey = `${item.productId}__${item.variantId ?? 'base'}`
         freeByKey[itemKey] = (freeByKey[itemKey] || 0) + take
+        itemOffers[itemKey] = { 
+          buy: offer.buyQuantity, 
+          get: offer.getQuantity,
+          label: `Buy ${offer.buyQuantity} Get ${offer.getQuantity}`
+        }
         totalSavings += take * item.price
         remainingFree -= take
       }
     }
   }
 
-  return { totalFreeUnits, freeByKey, totalSavings, upsell }
+  return { totalFreeUnits, freeByKey, itemOffers, totalSavings, upsell }
 }
+
 
 /** Returns true if this specific cart item has at least 1 free unit from the combo offer */
 export function selectItemFreeCount(state: RootState, item: CartItem): number {

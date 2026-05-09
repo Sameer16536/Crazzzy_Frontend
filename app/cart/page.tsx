@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { useAppDispatch, useAppSelector } from '@/lib/store/hooks'
-import { clearCart, removeFromCart, setQuantity, selectComboOffer } from '@/lib/store/slices/cart-slice'
+import { clearCart, removeFromCart, setQuantity, calculateComboOffer } from '@/lib/store/slices/cart-slice'
+import { useCatalog } from '@/lib/catalog/catalog-context'
 import { Minus, Plus, Trash2, Gift, Tag, Sparkles } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -18,7 +19,10 @@ function formatINR(value: number) {
 export default function CartPage() {
   const dispatch = useAppDispatch()
   const items = useAppSelector((s) => s.cart.items)
-  const comboOffer = useAppSelector(selectComboOffer)
+  const { data: catalogData } = useCatalog()
+  const offers = catalogData?.categoryOffers || []
+  const categories = catalogData?.categories || []
+  const comboOffer = calculateComboOffer(items, offers, categories)
 
   // Compute subtotal after combo offer discount
   // Compute subtotal after combo offer discount and fixed bundles
@@ -64,10 +68,10 @@ export default function CartPage() {
             <Gift size={18} className="text-primary flex-shrink-0" />
             <div className="flex-1">
               <p className="text-sm font-black text-primary uppercase tracking-widest">
-                🎉 Buy 2 Get 1 Free Applied!
+                🎉 Automatic Offer Applied!
               </p>
               <p className="text-xs text-primary/70 mt-0.5">
-                {comboOffer.totalFreeUnits} poster{comboOffer.totalFreeUnits > 1 ? 's' : ''} free — you save {formatINR(comboOffer.totalSavings)}
+                {comboOffer.totalFreeUnits} free item{comboOffer.totalFreeUnits > 1 ? 's' : ''} added — you save {formatINR(comboOffer.totalSavings)}
               </p>
             </div>
             <span className="text-xs font-mono font-bold text-primary">-{formatINR(comboOffer.totalSavings)}</span>
@@ -82,8 +86,8 @@ export default function CartPage() {
             </div>
             <p className="text-sm md:text-base text-foreground/80 font-medium leading-relaxed tracking-tight">
               Psst! Add <span className="text-primary font-black uppercase tracking-widest bg-primary/10 px-2 py-0.5 rounded ml-1 mr-1">{comboOffer.upsell.needed} more</span> 
-              {" "}poster{comboOffer.upsell.needed > 1 ? 's' : ''} of size <span className="text-foreground font-black underline decoration-primary/40 underline-offset-4">{comboOffer.upsell.variantName}</span> 
-              {" "}to unlock your next <span className="text-primary font-black uppercase tracking-[0.1em] drop-shadow-[0_0_8px_rgba(212,175,55,0.3)]">FREE</span> item!
+              {" "}<span className="text-foreground font-black underline decoration-primary/40 underline-offset-4">{comboOffer.upsell.variantName}</span> 
+              {" "}item{comboOffer.upsell.needed > 1 ? 's' : ''} to unlock your next <span className="text-primary font-black uppercase tracking-[0.1em] drop-shadow-[0_0_8px_rgba(212,175,55,0.3)]">FREE</span> item!
             </p>
           </div>
         )}
@@ -138,7 +142,7 @@ export default function CartPage() {
                               <div className="mt-1.5 inline-flex items-center gap-1.5 bg-primary/15 text-primary border border-primary/30 rounded-full px-2.5 py-0.5">
                                 <Gift size={11} />
                                 <span className="text-[10px] font-black uppercase tracking-widest">
-                                  {freeCount} FREE (Buy 2 Get 1)
+                                  {freeCount} FREE ({comboOffer.itemOffers[`${item.productId}__${item.variantId ?? 'base'}`]?.label || 'Buy 2 Get 1'})
                                 </span>
                               </div>
                             )}
@@ -215,7 +219,7 @@ export default function CartPage() {
                 {comboDiscount > 0 && (
                   <div className="flex justify-between text-primary">
                     <span className="uppercase tracking-widest font-bold flex items-center gap-1.5">
-                      <Gift size={12} /> Buy 2 Get 1 Free
+                      <Gift size={12} /> {Object.values(comboOffer.itemOffers)[0]?.label || 'Offer'} applied
                     </span>
                     <span className="font-mono font-bold">-{formatINR(comboDiscount)}</span>
                   </div>
@@ -253,7 +257,7 @@ export default function CartPage() {
               </div>
 
               <p className="text-[10px] text-muted-foreground/40 mt-6 leading-relaxed font-light italic">
-                * Free shipping on orders above ₹1,999. Buy 2 Wall Posters of the same size and get 1 FREE.
+                * Free shipping on orders above ₹1,999. Automatic discounts apply based on category volume.
               </p>
               </div>
           </div>

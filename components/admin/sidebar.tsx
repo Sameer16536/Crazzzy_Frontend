@@ -23,6 +23,7 @@ export function AdminSidebar({ open, onOpenChange }: AdminSidebarProps) {
     { label: 'Featured', href: '/admin/featured', icon: Star },
     { label: 'Deal of the Day', href: '/admin/deal', icon: Zap },
     { label: 'Combo Deals', href: '/admin/combo-deals', icon: Gift },
+    { label: 'Category Offers', href: '/admin/category-offers', icon: Ticket },
     { label: 'Orders', href: '/admin/orders', icon: ShoppingCart },
     { label: 'Customers', href: '/admin/customers', icon: Users },
     { label: 'Coupons', href: '/admin/coupons', icon: Ticket },

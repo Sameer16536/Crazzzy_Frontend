@@ -13,6 +13,20 @@ All notable changes to this project will be documented in this file.
   - Refactored the pagination system to show a subset of page numbers (e.g., `1 ... 5 6 7 ... 21`) with "..." ellipses.
   - Prevents the pagination bar from overflowing on small screens like 360px (Samsung Galaxy S8+).
 
+- **Featured Products Mobile Optimization** (`app/admin/featured/page.tsx`):
+  - Converted the product grid to 2 columns on mobile (from 1) to make better use of screen space and reduce vertical scrolling.
+  - Added a **Category Filter** (Sectors) to allow admins to quickly filter products while managing featured status.
+  - Implemented responsive font scaling for product titles and buttons on mobile.
+  - Optimized card padding and image aspect ratios for a more compact, dashboard-style experience.
+- **Global Dark Mode Select Styling** (`app/globals.css`):
+  - Added explicit `color-scheme` and background overrides for native `select` and `option` elements.
+  - Ensures that browser-native dropdown menus match the dark/premium aesthetic of the application.
+
+- **Orders Mobile UX Overhaul** (`components/admin/orders/orders-table.tsx`):
+  - Implemented a responsive card-based view for the orders registry on mobile.
+  - Condensed transmission IDs, recipient details, and timeline information for small screens.
+  - Made status badges and payment indicators responsive within the card layout.
+
 ### Changed
 - **Responsive Header Scaling** (`components/admin/products/products-header.tsx`): 
   - Reduced the "Products" page title size from `text-3xl` to `text-xl` on mobile devices to prevent layout crowding.

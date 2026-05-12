@@ -78,7 +78,7 @@ interface CatalogContextType {
   // Persistence States
   adminFilters: {
     products: { category: string; search: string; page: number }
-    orders: { search: string }
+    orders: { search: string; page: number }
     customers: { search: string }
   }
   setAdminFilter: (area: 'products' | 'orders' | 'customers', filters: any) => void
@@ -153,7 +153,7 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
   // Persistent Filter States
   const [adminFilters, setAdminFilters] = useState<CatalogContextType['adminFilters']>({
     products: { category: '', search: '', page: 1 },
-    orders: { search: '' },
+    orders: { search: '', page: 1 },
     customers: { search: '' }
   })
 

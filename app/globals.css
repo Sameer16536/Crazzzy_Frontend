@@ -183,6 +183,19 @@ html::before {
   code, pre {
     font-family: var(--font-mono);
   }
+
+  /* Styling for native select/option in dark mode */
+  select {
+    color-scheme: light;
+  }
+
+  .dark select {
+    color-scheme: dark;
+  }
+
+  select option {
+    @apply bg-background text-foreground;
+  }
 }
 
 /* ── Hero portal grain — scoped to hero so it's richer than the global grain ── */

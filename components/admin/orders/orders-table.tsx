@@ -12,12 +12,20 @@ import { toast } from 'sonner'
 
 export function OrdersTable() {
   const { adminFilters, setAdminFilter } = useCatalog()
-  const searchQuery = adminFilters.orders.search
+  const { search: searchQuery, page: currentPage } = adminFilters.orders
+  
   const setSearchQuery = (search: string) => setAdminFilter('orders', { search })
+  const setCurrentPage = (page: number | ((p: number) => number)) => {
+    const next = typeof page === 'function' ? page(currentPage) : page
+    setAdminFilter('orders', { page: next })
+  }
 
   const [orders, setOrders] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [copiedId, setCopiedId] = useState<string | null>(null)
+  const [totalPages, setTotalPages] = useState(1)
+  const [totalOrders, setTotalOrders] = useState(0)
+  const limit = 10
 
   const copyToClipboard = (id: string) => {
     navigator.clipboard.writeText(id)
@@ -26,12 +34,23 @@ export function OrdersTable() {
     setTimeout(() => setCopiedId(null), 2000)
   }
 
-  const fetchOrders = async () => {
+  const fetchOrders = async (search?: string, page: number = 1) => {
     try {
       setLoading(true)
-      const res = await api.get<any>('/admin/orders')
+      const params = new URLSearchParams({ 
+        page: String(page), 
+        limit: String(limit) 
+      })
+      if (search) params.set('search', search)
+      
+      const res = await api.get<any>(`/admin/orders?${params.toString()}`)
       const list = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : [])
       setOrders(list)
+      
+      if (res?.meta) {
+        setTotalPages(res.meta.totalPages || 1)
+        setTotalOrders(res.meta.total || 0)
+      }
     } catch (error) {
       console.error('Failed to fetch orders', error)
       toast.error('Failed to sync with logistics registry')
@@ -40,15 +59,17 @@ export function OrdersTable() {
     }
   }
 
+  // Reset to page 1 whenever search changes
   useEffect(() => {
-    fetchOrders()
-  }, [])
+    setCurrentPage(1)
+  }, [searchQuery])
 
-  const filteredOrders = Array.isArray(orders) ? orders.filter(o =>
-    String(o.id).includes(searchQuery) ||
-    o.user?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    o.shippingAddress?.toLowerCase().includes(searchQuery.toLowerCase())
-  ) : []
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchOrders(searchQuery || undefined, currentPage)
+    }, searchQuery ? 400 : 0)
+    return () => clearTimeout(timer)
+  }, [searchQuery, currentPage])
 
   return (
     <div className="space-y-6">
@@ -61,11 +82,11 @@ export function OrdersTable() {
             placeholder="Search Registry (ID, Customer, Address)..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-zinc-900 border border-white/5 px-12 py-4 text-[10px] font-black uppercase tracking-[0.2em] focus:outline-none focus:border-primary/30 transition-all text-white"
+            className="w-full bg-zinc-900 border border-white/5 px-12 py-4 text-[10px] font-black uppercase tracking-[0.2em] focus:outline-none focus:border-primary/30 transition-all text-white rounded-sm"
           />
         </div>
         <div className="flex items-center gap-4">
-          <button className="px-6 py-4 bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-white/10 transition-all text-white/60">
+          <button className="px-6 py-4 bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-white/10 transition-all text-white/60 rounded-sm">
             <Filter size={14} />
             Filter
           </button>
@@ -73,7 +94,8 @@ export function OrdersTable() {
       </div>
 
       <div className="bg-zinc-900/30 border border-white/5 overflow-hidden">
-        <div className="overflow-x-auto">
+        {/* Desktop Table View */}
+        <div className="hidden lg:block overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-white/5 bg-zinc-950/50">
@@ -90,10 +112,13 @@ export function OrdersTable() {
               {loading ? (
                 <tr>
                   <td colSpan={7} className="p-20 text-center">
-                    <Loader2 className="animate-spin text-primary mx-auto" size={32} />
+                    <div className="flex flex-col items-center gap-4">
+                      <Loader2 className="animate-spin text-primary mx-auto" size={32} />
+                      <span className="text-[10px] font-black uppercase tracking-[0.5em] text-primary/40">Accessing Data...</span>
+                    </div>
                   </td>
                 </tr>
-              ) : filteredOrders.map((order, i) => (
+              ) : orders.map((order, i) => (
                 <tr
                   key={order.id}
                   className="border-b border-white/5 hover:bg-white/[0.02] transition-colors group"
@@ -135,13 +160,147 @@ export function OrdersTable() {
                     <StatusBadge status={order.status.toLowerCase() as any} />
                   </td>
                   <td className="p-6 text-right">
-                    <OrderActions orderId={order.id} onUpdate={fetchOrders} />
+                    <OrderActions orderId={order.id} onUpdate={() => fetchOrders(searchQuery, currentPage)} />
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+
+        {/* Mobile Card View */}
+        <div className="lg:hidden divide-y divide-white/5">
+          {loading ? (
+            <div className="py-20 text-center">
+              <Loader2 className="animate-spin text-primary mx-auto mb-4" size={32} />
+              <span className="text-[10px] font-black uppercase tracking-[0.5em] text-primary/40">Accessing Data...</span>
+            </div>
+          ) : orders.length === 0 ? (
+            <div className="py-20 text-center px-4">
+              <Package className="mx-auto text-white/10 mb-4" size={48} />
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/20 leading-relaxed">
+                No transmissions detected
+              </p>
+            </div>
+          ) : (
+            orders.map((order) => (
+              <div key={order.id} className="p-4 space-y-4">
+                <div className="flex items-start justify-between">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <p className="text-xs font-mono font-bold text-primary">#{order.id.toString().padStart(6, '0')}</p>
+                      <button
+                        onClick={() => copyToClipboard(String(order.id))}
+                        className="p-1 hover:bg-white/5 rounded"
+                      >
+                        {copiedId === String(order.id) ? <Check size={12} className="text-green-500" /> : <Copy size={12} className="text-white/20" />}
+                      </button>
+                    </div>
+                    <p className="text-xs font-black uppercase tracking-tight text-white mt-1 truncate">{order.user?.name || 'Unknown'}</p>
+                    <p className="text-[9px] text-white/40 uppercase tracking-widest truncate">{order.user?.email}</p>
+                    {order.trackingNumber && (
+                      <p className="text-[8px] text-primary/60 uppercase tracking-widest mt-1 font-mono flex items-center gap-1">
+                        <Truck size={10} /> {order.courierName}: {order.trackingNumber}
+                      </p>
+                    )}
+                  </div>
+                  <OrderActions orderId={order.id} onUpdate={() => fetchOrders(searchQuery, currentPage)} />
+                </div>
+                
+                <div className="flex items-center justify-between pt-3 border-t border-white/5">
+                  <div className="space-y-1">
+                    <p className="text-[9px] text-white/40 uppercase tracking-widest font-mono">
+                      {new Date(order.createdAt).toLocaleDateString()}
+                    </p>
+                    <p className="text-sm font-black font-mono text-white">₹{parseFloat(order.totalAmount).toLocaleString('en-IN')}</p>
+                  </div>
+                  <div className="flex flex-col items-end gap-2">
+                    <StatusBadge status={order.status.toLowerCase() as any} />
+                    <PaymentStatusBadge
+                      status={['PAID', 'SHIPPED', 'DELIVERED', 'PROCESSING'].includes(order.status) ? 'paid' : 'pending'}
+                    />
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        {!loading && orders.length > 0 && (
+          <div className="px-8 py-6 border-t border-white/5 bg-zinc-950/20 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/20">
+              Showing <span className="text-white">{(currentPage - 1) * limit + 1}</span> to <span className="text-white">{Math.min(currentPage * limit, totalOrders)}</span> of <span className="text-white">{totalOrders}</span> transmissions
+            </p>
+            
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+                className="p-3 border border-white/10 rounded-sm hover:bg-white/5 disabled:opacity-30 disabled:hover:bg-transparent transition-all text-white"
+              >
+                <ChevronLeft size={18} />
+              </button>
+              
+              <div className="flex items-center gap-1">
+                {(() => {
+                  const pages = []
+                  const maxVisible = 5
+                  
+                  if (totalPages <= maxVisible) {
+                    for (let i = 1; i <= totalPages; i++) pages.push(i)
+                  } else {
+                    pages.push(1)
+                    if (currentPage > 3) pages.push('...')
+                    
+                    const start = Math.max(2, currentPage - 1)
+                    const end = Math.min(totalPages - 1, currentPage + 1)
+                    
+                    if (currentPage <= 3) {
+                      for (let i = 2; i <= 4; i++) pages.push(i)
+                    } else if (currentPage >= totalPages - 2) {
+                      for (let i = totalPages - 3; i <= totalPages - 1; i++) pages.push(i)
+                    } else {
+                      for (let i = start; i <= end; i++) pages.push(i)
+                    }
+                    
+                    if (currentPage < totalPages - 2) pages.push('...')
+                    pages.push(totalPages)
+                  }
+
+                  return pages.map((page, idx) => (
+                    typeof page === 'number' ? (
+                      <button
+                        key={idx}
+                        onClick={() => setCurrentPage(page)}
+                        className={`w-10 h-10 text-[10px] font-black rounded-sm transition-all ${
+                          currentPage === page 
+                            ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20' 
+                            : 'hover:bg-white/5 text-white/40'
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    ) : (
+                      <span key={idx} className="px-2 text-white/20 text-[10px] font-black">...</span>
+                    )
+                  ))
+                })()}
+              </div>
+
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+                className="p-3 border border-white/10 rounded-sm hover:bg-white/5 disabled:opacity-30 disabled:hover:bg-transparent transition-all text-white"
+              >
+                <ChevronRight size={18} />
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
 
         {!loading && filteredOrders.length === 0 && (
           <div className="py-20 text-center text-white/20 border-t border-white/5">

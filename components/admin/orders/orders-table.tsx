@@ -302,16 +302,6 @@ export function OrdersTable() {
   )
 }
 
-        {!loading && filteredOrders.length === 0 && (
-          <div className="py-20 text-center text-white/20 border-t border-white/5">
-            <p className="text-[10px] font-black uppercase tracking-[0.3em]">No transmissions detected in this sector.</p>
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
-
 /**
  * PaymentStatusBadge Component
  * 

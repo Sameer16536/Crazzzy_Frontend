@@ -192,6 +192,22 @@ export function ProductForm({ productId }: { productId?: string }) {
       // Attach new image files under field name "images" (matches backend: upload.array('images', 5))
       newFiles.forEach(file => fd.append('images', file))
 
+      // Determine the Cloudinary folder path based on category hierarchy
+      let folderPath = 'uploads'
+      const catId = Number(formData.categoryId)
+      for (const main of categories) {
+        if (main.id === catId) {
+          folderPath = main.slug
+          break
+        }
+        const sub = main.subcategories?.find(s => s.id === catId)
+        if (sub) {
+          folderPath = `${main.slug}/${sub.slug}`
+          break
+        }
+      }
+      fd.append('categorySlug', folderPath)
+
       if (productId) {
         // PUT /admin/products/:id — backend uses upload.array('images', 5) + productUpdateValidation
         await api.uploadPut<any>(`/admin/products/${productId}`, fd)
@@ -548,7 +564,7 @@ export function ProductForm({ productId }: { productId?: string }) {
               {/* Existing images (edit mode) */}
               {existingImages.map((img, i) => (
                 <div key={`existing-${i}`} className="aspect-square bg-white border border-border rounded-lg relative overflow-hidden group">
-                  <Image src={resolveImageUrl(img.imageUrl, { thumbnail: true })} alt={`Product image ${i + 1}`} fill className="object-contain p-1" />
+                  <Image src={resolveImageUrl(img.imageUrl)} alt={`Product image ${i + 1}`} fill className="object-contain p-1" />
                   <button
                     type="button"
                     onClick={() => removeExistingImage(i)}

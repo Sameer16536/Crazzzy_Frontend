@@ -22,7 +22,7 @@ import { Mail, Instagram, Facebook, Youtube, Twitter, MapPin, ArrowRight, Chevro
 import { BentoGridCategories } from '@/components/bento-grid-categories'
 import { useCatalog } from '@/lib/catalog/use-catalog'
 import { motion } from 'framer-motion'
-import { useRef, useState, useEffect, useCallback } from 'react'
+import { useRef, useState, useEffect, useCallback, useMemo } from 'react'
 import { useMouseParallax } from '@/hooks/use-mouse-parallax'
 import { useMagneticButton } from '@/hooks/use-animations'
 import { DealOfTheDay } from '@/components/deal-of-the-day'
@@ -41,10 +41,10 @@ function ShowcaseCard({ product, index = 0 }: { product: any; index?: number }) 
           transition: 'border-color 0.5s, box-shadow 0.5s',
         }}
         onMouseEnter={(e) => {
-          ;(e.currentTarget as HTMLDivElement).style.boxShadow = '0 0 24px rgba(212,175,55,0.12)'
+          ; (e.currentTarget as HTMLDivElement).style.boxShadow = '0 0 24px rgba(212,175,55,0.12)'
         }}
         onMouseLeave={(e) => {
-          ;(e.currentTarget as HTMLDivElement).style.boxShadow = '0 0 0 0 rgba(212,175,55,0)'
+          ; (e.currentTarget as HTMLDivElement).style.boxShadow = '0 0 0 0 rgba(212,175,55,0)'
         }}
       >
         {imageUrl ? (
@@ -81,12 +81,18 @@ function ShowcaseCard({ product, index = 0 }: { product: any; index?: number }) 
 
 // ─── ProductShowcase ──────────────────────────────────────────────────────────
 function ProductShowcase({ products, mobile = false }: { products: any[]; mobile?: boolean }) {
-  if (!products.length) return null
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
+
+  if (!products.length || !mounted) return <div className="h-full w-full bg-white/[0.02] animate-pulse" />
 
   // Create a large pool of products for a "continuous" random feel
-  // We duplicate the array until we have a healthy amount, then shuffle.
-  const pool = products.length < 20 ? [...products, ...products, ...products] : products
-  const shuffled = [...pool].sort((a, b) => (a.id % 7) - (b.id % 7)) // Pseudo-random but stable for the render
+  // We use a deterministic shuffle based on the string ID to avoid hydration issues
+  const shuffled = [...products].sort((a, b) => {
+    const idA = String(a.id)
+    const idB = String(b.id)
+    return idA.localeCompare(idB)
+  })
 
   if (mobile) {
     // For a seamless horizontal loop with translateY/X(-50%), we need EXACTLY 2 identical sets.
@@ -113,11 +119,11 @@ function ProductShowcase({ products, mobile = false }: { products: any[]; mobile
   const mid = Math.ceil(shuffled.length / 2)
   const col1 = shuffled.slice(0, mid)
   const col2 = shuffled.slice(mid).length ? shuffled.slice(mid) : [...shuffled].reverse()
-  
+
   // For seamless vertical loop: EXACTLY 2 identical sets
   const track1 = [...col1, ...col1]
   const track2 = [...col2, ...col2]
-  
+
   return (
     <div
       className="relative w-full h-[520px] overflow-hidden"
@@ -224,11 +230,21 @@ function HeroHeadline() {
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function Home() {
+  const [mounted, setMounted] = useState(false)
   const { data } = useCatalog()
   const products = data?.products ?? []
-  // Take more products for the hero showcase to make it feel endless
-  const showcaseProducts = products.length > 0 ? products.slice(0, 40) : []
-  const featuredProducts = products.filter((p) => p.featured).slice(0, 12)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  // Optimized product pool: 24 is plenty for a seamless loop and saves massive memory
+  const showcaseProducts = useMemo(() => {
+    if (!products.length) return []
+    return products.slice(0, 24)
+  }, [products])
+
+  const featuredProducts = products.filter((p) => p.featured).slice(0, 8)
   const heroRef = useRef<HTMLElement>(null)
 
   // Mouse parallax

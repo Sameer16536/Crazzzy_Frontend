@@ -61,7 +61,7 @@ export default function OrdersPage() {
     <div className="min-h-screen bg-background text-foreground">
       <Navbar />
       
-      <div className="pt-32 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-24">
+      <div className="pt-24 sm:pt-32 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-24">
         
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-8 mb-16">
@@ -71,7 +71,7 @@ export default function OrdersPage() {
               <ChevronRight size={10} />
               <span className="text-foreground">Orders</span>
             </div>
-            <h1 className="text-5xl font-black uppercase tracking-tighter leading-none text-foreground">
+            <h1 className="text-2xl sm:text-5xl font-black uppercase tracking-tighter leading-none text-foreground">
               MY ORDERS
             </h1>
             <p className="text-muted-foreground text-[10px] font-mono uppercase tracking-widest">Tracking {orders.length} deployments</p>
@@ -101,11 +101,11 @@ export default function OrdersPage() {
                 transition={{ delay: i * 0.1 }}
                 className="group bg-muted/30 border border-border hover:border-primary/20 transition-all duration-300 overflow-hidden"
               >
-                <Link href={`/account/orders/${order.id}`} className="block p-8">
+                <Link href={`/account/orders/${order.id}`} className="block p-4 sm:p-8">
                   <div className="flex flex-col md:flex-row justify-between gap-8 items-start md:items-center">
                     
                     {/* Order Meta */}
-                    <div className="flex items-center gap-8">
+                    <div className="flex items-center gap-4 sm:gap-8 w-full sm:w-auto">
                       <div className="w-16 h-16 bg-black border border-white/5 flex items-center justify-center shrink-0">
                          <Package className="text-primary/40 group-hover:text-primary transition-colors" size={24} />
                       </div>
@@ -127,7 +127,7 @@ export default function OrdersPage() {
                         <status.icon size={14} />
                         <span className="text-[10px] font-black uppercase tracking-widest">{status.label}</span>
                       </div>
-                      <p className="text-xl font-black font-mono text-foreground">₹{parseFloat(order.totalAmount).toLocaleString('en-IN')}</p>
+                      <p className="text-lg sm:text-xl font-black font-mono text-foreground">₹{parseFloat(order.totalAmount).toLocaleString('en-IN')}</p>
                     </div>
 
                     <div className="hidden md:block">

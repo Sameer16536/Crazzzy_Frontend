@@ -69,7 +69,7 @@ export default function SettingsPage() {
     <div className="min-h-screen bg-background text-foreground selection:bg-primary selection:text-primary-foreground">
       <Navbar />
       
-      <div className="pt-32 max-w-2xl mx-auto px-4 pb-24">
+      <div className="pt-24 sm:pt-32 max-w-2xl mx-auto px-4 pb-24">
         <Link 
           href="/account" 
           className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground hover:text-foreground transition-colors mb-12 w-fit"
@@ -84,13 +84,13 @@ export default function SettingsPage() {
               <div className="w-8 h-px bg-primary" />
               <span className="text-primary text-[10px] font-mono tracking-[0.3em] uppercase">Security</span>
             </div>
-            <h1 className="text-4xl font-black uppercase tracking-tighter text-foreground">Account Settings</h1>
+            <h1 className="text-2xl sm:text-4xl font-black uppercase tracking-tighter text-foreground">Account Settings</h1>
             <p className="text-muted-foreground text-xs uppercase tracking-widest leading-loose">
               Update your security credentials and manage your account preferences.
             </p>
           </div>
 
-          <div className="bg-muted/30 border border-border p-8 sm:p-12 space-y-10">
+          <div className="bg-muted/30 border border-border p-6 sm:p-12 space-y-10">
             <div className="flex items-center gap-4">
                <ShieldCheck className="text-primary" size={24} />
                <h2 className="text-lg font-black uppercase tracking-widest text-foreground">Change Password</h2>

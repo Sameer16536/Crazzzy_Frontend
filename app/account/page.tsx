@@ -93,7 +93,7 @@ export default function AccountPage() {
                 <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
               <div className="space-y-1">
-                <h2 className="text-3xl font-black text-foreground uppercase tracking-tighter">{user.name}</h2>
+                <h2 className="text-xl sm:text-3xl font-black text-foreground uppercase tracking-tighter">{user.name}</h2>
                 <p className="text-xs font-mono text-muted-foreground uppercase tracking-widest">{user.email}</p>
               </div>
             </div>
@@ -149,7 +149,7 @@ export default function AccountPage() {
               <h3 className="text-[10px] font-black text-primary uppercase tracking-[0.4em]">Profile Details</h3>
               <div className="h-[1px] flex-1 bg-border" />
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 lg:gap-8">
+            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 lg:gap-8">
               <div className="space-y-1 min-w-0">
                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Full Name</p>
                 {editingField === 'name' ? (
@@ -240,7 +240,7 @@ export default function AccountPage() {
             </div>
 
             {wishlistedProducts.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-8">
                 {wishlistedProducts.map(product => (
                   <ProductCard key={product.id} product={product} />
                 ))}

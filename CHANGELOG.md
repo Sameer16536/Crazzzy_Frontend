@@ -27,6 +27,11 @@ All notable changes to this project will be documented in this file.
   - Condensed transmission IDs, recipient details, and timeline information for small screens.
   - Made status badges and payment indicators responsive within the card layout.
 
+- **User Account Mobile Optimizations** (`app/account/**`):
+  - Refined the **Account Dashboard**, **Orders History**, and **Security Settings** for 360px-width screens.
+  - Switched the wishlist and profile grids to a 2-column layout on mobile to maximize screen space.
+  - Scaled down large headings (`text-5xl` to `text-2xl`) and adjusted container paddings for a better fit.
+
 ### Changed
 - **Responsive Header Scaling** (`components/admin/products/products-header.tsx`): 
   - Reduced the "Products" page title size from `text-3xl` to `text-xl` on mobile devices to prevent layout crowding.

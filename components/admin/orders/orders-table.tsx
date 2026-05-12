@@ -5,7 +5,7 @@ import { api } from '@/lib/api-client'
 import { Card } from '@/components/ui/card'
 import { StatusBadge } from '../status-badge'
 import { OrderActions } from './order-actions'
-import { Loader2, Package, Search, Filter, Copy, Check, Truck } from 'lucide-react'
+import { Loader2, Package, Search, Filter, Copy, Check, Truck, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useCatalog } from '@/lib/catalog/use-catalog'
 import { toast } from 'sonner'
 

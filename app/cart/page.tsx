@@ -41,7 +41,7 @@ export default function CartPage() {
   const comboDiscount = comboOffer.totalSavings
   const subtotal = regularSubtotal + bundlesTotal
   const discountedSubtotal = subtotal - comboDiscount
-  const shipping = discountedSubtotal >= 1999 ? 0 : items.length > 0 ? 99 : 0
+  const shipping = discountedSubtotal >= 999 ? 0 : items.length > 0 ? 99 : 0
   const total = discountedSubtotal + shipping
 
   return (
@@ -257,7 +257,7 @@ export default function CartPage() {
               </div>
 
               <p className="text-[10px] text-muted-foreground/40 mt-6 leading-relaxed font-light italic">
-                * Free shipping on orders above ₹1,999. Automatic discounts apply based on category volume.
+                * Free shipping on orders above ₹999. Automatic discounts apply based on category volume.
               </p>
               </div>
           </div>

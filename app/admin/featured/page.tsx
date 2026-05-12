@@ -134,13 +134,13 @@ export default function FeaturedProductsAdminPage() {
         </div>
       ) : products.length > 0 ? (
         <div className="space-y-8">
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3 sm:gap-6">
+          <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-2 sm:gap-3">
             {products.map(product => (
             <motion.div 
               key={product.id}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className={`relative border ${product.isFeatured ? 'border-primary shadow-[0_0_15px_rgba(212,175,55,0.15)]' : 'border-border'} bg-card overflow-hidden group`}
+              className={`relative border ${product.isFeatured ? 'border-primary shadow-[0_0_10px_rgba(212,175,55,0.1)]' : 'border-border'} bg-card overflow-hidden group`}
             >
               <div className="aspect-square bg-muted relative overflow-hidden">
                 {product.imageUrl ? (
@@ -151,25 +151,25 @@ export default function FeaturedProductsAdminPage() {
                     className="object-cover group-hover:scale-105 transition-transform duration-500"
                   />
                 ) : (
-                  <div className="absolute inset-0 flex items-center justify-center text-muted-foreground/30">
-                    <Star size={48} />
+                  <div className="absolute inset-0 flex items-center justify-center text-muted-foreground/20">
+                    <Star size={24} />
                   </div>
                 )}
                 
                 {/* Status Badge */}
                 {product.isFeatured && (
-                  <div className="absolute top-2 right-2 bg-primary text-primary-foreground text-[8px] font-black uppercase tracking-widest px-2 py-1 flex items-center gap-1">
-                    <Star size={8} className="fill-current" /> Featured
+                  <div className="absolute top-1 right-1 bg-primary text-primary-foreground text-[6px] font-black uppercase tracking-widest px-1 py-0.5 flex items-center gap-0.5">
+                    <Star size={6} className="fill-current" />
                   </div>
                 )}
               </div>
 
-              <div className="p-3 sm:p-4 flex flex-col justify-between h-[110px] sm:h-[130px]">
+              <div className="p-2 flex flex-col justify-between h-[80px] sm:h-[90px]">
                 <div className="min-w-0">
-                  <h3 className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-foreground line-clamp-1 sm:line-clamp-2 leading-tight">
+                  <h3 className="text-[8px] sm:text-[9px] font-black uppercase tracking-tight text-foreground line-clamp-2 leading-tight">
                     {product.title}
                   </h3>
-                  <p className="text-[9px] sm:text-[10px] font-price font-bold text-muted-foreground mt-1">
+                  <p className="text-[8px] font-price font-bold text-muted-foreground mt-0.5">
                     ₹{product.price}
                   </p>
                 </div>
@@ -177,17 +177,17 @@ export default function FeaturedProductsAdminPage() {
                 <button
                   onClick={() => handleToggleFeatured(product.id, product.isFeatured)}
                   disabled={toggling === product.id}
-                  className={`w-full py-2 text-[8px] sm:text-[10px] font-black uppercase tracking-widest border transition-all flex items-center justify-center gap-1 sm:gap-2
+                  className={`w-full py-1 text-[7px] sm:text-[8px] font-black uppercase tracking-widest border transition-all flex items-center justify-center gap-1
                     ${product.isFeatured 
                       ? 'bg-transparent border-primary/50 text-primary hover:bg-primary/10' 
                       : 'bg-primary text-primary-foreground border-primary hover:bg-primary/90'
                     }`}
                 >
                   {toggling === product.id ? (
-                    <Loader2 size={10} className="animate-spin" />
+                    <Loader2 size={8} className="animate-spin" />
                   ) : (
                     <>
-                      <Star size={10} className={product.isFeatured ? 'fill-primary' : ''} />
+                      <Star size={8} className={product.isFeatured ? 'fill-primary' : ''} />
                       <span className="truncate">{product.isFeatured ? 'Remove' : 'Feature'}</span>
                     </>
                   )}

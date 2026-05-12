@@ -42,7 +42,14 @@ export default function ShippingPage() {
           <section className="space-y-4">
             <h2 className="text-xl font-bold text-foreground underline decoration-primary decoration-2 underline-offset-4 tracking-tight uppercase">Shipping Charges</h2>
             <p>
-              Shipping charges are calculated at checkout based on the weight of the items and your delivery location. We occasionally offer <strong>Free Shipping</strong> on orders above a certain value, which will be highlighted on the website.
+              We offer <strong>Free Shipping</strong> on all orders above <strong>₹999</strong> across India. For orders below this value, a standard shipping fee will be calculated at checkout.
+            </p>
+          </section>
+
+          <section className="space-y-4">
+            <h2 className="text-xl font-bold text-foreground underline decoration-primary decoration-2 underline-offset-4 tracking-tight uppercase">Payment & COD Policy</h2>
+            <p>
+              Please note that we currently <strong>do not offer Cash on Delivery (COD)</strong>. We only accept prepaid orders through our secure payment gateway (Razorpay), which supports UPI, Credit/Debit Cards, Net Banking, and Wallets.
             </p>
           </section>
 

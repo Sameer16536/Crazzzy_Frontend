@@ -106,14 +106,16 @@ export function Footer() {
             <h3 className="text-xs font-mono text-muted-foreground tracking-[0.2em] uppercase">Connect</h3>
             <div className="flex gap-2 flex-wrap">
               {[
-                { icon: Facebook, label: 'Facebook' },
-                { icon: Instagram, label: 'Instagram' },
-                { icon: Youtube, label: 'YouTube' },
-                { icon: Twitter, label: 'Twitter' },
-              ].map(({ icon: Icon, label }) => (
+                { icon: Facebook, label: 'Facebook', href: '#' },
+                { icon: Instagram, label: 'Instagram', href: 'https://www.instagram.com/crazzzy.in?igsh=MTJtNjR0bXRubTN1eQ==' },
+                { icon: Youtube, label: 'YouTube', href: '#' },
+                { icon: Twitter, label: 'Twitter', href: '#' },
+              ].map(({ icon: Icon, label, href }) => (
                 <a
                   key={label}
-                  href="#"
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="p-2.5 bg-muted hover:bg-primary/20 transition-colors group cursor-interactive"
                   title={label}
                   aria-label={label}
@@ -133,7 +135,7 @@ export function Footer() {
               <div className="flex gap-2 items-start">
                 <MapPin size={14} className="text-primary flex-shrink-0 mt-0.5" />
                 <p className="text-muted-foreground text-sm leading-relaxed">
-                  Unit no 5,6,7, Kopar, Sector 8,<br />
+                  Unit No 5,6,7, kopargaon, Sector 8,<br />
                   Ulwe, Navi Mumbai,<br />
                   Maharashtra 410206
                 </p>

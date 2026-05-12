@@ -58,7 +58,11 @@ export default function ContactPage() {
               </div>
               <div>
                 <h3 className="font-bold text-foreground mb-1">Location</h3>
-                <p className="text-muted-foreground">India 🇮🇳</p>
+                <p className="text-muted-foreground text-sm leading-relaxed">
+                  Unit No 5,6,7, kopargaon, Sector 8,<br />
+                  Ulwe, Navi Mumbai,<br />
+                  Maharashtra 410206
+                </p>
               </div>
             </div>
 

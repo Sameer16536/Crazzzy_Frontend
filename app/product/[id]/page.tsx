@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { Navbar } from '@/components/navbar'
-import { ShoppingCart, Heart, Share2, Star, ShieldCheck, ChevronRight } from 'lucide-react'
+import { ShoppingCart, Heart, Share2, Star, ShieldCheck, ChevronRight, Truck, Wallet } from 'lucide-react'
 import Link from 'next/link'
 import { useAppDispatch } from '@/lib/store/hooks'
 import { addToCart } from '@/lib/store/slices/cart-slice'
@@ -319,20 +319,18 @@ export default function ProductPage() {
               </div>
             </div>
 
-            <div className="pt-10 grid grid-cols-2 gap-8 border-t border-border">
-              <div className="flex gap-4 items-start">
+            <div className="pt-10 grid grid-cols-2 sm:grid-cols-3 gap-8 border-t border-border">
+              <div className="flex flex-col gap-2 items-center text-center">
                 <ShieldCheck className="text-primary shrink-0" size={20} />
-                <div className="space-y-1">
-                  <p className="text-[10px] font-black uppercase tracking-widest">Secure Checkout</p>
-                  <p className="text-[10px] text-muted-foreground leading-relaxed font-medium font-body">Razorpay verified safe transactions.</p>
-                </div>
+                <p className="text-[9px] font-black uppercase tracking-widest leading-tight">Secure<br />Checkout</p>
               </div>
-              <div className="flex gap-4 items-start">
+              <div className="flex flex-col gap-2 items-center text-center border-l border-border">
                 <Share2 className="text-primary shrink-0" size={20} />
-                <div className="space-y-1">
-                  <p className="text-[10px] font-black uppercase tracking-widest">All Over India Delivery</p>
-                  <p className="text-[10px] text-muted-foreground leading-relaxed font-medium font-body">Doorstep delivery across the universe.</p>
-                </div>
+                <p className="text-[9px] font-black uppercase tracking-widest leading-tight">All India<br />Delivery</p>
+              </div>
+              <div className="flex flex-col gap-2 items-center text-center border-t pt-8 sm:pt-0 sm:border-t-0 sm:border-l sm:border-border sm:pl-4">
+                <Truck className="text-primary shrink-0" size={20} />
+                <p className="text-[9px] font-black uppercase tracking-widest leading-tight">Free Shipping<br />Above ₹999</p>
               </div>
             </div>
           </div>

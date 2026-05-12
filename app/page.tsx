@@ -28,37 +28,123 @@ import { useMagneticButton } from '@/hooks/use-animations'
 import { DealOfTheDay } from '@/components/deal-of-the-day'
 import { ComboDealsSection } from '@/components/combo-deals-section'
 
-// ─── Local video sources (both loop; switch every 10 s) ─────────────────────
-
-const HERO_VIDEOS = [
-  'https://res.cloudinary.com/dirjsc8qf/video/upload/v1777052147/14160348_3840_2160_25fps_jtarm7.mp4',
-  'https://res.cloudinary.com/dirjsc8qf/video/upload/v1777052120/3116506-hd_1920_1080_25fps_iaej0f.mp4',
-] as const
-
-/**
- * useVideoCycle — cycles through an array of video URLs every `interval` ms.
- * Returns the active index and the previous index so callers can crossfade.
- */
-function useVideoCycle(count: number, interval: number = 10_000) {
-  const [active, setActive] = useState(0)
-  const [fading, setFading] = useState(false)
-
-  useEffect(() => {
-    const id = setInterval(() => {
-      setFading(true)
-      const timer = setTimeout(() => {
-        setActive((cur) => (cur + 1) % count)
-        setFading(false)
-      }, 800) // Match crossfade duration
-      return () => clearTimeout(timer)
-    }, interval)
-    return () => clearInterval(id)
-  }, [count, interval])
-
-  return { active, fading }
+// ─── ShowcaseCard ─────────────────────────────────────────────────────────────
+function ShowcaseCard({ product, index = 0 }: { product: any; index?: number }) {
+  const imageUrl = product.images?.[0]?.imageUrl ?? product.imageUrl ?? null
+  return (
+    <Link href={`/product/${product.slug ?? product.id}`} className="group block flex-shrink-0">
+      <div
+        className="relative w-full overflow-hidden bg-white/[0.03] border border-white/[0.07] group-hover:border-primary/50 transition-all duration-500"
+        style={{
+          aspectRatio: '3/4',
+          boxShadow: '0 0 0 0 rgba(212,175,55,0)',
+          transition: 'border-color 0.5s, box-shadow 0.5s',
+        }}
+        onMouseEnter={(e) => {
+          ;(e.currentTarget as HTMLDivElement).style.boxShadow = '0 0 24px rgba(212,175,55,0.12)'
+        }}
+        onMouseLeave={(e) => {
+          ;(e.currentTarget as HTMLDivElement).style.boxShadow = '0 0 0 0 rgba(212,175,55,0)'
+        }}
+      >
+        {imageUrl ? (
+          <Image
+            src={imageUrl}
+            alt={product.title ?? product.name ?? ''}
+            fill
+            unoptimized
+            priority={index < 12}
+            className="object-cover transition-transform duration-700 group-hover:scale-105"
+            sizes="(max-width: 768px) 140px, 200px"
+          />
+        ) : (
+          <div className="absolute inset-0 bg-white/5 flex items-center justify-center">
+            <span className="text-white/20 text-xs uppercase tracking-widest">No Image</span>
+          </div>
+        )}
+        {/* Bottom info overlay — appears on hover */}
+        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-400">
+          <p className="text-[8px] font-black uppercase tracking-[0.15em] text-white line-clamp-1">
+            {product.title ?? product.name}
+          </p>
+          <p className="text-[9px] font-mono font-bold text-primary mt-0.5">
+            ₹{Number(product.price).toLocaleString('en-IN')}
+          </p>
+        </div>
+        {/* Corner accent */}
+        <div className="absolute top-0 left-0 w-4 h-4 border-t border-l border-primary/30 group-hover:border-primary/80 transition-colors duration-500" />
+        <div className="absolute bottom-0 right-0 w-4 h-4 border-b border-r border-primary/30 group-hover:border-primary/80 transition-colors duration-500" />
+      </div>
+    </Link>
+  )
 }
 
-// ─── Animation Variants ──────────────────────────────────────────────────────
+// ─── ProductShowcase ──────────────────────────────────────────────────────────
+function ProductShowcase({ products, mobile = false }: { products: any[]; mobile?: boolean }) {
+  if (!products.length) return null
+
+  // Create a large pool of products for a "continuous" random feel
+  // We duplicate the array until we have a healthy amount, then shuffle.
+  const pool = products.length < 20 ? [...products, ...products, ...products] : products
+  const shuffled = [...pool].sort((a, b) => (a.id % 7) - (b.id % 7)) // Pseudo-random but stable for the render
+
+  if (mobile) {
+    // For a seamless horizontal loop with translateY/X(-50%), we need EXACTLY 2 identical sets.
+    const track = [...shuffled, ...shuffled]
+    return (
+      <div
+        className="relative w-full overflow-hidden"
+        style={{
+          maskImage: 'linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%)',
+          WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%)',
+        }}
+      >
+        <div className="flex gap-4 animate-marquee-left py-4 w-max">
+          {track.map((p, i) => (
+            <div key={`${p.id}-${i}`} className="w-[140px] flex-shrink-0">
+              <ShowcaseCard product={p} index={i} />
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  const mid = Math.ceil(shuffled.length / 2)
+  const col1 = shuffled.slice(0, mid)
+  const col2 = shuffled.slice(mid).length ? shuffled.slice(mid) : [...shuffled].reverse()
+  
+  // For seamless vertical loop: EXACTLY 2 identical sets
+  const track1 = [...col1, ...col1]
+  const track2 = [...col2, ...col2]
+  
+  return (
+    <div
+      className="relative w-full h-[520px] overflow-hidden"
+      style={{
+        maskImage: 'linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%)',
+        WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%)',
+      }}
+    >
+      {/* Radial gold ambient */}
+      <div
+        className="absolute inset-0 pointer-events-none z-10"
+        style={{ background: 'radial-gradient(ellipse 70% 60% at 50% 50%, rgba(212,175,55,0.07) 0%, transparent 70%)' }}
+      />
+      <div className="flex gap-3 h-full px-1">
+        {/* Column 1 — scrolls UP */}
+        <div className="flex-1 flex flex-col gap-3 animate-marquee-up h-max">
+          {track1.map((p, i) => <ShowcaseCard key={`c1-${p.id}-${i}`} product={p} index={i} />)}
+        </div>
+        {/* Column 2 — scrolls DOWN */}
+        <div className="flex-1 flex flex-col gap-3 animate-marquee-down h-max">
+          {track2.map((p, i) => <ShowcaseCard key={`c2-${p.id}-${i}`} product={p} index={i + 20} />)}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 
 /**
  * wordReveal — staggered word reveal from below with blur.
@@ -97,7 +183,7 @@ function HeroHeadline() {
   ]
   let wordIdx = 0
   return (
-    <h1 className="text-[clamp(2.5rem,7vw,5rem)] font-black leading-[0.88] tracking-tight text-foreground">
+    <h1 className="text-[clamp(2.2rem,8vw,5rem)] font-black leading-[0.88] tracking-tight text-foreground">
       {lines.map((line, li) => (
         <div key={li} className="overflow-hidden">
           <div className="flex flex-wrap gap-x-[0.18em]">
@@ -134,132 +220,20 @@ function HeroHeadline() {
   )
 }
 
-// ─── CinematicPortal (SVG-clipped dual-video crossfade) ────────────────────────
-
-/**
- * CinematicPortal — a pair of <video> elements crossfading every 10 s,
- * masked inside an organic SVG blob with a gold glow ring.
- * The portal offsets its cycle by 5 s from the background so they
- * don't always show the same clip at the same time.
- */
-function CinematicPortal({ activeIdx, fading }: { activeIdx: number; fading: boolean }) {
-  const CLIP_ID = 'portal-clip'
-  const GLOW_ID = 'portal-glow'
-  const nextIdx = (activeIdx + 1) % HERO_VIDEOS.length
-
-  return (
-    <div className="relative w-full h-full flex items-center justify-center">
-      {/* SVG definitions — clip path + glow filter */}
-      <svg width="0" height="0" className="absolute" aria-hidden="true">
-        <defs>
-          <clipPath id={CLIP_ID} clipPathUnits="objectBoundingBox">
-            <path d="M0.5,0.02 C0.72,0.02 0.93,0.18 0.97,0.38 C1.02,0.60 0.94,0.84 0.76,0.94 C0.60,1.03 0.38,1.01 0.22,0.90 C0.06,0.79 -0.01,0.57 0.04,0.36 C0.09,0.16 0.28,0.02 0.5,0.02 Z" />
-          </clipPath>
-          <filter id={GLOW_ID} x="-20%" y="-20%" width="140%" height="140%">
-            <feDropShadow dx="0" dy="0" stdDeviation="18" floodColor="#d4af37" floodOpacity="0.55" />
-            <feDropShadow dx="0" dy="0" stdDeviation="6" floodColor="#f5e27a" floodOpacity="0.35" />
-          </filter>
-        </defs>
-      </svg>
-
-      {/* Portal shape wrapper */}
-      <div
-        className="relative"
-        style={{
-          width: 'min(420px, 90%)',
-          aspectRatio: '0.85',
-          filter: `url(#${GLOW_ID})`,
-          willChange: 'transform',
-        }}
-      >
-        {/* Clipped video container */}
-        <div
-          style={{ clipPath: `url(#${CLIP_ID})`, width: '100%', height: '100%' }}
-          className="relative overflow-hidden bg-black"
-        >
-          {/* Stable Video Elements - no keys, no re-mounting */}
-          <video
-            src={HERO_VIDEOS[0]}
-            autoPlay muted loop playsInline preload="metadata"
-            aria-hidden="true"
-            className="absolute inset-0 w-full h-full object-cover scale-110"
-            style={{
-              willChange: 'opacity',
-              opacity: activeIdx === 0 ? (fading ? 0 : 1) : (fading && activeIdx === 1 ? 1 : 0),
-              transition: 'opacity 0.8s ease-in-out',
-            }}
-          />
-          <video
-            src={HERO_VIDEOS[1]}
-            autoPlay muted loop playsInline preload="metadata"
-            aria-hidden="true"
-            className="absolute inset-0 w-full h-full object-cover scale-110"
-            style={{
-              willChange: 'opacity',
-              opacity: activeIdx === 1 ? (fading ? 0 : 1) : (fading && activeIdx === 0 ? 1 : 0),
-              transition: 'opacity 0.8s ease-in-out',
-            }}
-          />
-          {/* Inner scrim */}
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/10 to-black/40" style={{ zIndex: 1 }} />
-          {/* Hero-scoped grain (5% opacity) */}
-          <div className="hero-grain" style={{ zIndex: 2 }} />
-        </div>
-
-        {/* Gold border ring */}
-        <svg
-          className="absolute inset-0 w-full h-full pointer-events-none"
-          viewBox="0 0 100 118"
-          preserveAspectRatio="none"
-          aria-hidden="true"
-        >
-          <path
-            d="M50,2.4 C72,2.4 93,18 97,38 C102,60 94,84 76,94 C60,103 38,101 22,90 C6,79 -1,57 4,36 C9,16 28,2.4 50,2.4 Z"
-            fill="none"
-            stroke="url(#gold-stroke)"
-            strokeWidth="1.5"
-          />
-          <defs>
-            <linearGradient id="gold-stroke" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#d4af37" stopOpacity="0.9" />
-              <stop offset="50%" stopColor="#f5e27a" stopOpacity="0.6" />
-              <stop offset="100%" stopColor="#d4af37" stopOpacity="0.9" />
-            </linearGradient>
-          </defs>
-        </svg>
-      </div>
-
-      {/* Ambient glow */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{ background: 'radial-gradient(ellipse 60% 50% at 50% 50%, rgba(212,175,55,0.12) 0%, transparent 70%)' }}
-      />
-    </div>
-  )
-}
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function Home() {
   const { data } = useCatalog()
   const products = data?.products ?? []
-  const featuredProducts = products.filter((p) => p.featured).slice(0, 8)
+  // Take more products for the hero showcase to make it feel endless
+  const showcaseProducts = products.length > 0 ? products.slice(0, 40) : []
+  const featuredProducts = products.filter((p) => p.featured).slice(0, 12)
   const heroRef = useRef<HTMLElement>(null)
 
-  // Video cycle — background and portal share the same timing
-  // but use different initial videos for visual variety
-  const bgCycle = useVideoCycle(HERO_VIDEOS.length, 10_000)
-  // Portal uses the same active index (same clip in both, different framing)
-  // or swap the order: portal starts on video [1] by cycling offset
-  const portalActive = bgCycle.active
-  const portalFading = bgCycle.fading
-  const bgNext = (bgCycle.active + 1) % HERO_VIDEOS.length
-
-  // Mouse parallax — tiny fractional strength so movement is subtle, not jarring.
-  // The hook formula: offset = (cursor - 0.5) * strength * viewportSize
-  // e.g. strength=0.012 → max ≈16px drift at screen edge. Just a gentle float.
-  const textParallax = useMouseParallax(-0.012, 60, 18)  // text drifts slightly AGAINST cursor
-  const portalParallax = useMouseParallax(0.020, 50, 16)  // portal drifts WITH cursor
+  // Mouse parallax
+  const textParallax = useMouseParallax(-0.012, 60, 18)
+  const showcaseParallax = useMouseParallax(0.010, 40, 12)
 
   // Magnetic CTA button
   const { ref: magneticRef, x: magneticX, y: magneticY } = useMagneticButton(0.3)
@@ -276,47 +250,37 @@ export default function Home() {
       <Navbar />
 
       {/* ════════════════════════════════════════════════════════════════════
-          HERO SECTION — Two-column: Text left | Cinematic Portal right
+          HERO SECTION — Two-column: Text left | Product Showcase right
           ════════════════════════════════════════════════════════════════════ */}
       <section
         ref={heroRef}
-        className="relative h-screen w-full flex items-center justify-center overflow-hidden"
+        className="relative min-h-screen w-full flex items-center justify-center overflow-hidden pt-20 md:pt-0"
       >
-        {/* ── Full-bleed crossfading background videos ── */}
-        {/* Stable Background Videos - no keys, no re-mounting */}
-        <video
-          src={HERO_VIDEOS[0]}
-          autoPlay muted loop playsInline preload="metadata"
-          aria-hidden="true"
-          className="absolute inset-0 w-full h-full object-cover"
+        {/* Rich gradient background — replaces video */}
+        <div
+          className="absolute inset-0"
           style={{
-            willChange: 'opacity',
-            opacity: bgCycle.active === 0 ? (bgCycle.fading ? 0 : 1) : (bgCycle.fading && bgCycle.active === 1 ? 1 : 0),
-            transition: 'opacity 1s ease-in-out',
-            zIndex: 0,
+            background: `
+              radial-gradient(ellipse 90% 70% at 20% 50%, rgba(212,175,55,0.07) 0%, transparent 60%),
+              radial-gradient(ellipse 50% 60% at 85% 20%, rgba(212,175,55,0.04) 0%, transparent 50%),
+              radial-gradient(ellipse 40% 40% at 75% 80%, rgba(212,175,55,0.03) 0%, transparent 50%)
+            `,
           }}
         />
-        <video
-          src={HERO_VIDEOS[1]}
-          autoPlay muted loop playsInline preload="metadata"
-          aria-hidden="true"
-          className="absolute inset-0 w-full h-full object-cover"
+        {/* Subtle dot-grid texture */}
+        <div
+          className="absolute inset-0 opacity-[0.04]"
           style={{
-            willChange: 'opacity',
-            opacity: bgCycle.active === 1 ? (bgCycle.fading ? 0 : 1) : (bgCycle.fading && bgCycle.active === 0 ? 1 : 0),
-            transition: 'opacity 1s ease-in-out',
-            zIndex: 0,
+            backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.8) 1px, transparent 1px)',
+            backgroundSize: '32px 32px',
           }}
         />
-
-        {/* Multi-layer overlay */}
-        <div className="absolute inset-0 bg-background/60 dark:bg-black/55" style={{ zIndex: 1 }} />
-        <div className="absolute inset-0 backdrop-blur-[2px]" style={{ zIndex: 1 }} />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/20 dark:via-black/20 to-background/90 dark:to-black/80" style={{ zIndex: 1 }} />
-        <div className="absolute inset-0 bg-gradient-to-r from-background/40 dark:from-black/50 via-transparent to-transparent" style={{ zIndex: 1 }} />
+        {/* Edge vignette */}
+        <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-transparent to-background/80" />
+        <div className="absolute inset-0 bg-gradient-to-r from-background/60 via-transparent to-background/20" />
 
         {/* ── Two-column content grid ── */}
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 w-full h-full flex items-center">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 w-full h-auto md:h-full md:flex items-center">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-16 items-center w-full">
 
             {/* ── LEFT COLUMN: Text ── */}
@@ -386,6 +350,20 @@ export default function Home() {
                 </Link>
               </motion.div>
 
+              {/* Mobile Showcase: horizontal marquee after CTAs */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.8 }}
+                className="md:hidden mt-10"
+              >
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-4 h-px bg-primary/40" />
+                  <span className="text-primary/60 text-[8px] font-mono tracking-[0.2em] uppercase">Featured</span>
+                </div>
+                <ProductShowcase products={showcaseProducts} mobile />
+              </motion.div>
+
               {/* Floating Stats Bar */}
               <motion.div
                 custom={2}
@@ -407,19 +385,31 @@ export default function Home() {
               </motion.div>
             </motion.div>
 
-            {/* ── RIGHT COLUMN: Cinematic Portal (hidden on mobile) ── */}
+            {/* ── RIGHT COLUMN: Product Showcase Marquee ── */}
             <motion.div
-              className="hidden md:flex items-center justify-center"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 1.1, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
+              className="hidden md:block overflow-hidden"
+              initial={{ opacity: 0, x: 40 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 1.1, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
               style={{
-                x: portalParallax.x,
-                y: portalParallax.y,
+                x: showcaseParallax.x,
+                y: showcaseParallax.y,
                 willChange: 'transform',
               }}
             >
-              <CinematicPortal activeIdx={portalActive} fading={portalFading} />
+              {/* Label */}
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-6 h-px bg-primary/60" />
+                <span className="text-primary/70 text-[9px] font-mono tracking-[0.25em] uppercase">Featured Collection</span>
+                <div className="flex-1 h-px bg-white/5" />
+              </div>
+              <ProductShowcase products={showcaseProducts} />
+              {/* Bottom label */}
+              <div className="flex items-center justify-end gap-3 mt-4">
+                <Link href="/shop" className="text-[9px] font-black uppercase tracking-[0.2em] text-primary/70 hover:text-primary transition-colors flex items-center gap-1 group">
+                  View All <ArrowRight size={10} className="group-hover:translate-x-0.5 transition-transform" />
+                </Link>
+              </div>
             </motion.div>
           </div>
         </div>

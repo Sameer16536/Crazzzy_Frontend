@@ -136,6 +136,37 @@ body {
   90% { transform: translate(0, -1%); }
 }
 
+/* Product Showcase Marquee Animations */
+@keyframes marqueeUp {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-50%); }
+}
+@keyframes marqueeDown {
+  0% { transform: translateY(-50%); }
+  100% { transform: translateY(0); }
+}
+@keyframes marqueeLeft {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+@keyframes marqueeRight {
+  0% { transform: translateX(-50%); }
+  100% { transform: translateX(0); }
+}
+
+.animate-marquee-up {
+  animation: marqueeUp 42s linear infinite;
+}
+.animate-marquee-down {
+  animation: marqueeDown 38s linear infinite;
+}
+.animate-marquee-left {
+  animation: marqueeLeft 48s linear infinite;
+}
+.animate-marquee-right {
+  animation: marqueeRight 44s linear infinite;
+}
+
 html::before {
   content: '';
   position: fixed;

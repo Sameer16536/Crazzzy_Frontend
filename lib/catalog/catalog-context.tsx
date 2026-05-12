@@ -102,7 +102,7 @@ const API_BASE = (process.env.NEXT_PUBLIC_API_URL || '').startsWith('/')
 /**
  * Helper to resolve backend image paths or Cloudinary URLs.
  */
-function resolveImageUrl(url: string | null | undefined): string {
+export function resolveImageUrl(url: string | null | undefined, options?: { thumbnail?: boolean }): string {
   if (!url) return '/placeholder.jpg'
   
   let finalUrl = url;
@@ -112,12 +112,16 @@ function resolveImageUrl(url: string | null | undefined): string {
     finalUrl = `${base}${path}`
   }
 
-  // Optimize Cloudinary URLs on-the-fly (Free tier compatible)
-  // This reduces RAM usage and bandwidth by requesting optimized 800px versions
+  // Cloudinary optimizations
   if (finalUrl.includes('res.cloudinary.com') && finalUrl.includes('/upload/')) {
-    return finalUrl.replace('/upload/', '/upload/w_800,q_auto,f_auto/')
+    if (options?.thumbnail) {
+      // Small thumbnail for Admin Panel previews (uses 1 transformation credit per image)
+      // Using f_webp specifically (not f_auto) to prevent multiple format generation.
+      return finalUrl.replace('/upload/', '/upload/w_150,c_fill,q_auto,f_webp/')
+    }
   }
 
+  // Production view: NO dynamic transformations to preserve free tier.
   return finalUrl
 }
 

@@ -7,6 +7,7 @@ import { api } from '@/lib/api-client'
 import { toast } from 'sonner'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
+import { resolveImageUrl } from '@/lib/catalog/catalog-context'
 
 interface Category {
   id: number
@@ -547,7 +548,7 @@ export function ProductForm({ productId }: { productId?: string }) {
               {/* Existing images (edit mode) */}
               {existingImages.map((img, i) => (
                 <div key={`existing-${i}`} className="aspect-square bg-white border border-border rounded-lg relative overflow-hidden group">
-                  <Image src={img.imageUrl} alt={`Product image ${i + 1}`} fill className="object-contain p-1" />
+                  <Image src={resolveImageUrl(img.imageUrl, { thumbnail: true })} alt={`Product image ${i + 1}`} fill className="object-contain p-1" />
                   <button
                     type="button"
                     onClick={() => removeExistingImage(i)}

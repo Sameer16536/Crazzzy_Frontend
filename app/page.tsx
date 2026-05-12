@@ -18,13 +18,11 @@ import { Navbar } from '@/components/navbar'
 import { ProductCard } from '@/components/product-card'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Mail, Instagram, Facebook, Youtube, Twitter, MapPin, ArrowRight, ChevronDown } from 'lucide-react'
+import { ArrowRight, ChevronDown } from 'lucide-react'
 import { BentoGridCategories } from '@/components/bento-grid-categories'
 import { useCatalog } from '@/lib/catalog/use-catalog'
 import { motion } from 'framer-motion'
-import { useRef, useState, useEffect, useCallback, useMemo } from 'react'
-import { useMouseParallax } from '@/hooks/use-mouse-parallax'
-import { useMagneticButton } from '@/hooks/use-animations'
+import { useRef, useState, useEffect, useMemo } from 'react'
 import { DealOfTheDay } from '@/components/deal-of-the-day'
 import { ComboDealsSection } from '@/components/combo-deals-section'
 
@@ -219,33 +217,20 @@ export default function Home() {
   const [isMobile, setIsMobile] = useState(false)
   const { data } = useCatalog()
   const products = data?.products ?? []
+  const heroRef = useRef<HTMLElement>(null)
 
   useEffect(() => {
     setMounted(true)
     setIsMobile(window.innerWidth < 768)
   }, [])
 
-  // Mobile: 8 products only. Desktop: up to 24.
+  // Mobile: 8 products only. Desktop: 16.
   const showcaseProducts = useMemo(() => {
     if (!products.length) return []
-    return products.slice(0, isMobile ? 8 : 24)
+    return products.slice(0, isMobile ? 8 : 16)
   }, [products, isMobile])
 
   const featuredProducts = products.filter((p) => p.featured).slice(0, 8)
-  const heroRef = useRef<HTMLElement>(null)
-
-  // Parallax and magnetic button — only on desktop (these use framer-motion springs
-  // which are very expensive on low-end mobile)
-  const textParallax = useMouseParallax(isMobile ? 0 : -0.012, 60, 18)
-  const showcaseParallax = useMouseParallax(isMobile ? 0 : 0.010, 40, 12)
-  const { ref: magneticRef, x: magneticX, y: magneticY } = useMagneticButton(isMobile ? 0 : 0.3)
-
-  const scrollPastHero = () => {
-    window.scrollTo({
-      top: window.innerHeight,
-      behavior: 'smooth'
-    })
-  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -286,14 +271,7 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-16 items-center w-full">
 
             {/* ── LEFT COLUMN: Text ── */}
-            <motion.div
-              className="max-w-2xl"
-              style={{
-                x: textParallax.x,
-                y: textParallax.y,
-                willChange: 'transform',
-              }}
-            >
+            <div className="max-w-2xl">
               {/* Eyebrow tag */}
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
@@ -329,19 +307,14 @@ export default function Home() {
                 animate="visible"
                 className="flex flex-col sm:flex-row gap-4 mt-8"
               >
-                {/* Magnetic CTA wrapper */}
-                <div ref={magneticRef} className="inline-flex">
-                  <motion.div style={{ x: magneticX, y: magneticY, willChange: 'transform' }}>
-                    <Link
-                      href="/shop"
-                      id="hero-shop-cta"
-                      className="group px-8 py-4 bg-primary hover:bg-primary/90 text-black font-bold rounded-none transition-colors duration-300 active:scale-95 inline-flex items-center gap-3 justify-center cursor-interactive text-sm tracking-wider uppercase"
-                    >
-                      Start Shopping
-                      <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
-                    </Link>
-                  </motion.div>
-                </div>
+                <Link
+                  href="/shop"
+                  id="hero-shop-cta"
+                  className="group px-8 py-4 bg-primary hover:bg-primary/90 text-black font-bold rounded-none transition-colors duration-300 active:scale-95 inline-flex items-center gap-3 justify-center text-sm tracking-wider uppercase"
+                >
+                  Start Shopping
+                  <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                </Link>
 
                 <Link
                   href="#categories"
@@ -385,19 +358,14 @@ export default function Home() {
                   </div>
                 ))}
               </motion.div>
-            </motion.div>
+            </div>
 
             {/* ── RIGHT COLUMN: Product Showcase Marquee ── */}
             <motion.div
               className="hidden md:block overflow-hidden"
               initial={{ opacity: 0, x: 40 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 1.1, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
-              style={{
-                x: showcaseParallax.x,
-                y: showcaseParallax.y,
-                willChange: 'transform',
-              }}
+              transition={{ duration: 0.9, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
             >
               {/* Label */}
               <div className="flex items-center gap-3 mb-4">
@@ -416,18 +384,15 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Scroll indicator */}
-        <motion.button
-          className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2 cursor-interactive"
-          onClick={scrollPastHero}
-          animate={{ y: [0, 8, 0] }}
-          transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+        {/* Scroll indicator — CSS animation, no RAF loop */}
+        <button
+          className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2 animate-bounce-slow"
+          onClick={() => window.scrollTo({ top: window.innerHeight, behavior: 'smooth' })}
           aria-label="Scroll down"
-          style={{ willChange: 'transform' }}
         >
           <span className="text-[10px] text-muted-foreground dark:text-white/40 tracking-[0.3em] uppercase">Scroll</span>
           <ChevronDown size={18} className="text-muted-foreground dark:text-white/40" />
-        </motion.button>
+        </button>
       </section>
 
       {/* ════════════════════════════════════════════════════════════════════

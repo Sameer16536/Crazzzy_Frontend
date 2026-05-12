@@ -156,15 +156,38 @@ body {
 
 .animate-marquee-up {
   animation: marqueeUp 42s linear infinite;
+  will-change: transform;
 }
 .animate-marquee-down {
   animation: marqueeDown 38s linear infinite;
+  will-change: transform;
 }
 .animate-marquee-left {
   animation: marqueeLeft 48s linear infinite;
+  will-change: transform;
 }
 .animate-marquee-right {
   animation: marqueeRight 44s linear infinite;
+  will-change: transform;
+}
+
+/* Pause GPU-consuming marquee animations when tab is not visible */
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee-up,
+  .animate-marquee-down,
+  .animate-marquee-left,
+  .animate-marquee-right {
+    animation: none;
+  }
+}
+
+/* Lightweight scroll indicator bounce — pure CSS, no JS RAF loop */
+@keyframes bounceSlow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(8px); }
+}
+.animate-bounce-slow {
+  animation: bounceSlow 2s ease-in-out infinite;
 }
 
 html::before {

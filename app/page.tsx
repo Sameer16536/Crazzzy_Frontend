@@ -53,24 +53,16 @@ function ShowcaseCard({ product, index = 0 }: { product: any; index?: number }) 
             alt={product.title ?? product.name ?? ''}
             fill
             unoptimized
-            priority={index < 12}
+            priority={index < 4}
+            loading={index < 4 ? 'eager' : 'lazy'}
             className="object-cover transition-transform duration-700 group-hover:scale-105"
-            sizes="(max-width: 768px) 140px, 200px"
+            sizes="(max-width: 768px) 110px, 160px"
           />
         ) : (
           <div className="absolute inset-0 bg-white/5 flex items-center justify-center">
             <span className="text-white/20 text-xs uppercase tracking-widest">No Image</span>
           </div>
         )}
-        {/* Bottom info overlay — appears on hover */}
-        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-400">
-          <p className="text-[8px] font-black uppercase tracking-[0.15em] text-white line-clamp-1">
-            {product.title ?? product.name}
-          </p>
-          <p className="text-[9px] font-mono font-bold text-primary mt-0.5">
-            ₹{Number(product.price).toLocaleString('en-IN')}
-          </p>
-        </div>
         {/* Corner accent */}
         <div className="absolute top-0 left-0 w-4 h-4 border-t border-l border-primary/30 group-hover:border-primary/80 transition-colors duration-500" />
         <div className="absolute bottom-0 right-0 w-4 h-4 border-b border-r border-primary/30 group-hover:border-primary/80 transition-colors duration-500" />
@@ -84,19 +76,15 @@ function ProductShowcase({ products, mobile = false }: { products: any[]; mobile
   const [mounted, setMounted] = useState(false)
   useEffect(() => setMounted(true), [])
 
-  if (!products.length || !mounted) return <div className="h-full w-full bg-white/[0.02] animate-pulse" />
+  if (!products.length || !mounted) return <div className="h-[120px] md:h-[520px] w-full" />
 
-  // Create a large pool of products for a "continuous" random feel
-  // We use a deterministic shuffle based on the string ID to avoid hydration issues
-  const shuffled = [...products].sort((a, b) => {
-    const idA = String(a.id)
-    const idB = String(b.id)
-    return idA.localeCompare(idB)
-  })
+  // Deterministic sort to avoid hydration mismatch
+  const sorted = [...products].sort((a, b) => String(a.id).localeCompare(String(b.id)))
 
   if (mobile) {
-    // For a seamless horizontal loop with translateY/X(-50%), we need EXACTLY 2 identical sets.
-    const track = [...shuffled, ...shuffled]
+    // Keep mobile marquee lean: 8 products × 2 = 16 DOM nodes total
+    const slim = sorted.slice(0, 8)
+    const track = [...slim, ...slim]
     return (
       <div
         className="relative w-full overflow-hidden"
@@ -105,9 +93,9 @@ function ProductShowcase({ products, mobile = false }: { products: any[]; mobile
           WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%)',
         }}
       >
-        <div className="flex gap-4 animate-marquee-left py-4 w-max">
+        <div className="flex gap-3 animate-marquee-left py-2 w-max">
           {track.map((p, i) => (
-            <div key={`${p.id}-${i}`} className="w-[140px] flex-shrink-0">
+            <div key={`m-${p.id}-${i}`} className="w-[110px] flex-shrink-0">
               <ShowcaseCard product={p} index={i} />
             </div>
           ))}
@@ -116,11 +104,10 @@ function ProductShowcase({ products, mobile = false }: { products: any[]; mobile
     )
   }
 
-  const mid = Math.ceil(shuffled.length / 2)
-  const col1 = shuffled.slice(0, mid)
-  const col2 = shuffled.slice(mid).length ? shuffled.slice(mid) : [...shuffled].reverse()
-
-  // For seamless vertical loop: EXACTLY 2 identical sets
+  // Desktop: 12 products per column × 2 cols × 2 tracks = 48 nodes (manageable)
+  const half = Math.ceil(sorted.length / 2)
+  const col1 = sorted.slice(0, half)
+  const col2 = sorted.slice(half).length ? sorted.slice(half) : [...sorted].reverse()
   const track1 = [...col1, ...col1]
   const track2 = [...col2, ...col2]
 
@@ -132,19 +119,16 @@ function ProductShowcase({ products, mobile = false }: { products: any[]; mobile
         WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%)',
       }}
     >
-      {/* Radial gold ambient */}
       <div
         className="absolute inset-0 pointer-events-none z-10"
         style={{ background: 'radial-gradient(ellipse 70% 60% at 50% 50%, rgba(212,175,55,0.07) 0%, transparent 70%)' }}
       />
       <div className="flex gap-3 h-full px-1">
-        {/* Column 1 — scrolls UP */}
         <div className="flex-1 flex flex-col gap-3 animate-marquee-up h-max">
           {track1.map((p, i) => <ShowcaseCard key={`c1-${p.id}-${i}`} product={p} index={i} />)}
         </div>
-        {/* Column 2 — scrolls DOWN */}
         <div className="flex-1 flex flex-col gap-3 animate-marquee-down h-max">
-          {track2.map((p, i) => <ShowcaseCard key={`c2-${p.id}-${i}`} product={p} index={i + 20} />)}
+          {track2.map((p, i) => <ShowcaseCard key={`c2-${p.id}-${i}`} product={p} index={i + 12} />)}
         </div>
       </div>
     </div>
@@ -153,22 +137,23 @@ function ProductShowcase({ products, mobile = false }: { products: any[]; mobile
 
 
 /**
- * wordReveal — staggered word reveal from below with blur.
- * GPU-safe: uses opacity + y + filter (all compositor-friendly on Chrome/Firefox).
+ * wordReveal — staggered word reveal from below.
+ * NOTE: filter:blur is intentionally removed — it creates GPU texture uploads
+ * per-word on mobile which crashes low-end devices.
  */
 const wordReveal = {
-  hidden: { opacity: 0, y: 60, filter: 'blur(12px)' },
+  hidden: { opacity: 0, y: 40 },
   visible: (i: number) => ({
     opacity: 1,
     y: 0,
-    filter: 'blur(0px)',
     transition: {
-      delay: i * 0.12,
-      duration: 0.8,
+      delay: i * 0.1,
+      duration: 0.6,
       ease: [0.16, 1, 0.3, 1] as [number, number, number, number],
     },
   }),
 }
+
 
 /** lineReveal — for subtitle, CTAs, and stats */
 const lineReveal = {
@@ -231,28 +216,29 @@ function HeroHeadline() {
 
 export default function Home() {
   const [mounted, setMounted] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
   const { data } = useCatalog()
   const products = data?.products ?? []
 
   useEffect(() => {
     setMounted(true)
+    setIsMobile(window.innerWidth < 768)
   }, [])
 
-  // Optimized product pool: 24 is plenty for a seamless loop and saves massive memory
+  // Mobile: 8 products only. Desktop: up to 24.
   const showcaseProducts = useMemo(() => {
     if (!products.length) return []
-    return products.slice(0, 24)
-  }, [products])
+    return products.slice(0, isMobile ? 8 : 24)
+  }, [products, isMobile])
 
   const featuredProducts = products.filter((p) => p.featured).slice(0, 8)
   const heroRef = useRef<HTMLElement>(null)
 
-  // Mouse parallax
-  const textParallax = useMouseParallax(-0.012, 60, 18)
-  const showcaseParallax = useMouseParallax(0.010, 40, 12)
-
-  // Magnetic CTA button
-  const { ref: magneticRef, x: magneticX, y: magneticY } = useMagneticButton(0.3)
+  // Parallax and magnetic button — only on desktop (these use framer-motion springs
+  // which are very expensive on low-end mobile)
+  const textParallax = useMouseParallax(isMobile ? 0 : -0.012, 60, 18)
+  const showcaseParallax = useMouseParallax(isMobile ? 0 : 0.010, 40, 12)
+  const { ref: magneticRef, x: magneticX, y: magneticY } = useMagneticButton(isMobile ? 0 : 0.3)
 
   const scrollPastHero = () => {
     window.scrollTo({

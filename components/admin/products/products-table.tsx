@@ -170,7 +170,8 @@ export function ProductsTable() {
 
       {/* Table Wrapper - Increased padding and width awareness */}
       <div className="bg-muted/10 border border-border rounded-sm overflow-hidden backdrop-blur-sm">
-        <div className="overflow-x-auto">
+        {/* Desktop Table View */}
+        <div className="hidden lg:block overflow-x-auto">
           <table className="w-full text-left border-collapse min-w-[1000px]">
             <thead>
               <tr className="border-b border-border bg-muted/20">
@@ -288,6 +289,98 @@ export function ProductsTable() {
           </table>
         </div>
 
+        {/* Mobile Card View */}
+        <div className="lg:hidden divide-y divide-border">
+          {loading ? (
+            <div className="py-20 text-center">
+              <Loader2 className="animate-spin text-primary mx-auto mb-4" size={32} />
+              <span className="text-[10px] font-black uppercase tracking-[0.5em] text-primary/40">Accessing Data...</span>
+            </div>
+          ) : products.length === 0 ? (
+            <div className="py-20 text-center px-4">
+              <Package className="mx-auto text-muted-foreground/10 mb-4" size={48} />
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/60 leading-relaxed">
+                No artifacts identified
+              </p>
+            </div>
+          ) : (
+            <AnimatePresence mode="popLayout">
+              {products.map((p, i) => (
+                <motion.div
+                  key={p.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2, delay: i * 0.02 }}
+                  className="p-4 space-y-4"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-center gap-4 min-w-0">
+                      <div className="relative w-16 h-16 bg-background border border-border overflow-hidden shrink-0 rounded-sm">
+                        <Image 
+                          src={p.imageUrl || '/placeholder.jpg'} 
+                          alt={p.title} 
+                          fill 
+                          className="object-contain p-1" 
+                        />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs font-black uppercase tracking-tight truncate text-foreground leading-tight mb-1">{p.title}</p>
+                        <p className="text-[9px] text-muted-foreground/60 uppercase tracking-[0.1em] font-bold">
+                          ID: #{p.id} • {p.category?.name?.toUpperCase() || 'UNCATEGORIZED'}
+                        </p>
+                        <p className="text-sm font-black font-mono text-foreground mt-1">₹{parseFloat(p.price).toLocaleString('en-IN')}</p>
+                      </div>
+                    </div>
+                    
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button className="p-2 text-muted-foreground/30 hover:text-primary transition-colors">
+                          <MoreHorizontal size={20} />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-56 bg-popover border-border p-2">
+                        <DropdownMenuItem asChild>
+                          <Link href={`/product/${p.slug}`} target="_blank" className="flex items-center gap-3 px-4 py-3 rounded-sm">
+                            <Eye size={16} className="text-primary/60" />
+                            <span className="font-black text-[10px] uppercase tracking-widest">Protocol: View</span>
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link href={`/admin/products/edit/${p.id}`} className="flex items-center gap-3 px-4 py-3 rounded-sm">
+                            <Edit2 size={16} className="text-primary/60" />
+                            <span className="font-black text-[10px] uppercase tracking-widest">Protocol: Edit</span>
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator className="bg-border my-1" />
+                        <DropdownMenuItem
+                          onClick={() => handleDelete(p.id)}
+                          className="flex items-center gap-3 px-4 py-3 text-red-500/60 rounded-sm"
+                        >
+                          <Trash2 size={16} />
+                          <span className="font-black text-[10px] uppercase tracking-widest">Protocol: Delete</span>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2 border-t border-border/30">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-1.5 h-1.5 rounded-full ${p.isActive ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]' : 'bg-red-500'}`} />
+                      <span className={`text-[9px] font-black uppercase tracking-widest ${p.isActive ? 'text-green-500' : 'text-red-500/60'}`}>
+                        {p.isActive ? 'Active' : 'Offline'}
+                      </span>
+                    </div>
+                    <p className={`text-[10px] font-mono font-bold ${p.stock <= 5 ? 'text-red-500' : 'text-foreground/60'}`}>
+                      {p.stock.toString().padStart(2, '0')} Units In Stock
+                    </p>
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          )}
+        </div>
+
         {/* Improved Pagination Controls */}
         {!loading && products.length > 0 && (
           <div className="px-8 py-6 border-t border-border bg-muted/5 flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -305,19 +398,49 @@ export function ProductsTable() {
               </button>
               
               <div className="flex items-center gap-1">
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                  <button
-                    key={page}
-                    onClick={() => setCurrentPage(page)}
-                    className={`w-10 h-10 text-[10px] font-black rounded-sm transition-all ${
-                      currentPage === page 
-                        ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20' 
-                        : 'hover:bg-muted text-muted-foreground/60'
-                    }`}
-                  >
-                    {page}
-                  </button>
-                ))}
+                {(() => {
+                  const pages = []
+                  const maxVisible = 5
+                  
+                  if (totalPages <= maxVisible) {
+                    for (let i = 1; i <= totalPages; i++) pages.push(i)
+                  } else {
+                    pages.push(1)
+                    if (currentPage > 3) pages.push('...')
+                    
+                    const start = Math.max(2, currentPage - 1)
+                    const end = Math.min(totalPages - 1, currentPage + 1)
+                    
+                    if (currentPage <= 3) {
+                      for (let i = 2; i <= 4; i++) pages.push(i)
+                    } else if (currentPage >= totalPages - 2) {
+                      for (let i = totalPages - 3; i <= totalPages - 1; i++) pages.push(i)
+                    } else {
+                      for (let i = start; i <= end; i++) pages.push(i)
+                    }
+                    
+                    if (currentPage < totalPages - 2) pages.push('...')
+                    pages.push(totalPages)
+                  }
+
+                  return pages.map((page, idx) => (
+                    typeof page === 'number' ? (
+                      <button
+                        key={idx}
+                        onClick={() => setCurrentPage(page)}
+                        className={`w-10 h-10 text-[10px] font-black rounded-sm transition-all ${
+                          currentPage === page 
+                            ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20' 
+                            : 'hover:bg-muted text-muted-foreground/60'
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    ) : (
+                      <span key={idx} className="px-2 text-muted-foreground/30 text-[10px] font-black">...</span>
+                    )
+                  ))
+                })()}
               </div>
 
               <button

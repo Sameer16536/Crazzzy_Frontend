@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2026-05-12] - Admin Products Mobile UX Overhaul
+
+### Added
+- **Mobile Card Layout for Products** (`components/admin/products/products-table.tsx`): 
+  - Implemented a fully responsive card-based view for screens below the `lg` (1024px) breakpoint.
+  - Replaced the wide table on mobile to eliminate horizontal scrolling and ensure all "Control" actions are accessible.
+  - Cards display product image, title, ID, category, status, stock, and price in a condensed, vertical format.
+- **Truncated Pagination Logic**:
+  - Refactored the pagination system to show a subset of page numbers (e.g., `1 ... 5 6 7 ... 21`) with "..." ellipses.
+  - Prevents the pagination bar from overflowing on small screens like 360px (Samsung Galaxy S8+).
+
+### Changed
+- **Responsive Header Scaling** (`components/admin/products/products-header.tsx`): 
+  - Reduced the "Products" page title size from `text-3xl` to `text-xl` on mobile devices to prevent layout crowding.
+  - Maintained `text-3xl` for desktop/tablet users for UI consistency.
+
 ## [2026-05-09] - Shop Features & Stability Hotfixes
 
 ### Added

@@ -19,7 +19,7 @@ import { ReviewForm } from '@/components/review-form'
 // ─── WallMockup ───────────────────────────────────────────────────────────────
 // Composes the poster onto a room photo entirely in CSS — zero API calls,
 // zero Cloudinary/Vercel credits. The room image is a static public asset.
-function WallMockup({ posterSrc, alt, roomSrc, posterStyles }: { posterSrc: string; alt: string; roomSrc: string; posterStyles: React.CSSProperties }) {
+function WallMockup({ posterSrc, alt, roomSrc, posterStyles, showBadge = true }: { posterSrc: string; alt: string; roomSrc: string; posterStyles: React.CSSProperties; showBadge?: boolean }) {
   return (
     <div className="relative w-full h-full overflow-hidden bg-[#f4f4f2]">
       {/* 1. Base Room Image */}
@@ -55,7 +55,7 @@ function WallMockup({ posterSrc, alt, roomSrc, posterStyles }: { posterSrc: stri
             className="object-cover"
             style={{
               // 1. Force the browser to use a higher-quality scaling algorithm
-              imageRendering: 'high-quality', 
+              imageRendering: 'high-quality' as any, 
               // 2. Improves contrast and sharpness on Webkit browsers
               WebkitPrintColorAdjust: 'exact',
               // 3. The "Secret Sauce": A tiny blur and sub-pixel transform
@@ -87,9 +87,11 @@ function WallMockup({ posterSrc, alt, roomSrc, posterStyles }: { posterSrc: stri
       </div>
 
       {/* Badge */}
-      <div className="absolute bottom-4 right-4 bg-black/80 backdrop-blur-md px-3 py-1.5 border border-white/10 z-30">
-        <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/90">Live Wall Preview</span>
-      </div>
+      {showBadge && (
+        <div className="absolute bottom-4 right-4 bg-black/80 backdrop-blur-md px-3 py-1.5 border border-white/10 z-30">
+          <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/90">Live Wall Preview</span>
+        </div>
+      )}
     </div>
   )
 }
@@ -398,7 +400,19 @@ export default function ProductPage() {
                     className={`relative flex-shrink-0 border transition-all duration-300 overflow-hidden w-24 h-24
                       ${selectedImage === WALL_MOCKUP_DESK_INDEX ? 'border-primary opacity-100' : 'border-border opacity-50 hover:opacity-100 hover:border-primary/40'}`}
                   >
-                    <Image src="/wall-mockup-room.jpg" alt="Desk mockup" fill unoptimized className="object-cover" />
+                    <WallMockup
+                      posterSrc={primaryImage}
+                      alt=""
+                      roomSrc="/wall-mockup-room.jpg"
+                      showBadge={false}
+                      posterStyles={{
+                        top: '16%',
+                        left: '40%',
+                        width: '20%',
+                        height: '28%',
+                        transform: 'perspective(1000px) rotateY(-1.5deg) rotateX(0.5deg)',
+                      }}
+                    />
                     <div className="absolute inset-0 flex items-end justify-center pb-1.5 bg-black/20">
                       <span className="text-[7px] font-black uppercase tracking-widest text-white">Desk</span>
                     </div>
@@ -408,7 +422,19 @@ export default function ProductPage() {
                     className={`relative flex-shrink-0 border transition-all duration-300 overflow-hidden w-24 h-24
                       ${selectedImage === WALL_MOCKUP_PLANT_INDEX ? 'border-primary opacity-100' : 'border-border opacity-50 hover:opacity-100 hover:border-primary/40'}`}
                   >
-                    <Image src="/wall-mockup-plant.png" alt="Plant mockup" fill unoptimized className="object-cover" />
+                    <WallMockup
+                      posterSrc={primaryImage}
+                      alt=""
+                      roomSrc="/wall-mockup-plant.png"
+                      showBadge={false}
+                      posterStyles={{
+                        top: '15%',
+                        left: '30%',
+                        width: '38%',
+                        height: '52%',
+                        transform: 'perspective(1000px) rotateY(-1deg) rotateX(0.5deg)',
+                      }}
+                    />
                     <div className="absolute inset-0 flex items-end justify-center pb-1.5 bg-black/20">
                       <span className="text-[7px] font-black uppercase tracking-widest text-white">Studio</span>
                     </div>
@@ -418,7 +444,19 @@ export default function ProductPage() {
                     className={`relative flex-shrink-0 border transition-all duration-300 overflow-hidden w-24 h-24
                       ${selectedImage === WALL_MOCKUP_CONCRETE_INDEX ? 'border-primary opacity-100' : 'border-border opacity-50 hover:opacity-100 hover:border-primary/40'}`}
                   >
-                    <Image src="/wall-mockup-concrete.png" alt="Concrete mockup" fill unoptimized className="object-cover" />
+                    <WallMockup
+                      posterSrc={primaryImage}
+                      alt=""
+                      roomSrc="/wall-mockup-concrete.png"
+                      showBadge={false}
+                      posterStyles={{
+                        top: '18%',
+                        left: '48%',
+                        width: '32%',
+                        height: '46%',
+                        transform: 'perspective(1000px) rotateY(-2deg) rotateX(0.5deg)',
+                      }}
+                    />
                     <div className="absolute inset-0 flex items-end justify-center pb-1.5 bg-black/20">
                       <span className="text-[7px] font-black uppercase tracking-widest text-white">Concrete</span>
                     </div>

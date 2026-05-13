@@ -220,6 +220,33 @@ export default function ShopPage() {
   const setSortBy = (sort: string) => setShopFilter({ sortBy: sort })
   const setInStockOnly = (val: boolean) => setShopFilter({ inStockOnly: val })
 
+  const resetAllFilters = () => {
+    setShopFilter({
+      category: null,
+      search: '',
+      priceRange: [0, 5000],
+      inStockOnly: false
+    })
+    router.push('/shop', { scroll: false })
+  }
+
+  // Sync search query to URL with debounce
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const currentUrlSearch = searchParams.get('search') || ''
+      if (searchQuery === currentUrlSearch) return
+
+      const params = new URLSearchParams(window.location.search)
+      if (searchQuery) params.set('search', searchQuery)
+      else params.delete('search')
+      
+      // Update URL without page reload to trigger the fetchShopProducts effect
+      router.push(`/shop?${params.toString()}`, { scroll: false })
+    }, 500)
+
+    return () => clearTimeout(timer)
+  }, [searchQuery, router, searchParams])
+
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false)
 
   // ── Local shop products state ─────────────────────────────────────────────
@@ -279,7 +306,7 @@ export default function ShopPage() {
     }
     if (search) setSearchQuery(search)
 
-    const cacheKey = cat || '__all__'
+    const cacheKey = search ? `${cat || '__all__'}:search:${search}` : (cat || '__all__')
 
     // ── Cache hit: serve instantly from memory ──────────────────────────────
     if (shopCache.current.has(cacheKey)) {
@@ -293,12 +320,19 @@ export default function ShopPage() {
       try {
         const params = new URLSearchParams({ limit: '200', page: '1' })
         if (cat) params.set('category', cat)
+        if (search) params.set('search', search)
+        
         const res = await import('@/lib/api-client').then(m =>
           m.api.get<any>(`/products?${params.toString()}`)
         )
         const raw = res?.data || []
         const mapped = raw.map(mapProduct)
-        shopCache.current.set(cacheKey, mapped)  // store in cache
+        
+        // Only cache if it's a pure category fetch (no search)
+        if (!search) {
+          shopCache.current.set(cacheKey, mapped)
+        }
+        
         setShopProducts(mapped)
       } catch (e) {
         console.error('Shop fetch error', e)
@@ -327,9 +361,12 @@ export default function ShopPage() {
 
   // Memoized filter logic: robust multi-strategy category matching
   const filteredProducts = useMemo(() => {
+    // If we have shopProducts, they are already filtered by category on the server.
+    const isServerFiltered = shopProducts.length > 0
+
     return products.filter((p) => {
       let matchesCategory = true
-      if (selectedCategorySlug) {
+      if (selectedCategorySlug && !isServerFiltered) {
         const category = allCategories.find(c => c.slug === selectedCategorySlug)
         if (category) {
           const isParent = !category.parentId
@@ -496,7 +533,7 @@ export default function ShopPage() {
                   <div className="py-32 text-center border border-dashed border-border">
                     <p className="text-muted-foreground text-xs uppercase tracking-[0.3em] mb-6 font-light">No artifacts match your search parameters.</p>
                     <button
-                      onClick={() => { setSelectedCategorySlug(null); setPriceRange([0, 5000]); setSearchQuery(''); setInStockOnly(false); }}
+                      onClick={resetAllFilters}
                       className="text-primary text-[10px] font-black uppercase tracking-widest hover:underline"
                     >
                       Reset Universe

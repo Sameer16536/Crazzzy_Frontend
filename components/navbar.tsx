@@ -11,6 +11,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Search, ShoppingCart, Menu, LayoutDashboard, LogOut, User as UserIcon, ShieldCheck, ChevronRight, Plus, Minus } from 'lucide-react'
 import { useCatalog } from '@/lib/catalog/use-catalog'
+import { resolveImageUrl } from '@/lib/catalog/catalog-context'
 import { useAppSelector } from '@/lib/store/hooks'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
@@ -99,10 +100,43 @@ export function Navbar() {
     return () => document.removeEventListener('keydown', down)
   }, [searchOpen])
 
-  // Compute live search results for the dropdown
-  const searchResults = data?.products
-    ? data.products.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase())).slice(0, 3)
-    : []
+  const [apiSearchResults, setApiSearchResults] = useState<any[]>([])
+  const [isSearching, setIsSearching] = useState(false)
+
+  // Compute live search results for the dropdown via backend API
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setApiSearchResults([])
+      return
+    }
+    const timer = setTimeout(async () => {
+      setIsSearching(true)
+      try {
+        const params = new URLSearchParams({ search: searchQuery.trim(), limit: '4' })
+        const res = await import('@/lib/api-client').then(m => m.api.get<any>(`/products?${params.toString()}`))
+        const products = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : [])
+        setApiSearchResults(products)
+      } catch (e) {
+        console.error('Search API error:', e)
+      } finally {
+        setIsSearching(false)
+      }
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [searchQuery])
+
+  // Prefer API results, fallback to local search if API is slow or empty
+  const searchResults = apiSearchResults.length > 0 
+    ? apiSearchResults.map(p => ({
+        id: String(p.id),
+        name: p.title,
+        price: parseFloat(p.price),
+        imageUrl: resolveImageUrl(p.imageUrl),
+        slug: p.slug
+      })).slice(0, 4)
+    : (data?.products
+        ? data.products.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase())).slice(0, 4)
+        : [])
 
   const suggestedCategories = categories
     .filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase()))

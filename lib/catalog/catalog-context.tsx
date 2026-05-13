@@ -201,7 +201,7 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
-  const fetchCatalog = async (categorySlug?: string, page = 1, limit = 50, append = false) => {
+  const fetchCatalog = async (categorySlug?: string, page = 1, limit = 200, append = false) => {
     if (fetchingRef.current) return
     fetchingRef.current = true
 
@@ -309,7 +309,7 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
     await fetchCatalog(categorySlug, pagination.page + 1, 50, true)
   }
 
-  const refresh = async (categorySlug?: string, limit = 50) => {
+  const refresh = async (categorySlug?: string, limit = 200) => {
     await fetchCatalog(categorySlug, 1, limit, false)
   }
 

@@ -4,7 +4,9 @@ import { useSearchParams } from 'next/navigation'
 import { Navbar } from '@/components/navbar'
 import { ProductCard } from '@/components/product-card'
 import { useCatalog } from '@/lib/catalog/use-catalog'
-import { useMemo, useState } from 'react'
+import { resolveImageUrl } from '@/lib/catalog/catalog-context'
+import { api } from '@/lib/api-client'
+import { useEffect, useMemo, useState } from 'react'
 
 export default function SearchPage() {
   const searchParams = useSearchParams()
@@ -12,15 +14,67 @@ export default function SearchPage() {
   const { data } = useCatalog()
 
   const [sortBy, setSortBy] = useState('Relevance')
+  const [apiProducts, setApiProducts] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function performSearch() {
+      if (!q.trim()) {
+        setApiProducts([])
+        setLoading(false)
+        return
+      }
+      setLoading(true)
+      try {
+        const params = new URLSearchParams({ search: q.trim(), limit: '100' })
+        const res = await api.get<any>(`/products?${params.toString()}`)
+        const raw = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : [])
+        
+        // Map raw API products to CatalogProduct format
+        const mapped = raw.map((p: any) => ({
+          id: String(p.id),
+          name: p.title,
+          categoryId: String(p.categoryId || p.category_id || p.category?.id || ''),
+          categorySlug: p.category?.slug || undefined,
+          price: parseFloat(p.price),
+          originalPrice: p.originalPrice ? parseFloat(p.originalPrice) : undefined,
+          rating: parseFloat(p.ratingAvg || 0),
+          reviews: p.reviewCount || 0,
+          imageUrl: resolveImageUrl(p.imageUrl),
+          images: p.images?.length > 0
+            ? p.images.map((img: any) => resolveImageUrl(img.imageUrl))
+            : [resolveImageUrl(p.imageUrl)],
+          description: p.description || '',
+          inStock: p.stock > 0,
+          soldOut: p.stock === 0,
+          featured: p.isFeatured,
+          dealOfTheDay: p.isDealOfTheDay,
+          dealEndTime: p.dealEndTime ? new Date(p.dealEndTime).toISOString() : null,
+          slug: p.slug,
+          variants: p.variants,
+        }))
+        setApiProducts(mapped)
+      } catch (e) {
+        console.error('Failed to search', e)
+        setApiProducts([])
+      } finally {
+        setLoading(false)
+      }
+    }
+    performSearch()
+  }, [q])
 
   const matchingProducts = useMemo(() => {
-    if (!data?.products) return []
-    const query = q.toLowerCase()
-    
-    let results = data.products.filter(p => 
-      p.name.toLowerCase().includes(query) || 
-      p.description?.toLowerCase().includes(query)
-    )
+    let results = [...apiProducts]
+
+    // Fallback: if API fails or returns 0, try to search the local cache just in case
+    if (results.length === 0 && data?.products) {
+      const query = q.toLowerCase()
+      results = data.products.filter(p => 
+        p.name.toLowerCase().includes(query) || 
+        p.description?.toLowerCase().includes(query)
+      )
+    }
 
     if (sortBy === 'Price: Low to High') {
       results.sort((a, b) => Number(a.price) - Number(b.price))
@@ -29,7 +83,7 @@ export default function SearchPage() {
     }
 
     return results
-  }, [data?.products, q, sortBy])
+  }, [apiProducts, data?.products, q, sortBy])
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -68,7 +122,12 @@ export default function SearchPage() {
           </div>
         </div>
 
-        {matchingProducts.length > 0 ? (
+        {loading ? (
+          <div className="text-center py-32">
+            <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+            <p className="text-muted-foreground font-bold uppercase tracking-widest text-[10px]">Searching Databanks...</p>
+          </div>
+        ) : matchingProducts.length > 0 ? (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-8 gap-y-6 md:gap-y-12">
             {matchingProducts.map(product => (
               <ProductCard key={product.id} product={product} />

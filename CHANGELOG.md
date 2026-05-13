@@ -4,6 +4,22 @@ All significant changes are documented here. For rollback, use the git commit SH
 
 ---
 
+## [2026-05-13] — Bento Grid Category Thumbnails Fix
+
+### Problem
+The "Shop By Categories" section on the Home Page displayed empty grey boxes for certain categories (e.g., Die Cast Cars, Perfumes, Keychains).
+
+### Root Cause
+The global catalog context (`CatalogProvider`) initially fetches a default limit of 50 products. Because the `bento-grid-categories.tsx` component relies on grabbing a random product image from the global `byCategory` map for categories that lack a dedicated admin image, categories without recent products in the initial 50-item cache had an empty fallback pool, leading to blank thumbnails.
+
+### Fix
+Increased the default global fetch limit in `fetchCatalog` and `refresh` from 50 to 200 to guarantee a robust cross-section of products, ensuring every category has an image pool to draw from.
+
+### Architecture Upgrade: Full Database Search
+Upgraded the Navbar live search dropdown and the `/search` page to query the backend API directly (`/products?search=...`) rather than filtering the global context's limited cache. This guarantees that search queries check the entire database, bypassing pagination limits entirely.
+
+---
+
 ## [2026-05-13] — Product Not Found Fix + Shop Category Cache
 
 ### Problem 1: "Product Not Found" for wall poster products

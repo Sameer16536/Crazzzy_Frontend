@@ -206,9 +206,6 @@ export default function ShopPage() {
   const searchParams = useSearchParams()
   const router = useRouter()
 
-  const products = data?.products ?? []
-  const allCategories = data?.categories ?? []
-
   const {
     category: selectedCategorySlug,
     search: searchQuery,
@@ -225,10 +222,43 @@ export default function ShopPage() {
 
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false)
 
+  // ── Local shop products state ─────────────────────────────────────────────
+  // Fetches products PER CATEGORY from the API (same as admin panel).
+  // Never poisons the global catalog cache.
+  const [shopProducts, setShopProducts] = useState<any[]>([])
+  const [shopLoading, setShopLoading] = useState(false)
+
+  // ── In-memory category cache (useRef = survives re-renders, not re-mounts) ─
+  // Key: category slug or '__all__'. Cleared on full page refresh automatically.
+  const shopCache = useRef<Map<string, any[]>>(new Map())
+
+  // Map raw API product to CatalogProduct shape
+  const mapProduct = (p: any) => ({
+    id: String(p.id),
+    name: p.title,
+    categoryId: String(p.categoryId || p.category_id || p.category?.id || ''),
+    categorySlug: p.category?.slug || undefined,
+    price: parseFloat(p.price),
+    originalPrice: p.originalPrice ? parseFloat(p.originalPrice) : undefined,
+    rating: parseFloat(p.ratingAvg || 0),
+    reviews: p.reviewCount || 0,
+    imageUrl: p.imageUrl,
+    images: p.images?.length > 0
+      ? p.images.map((img: any) => img.imageUrl)
+      : [p.imageUrl],
+    description: p.description || '',
+    inStock: p.stock > 0,
+    soldOut: p.stock === 0,
+    featured: p.isFeatured,
+    dealOfTheDay: p.isDealOfTheDay,
+    slug: p.slug,
+    variants: p.variants,
+  })
+
   // Infinite Scroll Observer
   const observer = useRef<IntersectionObserver | null>(null)
   const lastElementRef = useCallback((node: HTMLDivElement | null) => {
-    if (isLoading || isSyncing) return
+    if (isLoading || isSyncing || shopLoading) return
     if (observer.current) observer.current.disconnect()
     observer.current = new IntersectionObserver(entries => {
       if (entries[0].isIntersecting && pagination.hasMore) {
@@ -236,12 +266,9 @@ export default function ShopPage() {
       }
     }, { rootMargin: '400px' })
     if (node) observer.current.observe(node)
-  }, [isLoading, isSyncing, pagination.hasMore, loadMore, selectedCategorySlug])
+  }, [isLoading, isSyncing, shopLoading, pagination.hasMore, loadMore, selectedCategorySlug])
 
-  // Initialize from URL — IMPORTANT: never call refresh(category) with a slug
-  // because that replaces the GLOBAL shared catalog (data.products) with only
-  // that category's products, breaking the home page bento grid when navigating back.
-  // Client-side filtering below handles the category view from the full dataset.
+  // Initialize from URL — fetch server-side per category (mirrors admin panel)
   useEffect(() => {
     const cat = searchParams.get('category')
     const search = searchParams.get('search')
@@ -251,9 +278,42 @@ export default function ShopPage() {
       setSelectedCategorySlug(null)
     }
     if (search) setSearchQuery(search)
-    // Only fetch if we have no data at all (very first load with empty cache)
-    if (!data) refresh()
+
+    const cacheKey = cat || '__all__'
+
+    // ── Cache hit: serve instantly from memory ──────────────────────────────
+    if (shopCache.current.has(cacheKey)) {
+      setShopProducts(shopCache.current.get(cacheKey)!)
+      return
+    }
+
+    // ── Cache miss: fetch from backend then store ───────────────────────────
+    const fetchShopProducts = async () => {
+      setShopLoading(true)
+      try {
+        const params = new URLSearchParams({ limit: '200', page: '1' })
+        if (cat) params.set('category', cat)
+        const res = await import('@/lib/api-client').then(m =>
+          m.api.get<any>(`/products?${params.toString()}`)
+        )
+        const raw = res?.data || []
+        const mapped = raw.map(mapProduct)
+        shopCache.current.set(cacheKey, mapped)  // store in cache
+        setShopProducts(mapped)
+      } catch (e) {
+        console.error('Shop fetch error', e)
+        setShopProducts([])
+      } finally {
+        setShopLoading(false)
+      }
+    }
+
+    fetchShopProducts()
   }, [searchParams])
+
+  // Use local shopProducts (server-filtered) instead of global data.products
+  const products = shopProducts.length > 0 ? shopProducts : (data?.products ?? [])
+  const allCategories = data?.categories ?? []
 
   // Update URL when category changes
   const handleCategoryChange = (slug: string | null) => {
@@ -265,7 +325,7 @@ export default function ShopPage() {
     // Refresh will be triggered by the useEffect observing searchParams
   }
 
-  // Memoized filter logic: includes sub-category inheritance (if parent is selected, show all children)
+  // Memoized filter logic: robust multi-strategy category matching
   const filteredProducts = useMemo(() => {
     return products.filter((p) => {
       let matchesCategory = true
@@ -274,13 +334,25 @@ export default function ShopPage() {
         if (category) {
           const isParent = !category.parentId
           if (isParent) {
-            // If parent selected, show products from parent AND all its children
+            // Parent selected: show products from parent AND all its children
+            // Match by categoryId (parent or child ID) OR by categorySlug (parent slug)
             const childrenIds = getSubcategories(category.id).map(s => s.id)
-            matchesCategory = p.categoryId === category.id || childrenIds.includes(p.categoryId)
+            const childrenSlugs = getSubcategories(category.id).map(s => s.slug)
+            matchesCategory =
+              p.categoryId === category.id ||
+              childrenIds.includes(p.categoryId) ||
+              p.categorySlug === category.slug ||
+              (p.categorySlug !== undefined && childrenSlugs.includes(p.categorySlug))
           } else {
-            // If sub-category selected, show only that
-            matchesCategory = p.categoryId === category.id
+            // Subcategory selected: match by ID OR by slug (backend may return either)
+            // This handles cases where products are tagged with parent ID but correct slug
+            matchesCategory =
+              p.categoryId === category.id ||
+              p.categorySlug === selectedCategorySlug
           }
+        } else {
+          // Category not found in local data — fall back to slug match on product
+          matchesCategory = p.categorySlug === selectedCategorySlug
         }
       }
 
@@ -365,7 +437,7 @@ export default function ShopPage() {
                     </button>
 
                     <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] whitespace-nowrap">
-                      {isLoading || isSyncing ? 'Scanning...' : `${sortedProducts.length} Items`}
+                      {shopLoading || isLoading || isSyncing ? 'Scanning...' : `${sortedProducts.length} Items`}
                     </p>
                   </div>
 
@@ -393,7 +465,7 @@ export default function ShopPage() {
             >
               <div className="pt-8">
                 {/* Grid */}
-                {isLoading || (isSyncing && sortedProducts.length === 0) ? (
+                {shopLoading || isLoading || (isSyncing && sortedProducts.length === 0) ? (
                   <div className="grid grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-8">
                     {[...Array(6)].map((_, i) => (
                       <div key={i} className="aspect-square bg-muted animate-pulse border border-border" />

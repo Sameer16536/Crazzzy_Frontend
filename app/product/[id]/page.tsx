@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { Navbar } from '@/components/navbar'
-import { ShoppingCart, Heart, Share2, Star, ShieldCheck, ChevronRight, Truck, Wallet } from 'lucide-react'
+import { ShoppingCart, Heart, Share2, Star, ShieldCheck, ChevronRight, Truck, Wallet, LayoutPanelTop } from 'lucide-react'
 import Link from 'next/link'
 import { useAppDispatch } from '@/lib/store/hooks'
 import { addToCart } from '@/lib/store/slices/cart-slice'
@@ -16,6 +16,55 @@ import { toast } from 'sonner'
 import { useAuth } from '@/lib/auth/auth-context'
 import { ReviewForm } from '@/components/review-form'
 
+// ─── WallMockup ───────────────────────────────────────────────────────────────
+// Composes the poster onto a room photo entirely in CSS — zero API calls,
+// zero Cloudinary/Vercel credits. The room image is a static public asset.
+function WallMockup({ posterSrc, alt }: { posterSrc: string; alt: string }) {
+  return (
+    <div className="relative w-full h-full overflow-hidden">
+      {/* Static room background */}
+      <Image
+        src="/wall-mockup-room.jpg"
+        alt="Room mockup"
+        fill
+        unoptimized
+        className="object-cover"
+      />
+      {/* Semi-transparent dark overlay for depth */}
+      <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.08)' }} />
+      {/* Poster overlay — positioned on the blank wall area above the desk */}
+      <div
+        className="absolute"
+        style={{
+          // These % values position the poster on the blank wall section
+          // of the generated room image. Adjust if room image changes.
+          top: '5%',
+          left: '18%',
+          width: '58%',
+          height: '54%',
+          // Subtle perspective to make it look "on the wall"
+          transform: 'perspective(1200px) rotateY(-1deg)',
+        }}
+      >
+        <div className="relative w-full h-full" style={{ boxShadow: '0 8px 40px rgba(0,0,0,0.35), 0 2px 8px rgba(0,0,0,0.2)' }}>
+          <Image
+            src={posterSrc}
+            alt={alt}
+            fill
+            unoptimized
+            className="object-contain"
+          />
+        </div>
+      </div>
+      {/* Label badge */}
+      <div className="absolute bottom-3 right-3 bg-black/60 backdrop-blur-sm px-2 py-1 flex items-center gap-1.5">
+        <LayoutPanelTop size={10} className="text-primary" />
+        <span className="text-[8px] font-black uppercase tracking-[0.2em] text-white/80">Wall Preview</span>
+      </div>
+    </div>
+  )
+}
+
 export default function ProductPage() {
   const params = useParams<{ id: string }>()
   const id = params?.id
@@ -25,6 +74,9 @@ export default function ProductPage() {
   const [loading, setLoading] = useState(true)
   const [quantity, setQuantity] = useState(1)
   const [selectedImage, setSelectedImage] = useState(0)
+  // WALL_MOCKUP_INDEX is a virtual index beyond product.images length
+  // It renders the CSS mockup instead of a real image, zero cost.
+  const WALL_MOCKUP_INDEX = -1
   const isWishlisted = product ? wishlistIds.has(String(product.id)) : false
   const [selectedVariant, setSelectedVariant] = useState<any>(null)
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false)
@@ -38,13 +90,48 @@ export default function ProductPage() {
     async function fetchProductDetails() {
       try {
         setLoading(true)
-        // Fetch specific product by ID or Slug
+        // 1. Try the global catalog cache first (fast, no network)
         const found = data?.products.find((p) => String(p.id) === id || p.slug === id)
         if (found) {
           setProduct(found)
-          // Fetch real reviews
           const reviewsData = await api.get<any>(`/products/${found.id}/reviews`).catch(() => ({ reviews: [] }))
           setReviews(reviewsData.reviews || [])
+          return
+        }
+
+        // 2. Fallback: fetch directly from backend by ID or slug
+        // Handles products not in the initial 50-item global cache (e.g. wall posters)
+        try {
+          const res = await api.get<any>(`/products/${id}`)
+          const p = res?.data || res
+          if (p && p.id) {
+            // Normalize to match catalog product shape
+            const normalized = {
+              id: String(p.id),
+              name: p.title,
+              categoryId: String(p.categoryId || p.category?.id || ''),
+              categorySlug: p.category?.slug,
+              price: parseFloat(p.price),
+              originalPrice: p.originalPrice ? parseFloat(p.originalPrice) : undefined,
+              rating: parseFloat(p.ratingAvg || 0),
+              reviews: p.reviewCount || 0,
+              imageUrl: p.imageUrl,
+              images: p.images?.length > 0
+                ? p.images.map((img: any) => img.imageUrl)
+                : [p.imageUrl],
+              description: p.description || '',
+              inStock: p.stock > 0,
+              soldOut: p.stock === 0,
+              featured: p.isFeatured,
+              slug: p.slug,
+              variants: p.variants,
+            }
+            setProduct(normalized)
+            const reviewsData = await api.get<any>(`/products/${p.id}/reviews`).catch(() => ({ reviews: [] }))
+            setReviews(reviewsData.reviews || [])
+          }
+        } catch (directErr) {
+          console.error('Direct product fetch failed', directErr)
         }
       } catch (error) {
         console.error('Failed to fetch product details', error)
@@ -53,10 +140,9 @@ export default function ProductPage() {
       }
     }
 
-    if (!catalogLoading) {
-      fetchProductDetails()
-    }
-  }, [id, data, catalogLoading])
+    // Don't wait for catalogLoading if we can fetch directly
+    fetchProductDetails()
+  }, [id, data])
 
   // Automatically select the first variant if available
   useEffect(() => {
@@ -128,6 +214,12 @@ export default function ProductPage() {
     .filter((p) => p.categoryId === product.categoryId && p.id !== product.id)
     .slice(0, 4)
 
+  // Detect if this is a wall poster — show the room mockup slide
+  const isWallPoster = product.categorySlug === 'wall-posters' ||
+    data?.categories?.find((c: any) => c.id === product.categoryId)?.slug === 'wall-posters' ||
+    data?.categories?.find((c: any) => c.id === product.categoryId)?.name?.toLowerCase().includes('poster')
+  const primaryImage = product.images?.[0] || product.imageUrl || '/placeholder.jpg'
+
   const basePrice = Number(product.price) || 0
   const additionalPrice = selectedVariant ? Number(selectedVariant.additionalPrice) || 0 : 0
   const displayPrice = basePrice + additionalPrice
@@ -151,36 +243,74 @@ export default function ProductPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
 
           <div className="lg:col-span-7 space-y-6">
-            <div className="relative aspect-square bg-muted/30 border border-border overflow-hidden group p-10">
-              <Image
-                src={product.images?.[selectedImage] || "/placeholder.jpg"}
-                alt={product.name}
-                fill
-                className="object-contain transition-transform duration-1000"
-                priority
-              />
+            {/* Main Viewer */}
+            <div className="relative aspect-square bg-muted/30 border border-border overflow-hidden group">
+              <AnimatePresence mode="wait">
+                {selectedImage === WALL_MOCKUP_INDEX ? (
+                  <motion.div
+                    key="mockup"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="absolute inset-0"
+                  >
+                    <WallMockup posterSrc={primaryImage} alt={product.name} />
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key={selectedImage}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="absolute inset-0 p-10"
+                  >
+                    <Image
+                      src={product.images?.[selectedImage] || '/placeholder.jpg'}
+                      alt={product.name}
+                      fill
+                      unoptimized
+                      className="object-contain"
+                      priority
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
               <div className="absolute inset-0 bg-gradient-to-t from-black/5 via-transparent to-transparent pointer-events-none" />
-
               {!product.inStock && (
-                <div className="absolute inset-0 bg-background/60 backdrop-blur-sm flex items-center justify-center">
+                <div className="absolute inset-0 bg-background/60 backdrop-blur-sm flex items-center justify-center z-10">
                   <span className="text-foreground font-black text-4xl uppercase tracking-[0.2em] border-2 border-foreground px-8 py-4">Sold Out</span>
                 </div>
               )}
             </div>
 
-            <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
+            {/* Thumbnail Strip */}
+            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
               {product.images?.map((img: string, idx: number) => (
                 <button
                   key={idx}
                   onClick={() => setSelectedImage(idx)}
-                  className={`
-                    relative flex-shrink-0 bg-muted/30 border transition-all duration-300 overflow-hidden w-24 h-24 p-3
-                    ${selectedImage === idx ? 'border-primary opacity-100' : 'border-border opacity-50 hover:opacity-100 hover:border-primary/40'}
-                  `}
+                  className={`relative flex-shrink-0 bg-muted/30 border transition-all duration-300 overflow-hidden w-24 h-24 p-3
+                    ${selectedImage === idx ? 'border-primary opacity-100' : 'border-border opacity-50 hover:opacity-100 hover:border-primary/40'}`}
                 >
-                  <Image src={img} alt="" fill className="object-contain" />
+                  <Image src={img} alt="" fill unoptimized className="object-contain" />
                 </button>
               ))}
+
+              {/* Wall Mockup Thumbnail — only for wall posters */}
+              {isWallPoster && (
+                <button
+                  onClick={() => setSelectedImage(WALL_MOCKUP_INDEX)}
+                  className={`relative flex-shrink-0 border transition-all duration-300 overflow-hidden w-24 h-24
+                    ${selectedImage === WALL_MOCKUP_INDEX ? 'border-primary opacity-100' : 'border-border opacity-50 hover:opacity-100 hover:border-primary/40'}`}
+                >
+                  <Image src="/wall-mockup-room.jpg" alt="Wall mockup" fill unoptimized className="object-cover" />
+                  <div className="absolute inset-0 flex items-end justify-center pb-1.5 bg-black/20">
+                    <span className="text-[7px] font-black uppercase tracking-widest text-white">On Wall</span>
+                  </div>
+                </button>
+              )}
             </div>
           </div>
 

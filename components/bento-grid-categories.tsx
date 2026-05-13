@@ -224,9 +224,9 @@ export function BentoGridCategories() {
       })
 
       if (pool.length > 0) {
-        // Pick a random image (better aesthetics)
-        const randomIndex = Math.floor(Math.random() * pool.length)
-        imageMap[cat.id] = pool[randomIndex]
+        // Deterministic pick based on category id — never changes between renders
+        const stableIndex = String(cat.id).split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0) % pool.length
+        imageMap[cat.id] = pool[stableIndex]
       }
     })
 

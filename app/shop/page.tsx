@@ -238,18 +238,21 @@ export default function ShopPage() {
     if (node) observer.current.observe(node)
   }, [isLoading, isSyncing, pagination.hasMore, loadMore, selectedCategorySlug])
 
-  // Initialize from URL
+  // Initialize from URL — IMPORTANT: never call refresh(category) with a slug
+  // because that replaces the GLOBAL shared catalog (data.products) with only
+  // that category's products, breaking the home page bento grid when navigating back.
+  // Client-side filtering below handles the category view from the full dataset.
   useEffect(() => {
     const cat = searchParams.get('category')
     const search = searchParams.get('search')
     if (cat) {
       setSelectedCategorySlug(cat)
-      refresh(cat) // Fetch specific category data on load
     } else {
       setSelectedCategorySlug(null)
-      refresh() // Fetch all
     }
     if (search) setSearchQuery(search)
+    // Only fetch if we have no data at all (very first load with empty cache)
+    if (!data) refresh()
   }, [searchParams])
 
   // Update URL when category changes

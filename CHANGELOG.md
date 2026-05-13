@@ -22,9 +22,31 @@ Every visit to a category (even a repeat) triggered a full API fetch.
 ### Fix
 Added `shopCache` (`useRef<Map>`) in the shop page. Cache key = category slug or `'__all__'`. Cache hit = instant serve from memory. Cache miss = fetch + store. Cache is cleared on full browser refresh (React ref lifecycle).
 
+### Problem 3: "On Wall" mockup missing for subcategory products
+Products in subcategories (like `anime`) didn't show the "On Wall" thumbnail because their `categoryId` matched the subcategory, not `wall-posters`.
+
+### Fix
+Updated `isWallPoster` logic in `app/product/[id]/page.tsx` to traverse the category tree and check if the parent category is `wall-posters`.
+
 ### Files Changed
-- `app/product/[id]/page.tsx` — direct API fallback if not in catalog
+- `app/product/[id]/page.tsx` — direct API fallback and robust `isWallPoster` check
 - `app/shop/page.tsx` — in-memory Map cache for shop fetches
+
+---
+
+## [2026-05-13] — Wall Poster Mockup Enhancements
+
+### Features
+1. **Studio Plant Mockup**: Added a second, minimalist wall mockup template featuring a clean wall with a potted plant.
+2. **Concrete Monstera Mockup**: Added a third ultra-realistic architectural mockup featuring a textured concrete wall and a foreground Monstera leaf based on user prompt. The poster is positioned in the sunlit area to preserve the depth effect of the foreground leaf.
+3. **Refactored Mockup Component**: `WallMockup` now accepts props for room images and CSS positioning, allowing infinite scalable mockup templates without repeating code.
+4. **Desk Mockup Resized**: Scaled down the desk poster CSS overlay (`width: 20%`) and aligned it perfectly over the monitor to prevent unnatural overlapping in the background.
+5. **Realism Stack & Anti-Aliasing**: Upgraded `WallMockup` with ambient occlusion shadows, a lighting gradient, paper texture `mix-blend-overlay`, and precise 3D perspective transforms (`rotateX`, `rotateY`). Applied sub-pixel blurring (`filter: blur(0.2px) contrast(1.05)`), hardware acceleration (`translateZ(0)`), inner box-shadow, and `opacity: 0.98` to eliminate rendering jaggedness (aliasing) and seamlessly blend the digital white of posters with the room lighting.
+
+### Files Changed
+- `app/product/[id]/page.tsx`
+- `public/wall-mockup-plant.png` (Added)
+- `public/wall-mockup-concrete.png` (Added)
 
 ---
 

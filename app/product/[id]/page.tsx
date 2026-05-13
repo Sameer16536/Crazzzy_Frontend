@@ -19,51 +19,81 @@ import { ReviewForm } from '@/components/review-form'
 // ─── WallMockup ───────────────────────────────────────────────────────────────
 // Composes the poster onto a room photo entirely in CSS — zero API calls,
 // zero Cloudinary/Vercel credits. The room image is a static public asset.
-function WallMockup({ posterSrc, alt }: { posterSrc: string; alt: string }) {
+function WallMockup({ posterSrc, alt, roomSrc, posterStyles }: { posterSrc: string; alt: string; roomSrc: string; posterStyles: React.CSSProperties }) {
   return (
-    <div className="relative w-full h-full overflow-hidden">
-      {/* Static room background */}
+    <div className="relative w-full h-full overflow-hidden bg-[#f4f4f2]">
+      {/* 1. Base Room Image */}
       <Image
-        src="/wall-mockup-room.jpg"
+        src={roomSrc}
         alt="Room mockup"
         fill
         unoptimized
         className="object-cover"
       />
-      {/* Semi-transparent dark overlay for depth */}
-      <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.08)' }} />
-      {/* Poster overlay — positioned on the blank wall area above the desk */}
+
+      {/* 2. The Poster Container */}
       <div
         className="absolute"
         style={{
-          // These % values position the poster on the blank wall section
-          // of the generated room image. Adjust if room image changes.
-          top: '5%',
-          left: '18%',
-          width: '58%',
-          height: '54%',
-          // Subtle perspective to make it look "on the wall"
-          transform: 'perspective(1200px) rotateY(-1deg)',
+          ...posterStyles,
+          zIndex: 20
         }}
       >
-        <div className="relative w-full h-full" style={{ boxShadow: '0 8px 40px rgba(0,0,0,0.35), 0 2px 8px rgba(0,0,0,0.2)' }}>
+        {/* 3. Complex Multi-layered Shadow (Ambient Occlusion) */}
+        <div className="absolute inset-0 shadow-[2px_4px_12px_rgba(0,0,0,0.15),_10px_20px_40px_rgba(0,0,0,0.1)]" />
+
+        <div 
+          className="relative w-full h-full overflow-hidden"
+          style={{ boxShadow: '0 8px 40px rgba(0,0,0,0.3), inset 0 0 1px rgba(0,0,0,0.2)' }}
+        >
+          {/* 4. The Actual Poster Image */}
           <Image
             src={posterSrc}
             alt={alt}
             fill
             unoptimized
-            className="object-contain"
+            className="object-cover"
+            style={{
+              // 1. Force the browser to use a higher-quality scaling algorithm
+              imageRendering: 'high-quality', 
+              // 2. Improves contrast and sharpness on Webkit browsers
+              WebkitPrintColorAdjust: 'exact',
+              // 3. The "Secret Sauce": A tiny blur and sub-pixel transform
+              // This removes the jagged "staircase" effect on line art
+              filter: 'blur(0.2px) contrast(1.05)',
+              transform: 'translateZ(0)', // Forces hardware acceleration
+              backfaceVisibility: 'hidden',
+              // 4. "Warm up" the sticker white to match the room lighting
+              opacity: 0.98,
+            }}
+          />
+
+          {/* 5. Realistic Lighting Overlay (Gradient) 
+              Simulates light coming from the side */}
+          <div 
+            className="absolute inset-0 pointer-events-none" 
+            style={{
+              background: 'linear-gradient(105deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 50%, rgba(0,0,0,0.05) 100%)',
+            }}
+          />
+
+          {/* 6. Subtle Paper/Wall Texture Blend 
+              Creates a microscopic "grain" so it doesn't look like a digital file */}
+          <div 
+            className="absolute inset-0 opacity-[0.015] pointer-events-none mix-blend-overlay"
+            style={{ backgroundImage: `url('https://www.transparenttextures.com/patterns/paper-fibers.png')` }}
           />
         </div>
       </div>
-      {/* Label badge */}
-      <div className="absolute bottom-3 right-3 bg-black/60 backdrop-blur-sm px-2 py-1 flex items-center gap-1.5">
-        <LayoutPanelTop size={10} className="text-primary" />
-        <span className="text-[8px] font-black uppercase tracking-[0.2em] text-white/80">Wall Preview</span>
+
+      {/* Badge */}
+      <div className="absolute bottom-4 right-4 bg-black/80 backdrop-blur-md px-3 py-1.5 border border-white/10 z-30">
+        <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/90">Live Wall Preview</span>
       </div>
     </div>
   )
 }
+
 
 export default function ProductPage() {
   const params = useParams<{ id: string }>()
@@ -74,9 +104,10 @@ export default function ProductPage() {
   const [loading, setLoading] = useState(true)
   const [quantity, setQuantity] = useState(1)
   const [selectedImage, setSelectedImage] = useState(0)
-  // WALL_MOCKUP_INDEX is a virtual index beyond product.images length
-  // It renders the CSS mockup instead of a real image, zero cost.
-  const WALL_MOCKUP_INDEX = -1
+  // Virtual indices for the CSS mockups
+  const WALL_MOCKUP_DESK_INDEX = -1
+  const WALL_MOCKUP_PLANT_INDEX = -2
+  const WALL_MOCKUP_CONCRETE_INDEX = -3
   const isWishlisted = product ? wishlistIds.has(String(product.id)) : false
   const [selectedVariant, setSelectedVariant] = useState<any>(null)
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false)
@@ -215,9 +246,15 @@ export default function ProductPage() {
     .slice(0, 4)
 
   // Detect if this is a wall poster — show the room mockup slide
+  const category = data?.categories?.find((c: any) => c.id === product.categoryId)
+  const parentCategory = category?.parentId ? data?.categories?.find((c: any) => c.id === category.parentId) : null
+
   const isWallPoster = product.categorySlug === 'wall-posters' ||
-    data?.categories?.find((c: any) => c.id === product.categoryId)?.slug === 'wall-posters' ||
-    data?.categories?.find((c: any) => c.id === product.categoryId)?.name?.toLowerCase().includes('poster')
+    category?.slug === 'wall-posters' ||
+    parentCategory?.slug === 'wall-posters' ||
+    category?.name?.toLowerCase().includes('poster') ||
+    parentCategory?.name?.toLowerCase().includes('poster')
+
   const primaryImage = product.images?.[0] || product.imageUrl || '/placeholder.jpg'
 
   const basePrice = Number(product.price) || 0
@@ -246,16 +283,71 @@ export default function ProductPage() {
             {/* Main Viewer */}
             <div className="relative aspect-square bg-muted/30 border border-border overflow-hidden group">
               <AnimatePresence mode="wait">
-                {selectedImage === WALL_MOCKUP_INDEX ? (
+                {selectedImage === WALL_MOCKUP_DESK_INDEX ? (
                   <motion.div
-                    key="mockup"
+                    key="mockup-desk"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.3 }}
                     className="absolute inset-0"
                   >
-                    <WallMockup posterSrc={primaryImage} alt={product.name} />
+                    <WallMockup
+                      posterSrc={primaryImage}
+                      alt={product.name}
+                      roomSrc="/wall-mockup-room.jpg"
+                      posterStyles={{
+                        top: '16%',
+                        left: '40%',
+                        width: '20%',
+                        height: '28%',
+                        transform: 'perspective(1000px) rotateY(-1.5deg) rotateX(0.5deg)',
+                      }}
+                    />
+                  </motion.div>
+                ) : selectedImage === WALL_MOCKUP_PLANT_INDEX ? (
+                  <motion.div
+                    key="mockup-plant"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="absolute inset-0"
+                  >
+                    <WallMockup
+                      posterSrc={primaryImage}
+                      alt={product.name}
+                      roomSrc="/wall-mockup-plant.png"
+                      posterStyles={{
+                        top: '15%',
+                        left: '30%',
+                        width: '38%',
+                        height: '52%',
+                        transform: 'perspective(1000px) rotateY(-1deg) rotateX(0.5deg)',
+                      }}
+                    />
+                  </motion.div>
+                ) : selectedImage === WALL_MOCKUP_CONCRETE_INDEX ? (
+                  <motion.div
+                    key="mockup-concrete"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="absolute inset-0"
+                  >
+                    <WallMockup
+                      posterSrc={primaryImage}
+                      alt={product.name}
+                      roomSrc="/wall-mockup-concrete.png"
+                      posterStyles={{
+                        top: '18%',
+                        left: '48%',
+                        width: '32%',
+                        height: '46%',
+                        transform: 'perspective(1000px) rotateY(-2deg) rotateX(0.5deg)',
+                      }}
+                    />
                   </motion.div>
                 ) : (
                   <motion.div
@@ -298,18 +390,40 @@ export default function ProductPage() {
                 </button>
               ))}
 
-              {/* Wall Mockup Thumbnail — only for wall posters */}
+              {/* Wall Mockup Thumbnails — only for wall posters */}
               {isWallPoster && (
-                <button
-                  onClick={() => setSelectedImage(WALL_MOCKUP_INDEX)}
-                  className={`relative flex-shrink-0 border transition-all duration-300 overflow-hidden w-24 h-24
-                    ${selectedImage === WALL_MOCKUP_INDEX ? 'border-primary opacity-100' : 'border-border opacity-50 hover:opacity-100 hover:border-primary/40'}`}
-                >
-                  <Image src="/wall-mockup-room.jpg" alt="Wall mockup" fill unoptimized className="object-cover" />
-                  <div className="absolute inset-0 flex items-end justify-center pb-1.5 bg-black/20">
-                    <span className="text-[7px] font-black uppercase tracking-widest text-white">On Wall</span>
-                  </div>
-                </button>
+                <>
+                  <button
+                    onClick={() => setSelectedImage(WALL_MOCKUP_DESK_INDEX)}
+                    className={`relative flex-shrink-0 border transition-all duration-300 overflow-hidden w-24 h-24
+                      ${selectedImage === WALL_MOCKUP_DESK_INDEX ? 'border-primary opacity-100' : 'border-border opacity-50 hover:opacity-100 hover:border-primary/40'}`}
+                  >
+                    <Image src="/wall-mockup-room.jpg" alt="Desk mockup" fill unoptimized className="object-cover" />
+                    <div className="absolute inset-0 flex items-end justify-center pb-1.5 bg-black/20">
+                      <span className="text-[7px] font-black uppercase tracking-widest text-white">Desk</span>
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => setSelectedImage(WALL_MOCKUP_PLANT_INDEX)}
+                    className={`relative flex-shrink-0 border transition-all duration-300 overflow-hidden w-24 h-24
+                      ${selectedImage === WALL_MOCKUP_PLANT_INDEX ? 'border-primary opacity-100' : 'border-border opacity-50 hover:opacity-100 hover:border-primary/40'}`}
+                  >
+                    <Image src="/wall-mockup-plant.png" alt="Plant mockup" fill unoptimized className="object-cover" />
+                    <div className="absolute inset-0 flex items-end justify-center pb-1.5 bg-black/20">
+                      <span className="text-[7px] font-black uppercase tracking-widest text-white">Studio</span>
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => setSelectedImage(WALL_MOCKUP_CONCRETE_INDEX)}
+                    className={`relative flex-shrink-0 border transition-all duration-300 overflow-hidden w-24 h-24
+                      ${selectedImage === WALL_MOCKUP_CONCRETE_INDEX ? 'border-primary opacity-100' : 'border-border opacity-50 hover:opacity-100 hover:border-primary/40'}`}
+                  >
+                    <Image src="/wall-mockup-concrete.png" alt="Concrete mockup" fill unoptimized className="object-cover" />
+                    <div className="absolute inset-0 flex items-end justify-center pb-1.5 bg-black/20">
+                      <span className="text-[7px] font-black uppercase tracking-widest text-white">Concrete</span>
+                    </div>
+                  </button>
+                </>
               )}
             </div>
           </div>

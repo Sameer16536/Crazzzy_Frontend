@@ -19,7 +19,7 @@ import { ReviewForm } from '@/components/review-form'
 // ─── WallMockup ───────────────────────────────────────────────────────────────
 // Composes the poster onto a room photo entirely in CSS — zero API calls,
 // zero Cloudinary/Vercel credits. The room image is a static public asset.
-function WallMockup({ posterSrc, alt, roomSrc, posterStyles, showBadge = true }: { posterSrc: string; alt: string; roomSrc: string; posterStyles: React.CSSProperties; showBadge?: boolean }) {
+function WallMockup({ posterSrc, alt, roomSrc, posterStyles, showBadge = true, isLandscape = false }: { posterSrc: string; alt: string; roomSrc: string; posterStyles: React.CSSProperties; showBadge?: boolean; isLandscape?: boolean }) {
   return (
     <div className="relative w-full h-full overflow-hidden bg-[#f4f4f2]">
       {/* 1. Base Room Image */}
@@ -61,7 +61,7 @@ function WallMockup({ posterSrc, alt, roomSrc, posterStyles, showBadge = true }:
               // 3. The "Secret Sauce": A tiny blur and sub-pixel transform
               // This removes the jagged "staircase" effect on line art
               filter: 'blur(0.2px) contrast(1.05)',
-              transform: 'translateZ(0)', // Forces hardware acceleration
+              transform: `translateZ(0) ${isLandscape ? 'rotate(-90deg)' : ''}`, // Forces hardware acceleration + auto-rotate
               backfaceVisibility: 'hidden',
               // 4. "Warm up" the sticker white to match the room lighting
               opacity: 0.98,
@@ -263,6 +263,8 @@ export default function ProductPage() {
   const additionalPrice = selectedVariant ? Number(selectedVariant.additionalPrice) || 0 : 0
   const displayPrice = basePrice + additionalPrice
 
+  const isLandscape = product.name?.toUpperCase().includes('LANDSCAPE')
+
   return (
     <div className="min-h-screen bg-background text-foreground selection:bg-primary selection:text-primary-foreground" style={{ isolation: 'isolate' }}>
       <Navbar />
@@ -298,11 +300,12 @@ export default function ProductPage() {
                       posterSrc={primaryImage}
                       alt={product.name}
                       roomSrc="/wall-mockup-room.jpg"
+                      isLandscape={isLandscape}
                       posterStyles={{
                         top: '16%',
-                        left: '40%',
-                        width: '20%',
-                        height: '28%',
+                        left: isLandscape ? '36%' : '40%',
+                        width: isLandscape ? '28%' : '20%',
+                        height: isLandscape ? '20%' : '28%',
                         transform: 'perspective(1000px) rotateY(-1.5deg) rotateX(0.5deg)',
                       }}
                     />
@@ -320,11 +323,12 @@ export default function ProductPage() {
                       posterSrc={primaryImage}
                       alt={product.name}
                       roomSrc="/wall-mockup-plant.png"
+                      isLandscape={isLandscape}
                       posterStyles={{
                         top: '15%',
-                        left: '30%',
-                        width: '38%',
-                        height: '52%',
+                        left: isLandscape ? '25%' : '30%',
+                        width: isLandscape ? '52%' : '38%',
+                        height: isLandscape ? '38%' : '52%',
                         transform: 'perspective(1000px) rotateY(-1deg) rotateX(0.5deg)',
                       }}
                     />
@@ -342,11 +346,12 @@ export default function ProductPage() {
                       posterSrc={primaryImage}
                       alt={product.name}
                       roomSrc="/wall-mockup-concrete.png"
+                      isLandscape={isLandscape}
                       posterStyles={{
                         top: '18%',
-                        left: '48%',
-                        width: '32%',
-                        height: '46%',
+                        left: isLandscape ? '44%' : '48%',
+                        width: isLandscape ? '46%' : '32%',
+                        height: isLandscape ? '32%' : '46%',
                         transform: 'perspective(1000px) rotateY(-2deg) rotateX(0.5deg)',
                       }}
                     />
@@ -405,11 +410,12 @@ export default function ProductPage() {
                       alt=""
                       roomSrc="/wall-mockup-room.jpg"
                       showBadge={false}
+                      isLandscape={isLandscape}
                       posterStyles={{
                         top: '16%',
-                        left: '40%',
-                        width: '20%',
-                        height: '28%',
+                        left: isLandscape ? '36%' : '40%',
+                        width: isLandscape ? '28%' : '20%',
+                        height: isLandscape ? '20%' : '28%',
                         transform: 'perspective(1000px) rotateY(-1.5deg) rotateX(0.5deg)',
                       }}
                     />
@@ -427,11 +433,12 @@ export default function ProductPage() {
                       alt=""
                       roomSrc="/wall-mockup-plant.png"
                       showBadge={false}
+                      isLandscape={isLandscape}
                       posterStyles={{
                         top: '15%',
-                        left: '30%',
-                        width: '38%',
-                        height: '52%',
+                        left: isLandscape ? '25%' : '30%',
+                        width: isLandscape ? '52%' : '38%',
+                        height: isLandscape ? '38%' : '52%',
                         transform: 'perspective(1000px) rotateY(-1deg) rotateX(0.5deg)',
                       }}
                     />
@@ -449,11 +456,12 @@ export default function ProductPage() {
                       alt=""
                       roomSrc="/wall-mockup-concrete.png"
                       showBadge={false}
+                      isLandscape={isLandscape}
                       posterStyles={{
                         top: '18%',
-                        left: '48%',
-                        width: '32%',
-                        height: '46%',
+                        left: isLandscape ? '44%' : '48%',
+                        width: isLandscape ? '46%' : '32%',
+                        height: isLandscape ? '32%' : '46%',
                         transform: 'perspective(1000px) rotateY(-2deg) rotateX(0.5deg)',
                       }}
                     />

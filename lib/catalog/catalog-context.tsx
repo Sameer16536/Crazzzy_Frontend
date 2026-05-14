@@ -71,8 +71,8 @@ interface CatalogContextType {
     totalPages: number
     hasMore: boolean
   }
-  refresh: (category?: string, limit?: number) => Promise<void>
-  loadMore: (category?: string) => Promise<void>
+  refresh: (category?: string, limit?: number, search?: string) => Promise<void>
+  loadMore: (category?: string, search?: string) => Promise<void>
   toggleWishlist: (productId: string) => Promise<void>
   
   // Persistence States
@@ -138,6 +138,12 @@ const DISPLAY_NAME_OVERRIDES: Record<string, string> = {
 
 export function CatalogProvider({ children }: { children: React.ReactNode }) {
   const [data, setData] = useState<CatalogContextType['data']>(null)
+  const dataRef = useRef<CatalogContextType['data']>(null)
+  
+  // Sync ref with state for use in callbacks without triggering re-renders
+  useEffect(() => {
+    dataRef.current = data
+  }, [data])
   const [wishlistIds, setWishlistIds] = useState<Set<string>>(new Set())
   const [isLoading, setIsLoading] = useState(true)
   const [isSyncing, setIsSyncing] = useState(false)
@@ -201,7 +207,7 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
-  const fetchCatalog = async (categorySlug?: string, page = 1, limit = 200, append = false) => {
+  const fetchCatalog = useCallback(async (categorySlug?: string, page = 1, limit = 200, append = false, search?: string) => {
     if (fetchingRef.current) return
     fetchingRef.current = true
 
@@ -216,11 +222,12 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
       // Build query params
       const params = new URLSearchParams({ limit: String(limit), page: String(page) })
       if (categorySlug) params.set('category', categorySlug)
+      if (search) params.set('search', search)
 
       const [categoriesData, productsData, offersData] = await Promise.all([
-        page === 1 ? api.get<any>('/categories').catch(() => ({ data: [] })) : Promise.resolve({ data: data?.categories }),
+        page === 1 ? api.get<any>('/categories').catch(() => ({ data: [] })) : Promise.resolve({ data: dataRef.current?.categories }),
         api.get<any>(`/products?${params.toString()}`).catch(() => ({ data: [] })),
-        page === 1 ? api.get<any>('/category-offers').catch(() => []) : Promise.resolve(data?.categoryOffers || [])
+        page === 1 ? api.get<any>('/category-offers').catch(() => []) : Promise.resolve(dataRef.current?.categoryOffers || [])
       ])
 
       const rawCategories = categoriesData.data || []
@@ -240,7 +247,7 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
           color: design.color,
           parentId: c.parentId ? String(c.parentId) : null,
         }
-      }) : (data?.categories || [])
+      }) : (dataRef.current?.categories || [])
 
       const rawProducts = productsData.data || []
       const products: CatalogProduct[] = rawProducts.map((p: any) => ({
@@ -268,7 +275,7 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
 
       const categoryOffers = page === 1 
         ? (Array.isArray(offersData) ? offersData : offersData?.data || [])
-        : (data?.categoryOffers || [])
+        : (dataRef.current?.categoryOffers || [])
 
       if (append) {
         setData(prev => {
@@ -302,16 +309,16 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
       setIsSyncing(false)
       fetchingRef.current = false
     }
-  }
+  }, [])
 
-  const loadMore = async (categorySlug?: string) => {
+  const loadMore = useCallback(async (categorySlug?: string, search?: string) => {
     if (!pagination.hasMore || isSyncing) return
-    await fetchCatalog(categorySlug, pagination.page + 1, 50, true)
-  }
+    await fetchCatalog(categorySlug, pagination.page + 1, 50, true, search)
+  }, [pagination.hasMore, isSyncing, fetchCatalog, pagination.page])
 
-  const refresh = async (categorySlug?: string, limit = 200) => {
-    await fetchCatalog(categorySlug, 1, limit, false)
-  }
+  const refresh = useCallback(async (categorySlug?: string, limit = 200, search?: string) => {
+    await fetchCatalog(categorySlug, 1, limit, false, search)
+  }, [fetchCatalog])
 
   useEffect(() => {
     fetchCatalog()

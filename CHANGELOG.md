@@ -15,8 +15,8 @@ The global catalog context (`CatalogProvider`) initially fetches a default limit
 ### Fix
 Increased the default global fetch limit in `fetchCatalog` and `refresh` from 50 to 200 to guarantee a robust cross-section of products, ensuring every category has an image pool to draw from.
 
-### Architecture Upgrade: Full Database Search
-Upgraded the Navbar live search dropdown, the `/search` page, and the **Shop Page search bar** to query the backend API directly (`/products?search=...`) rather than filtering the global context's limited cache. This guarantees that search queries check the entire database, bypassing pagination and category limits entirely.
+### Architecture Upgrade: Full Database Search, Unified Pagination & Deep Search
+Upgraded the Navbar live search dropdown, the `/search` page, and the **Shop Page search bar** to query the backend API directly (`/products?search=...`). Implemented **Deep Search** logic across the stack, allowing search queries to match against parent category names. Furthermore, merged the Shop Page's local state into the global `CatalogProvider` to enable **search-aware infinite scroll**, ensuring that scrolling correctly loads subsequent pages even during active searches or category filtering.
 
 ---
 

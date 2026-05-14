@@ -240,7 +240,7 @@ export default function ShopPage() {
       if (searchQuery) params.set('search', searchQuery)
       else params.delete('search')
       
-      // Update URL without page reload to trigger the fetchShopProducts effect
+      // Update URL without page reload
       router.push(`/shop?${params.toString()}`, { scroll: false })
     }, 500)
 
@@ -249,104 +249,35 @@ export default function ShopPage() {
 
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false)
 
-  // ── Local shop products state ─────────────────────────────────────────────
-  // Fetches products PER CATEGORY from the API (same as admin panel).
-  // Never poisons the global catalog cache.
-  const [shopProducts, setShopProducts] = useState<any[]>([])
-  const [shopLoading, setShopLoading] = useState(false)
-
-  // ── In-memory category cache (useRef = survives re-renders, not re-mounts) ─
-  // Key: category slug or '__all__'. Cleared on full page refresh automatically.
-  const shopCache = useRef<Map<string, any[]>>(new Map())
-
-  // Map raw API product to CatalogProduct shape
-  const mapProduct = (p: any) => ({
-    id: String(p.id),
-    name: p.title,
-    categoryId: String(p.categoryId || p.category_id || p.category?.id || ''),
-    categorySlug: p.category?.slug || undefined,
-    price: parseFloat(p.price),
-    originalPrice: p.originalPrice ? parseFloat(p.originalPrice) : undefined,
-    rating: parseFloat(p.ratingAvg || 0),
-    reviews: p.reviewCount || 0,
-    imageUrl: p.imageUrl,
-    images: p.images?.length > 0
-      ? p.images.map((img: any) => img.imageUrl)
-      : [p.imageUrl],
-    description: p.description || '',
-    inStock: p.stock > 0,
-    soldOut: p.stock === 0,
-    featured: p.isFeatured,
-    dealOfTheDay: p.isDealOfTheDay,
-    slug: p.slug,
-    variants: p.variants,
-  })
-
   // Infinite Scroll Observer
   const observer = useRef<IntersectionObserver | null>(null)
   const lastElementRef = useCallback((node: HTMLDivElement | null) => {
-    if (isLoading || isSyncing || shopLoading) return
+    if (isLoading || isSyncing) return
     if (observer.current) observer.current.disconnect()
     observer.current = new IntersectionObserver(entries => {
       if (entries[0].isIntersecting && pagination.hasMore) {
-        loadMore(selectedCategorySlug || undefined)
+        loadMore(selectedCategorySlug || undefined, searchQuery)
       }
     }, { rootMargin: '400px' })
     if (node) observer.current.observe(node)
-  }, [isLoading, isSyncing, shopLoading, pagination.hasMore, loadMore, selectedCategorySlug])
+  }, [isLoading, isSyncing, pagination.hasMore, loadMore, selectedCategorySlug, searchQuery])
 
-  // Initialize from URL — fetch server-side per category (mirrors admin panel)
+  // Initialize from URL — fetch server-side via unified refresh logic
   useEffect(() => {
     const cat = searchParams.get('category')
     const search = searchParams.get('search')
-    if (cat) {
-      setSelectedCategorySlug(cat)
-    } else {
-      setSelectedCategorySlug(null)
-    }
+    
+    if (cat) setSelectedCategorySlug(cat)
+    else setSelectedCategorySlug(null)
+    
     if (search) setSearchQuery(search)
 
-    const cacheKey = search ? `${cat || '__all__'}:search:${search}` : (cat || '__all__')
+    // Trigger global refresh which handles search + category in one go
+    refresh(cat || undefined, 200, search || undefined)
+  }, [searchParams, refresh])
 
-    // ── Cache hit: serve instantly from memory ──────────────────────────────
-    if (shopCache.current.has(cacheKey)) {
-      setShopProducts(shopCache.current.get(cacheKey)!)
-      return
-    }
-
-    // ── Cache miss: fetch from backend then store ───────────────────────────
-    const fetchShopProducts = async () => {
-      setShopLoading(true)
-      try {
-        const params = new URLSearchParams({ limit: '200', page: '1' })
-        if (cat) params.set('category', cat)
-        if (search) params.set('search', search)
-        
-        const res = await import('@/lib/api-client').then(m =>
-          m.api.get<any>(`/products?${params.toString()}`)
-        )
-        const raw = res?.data || []
-        const mapped = raw.map(mapProduct)
-        
-        // Only cache if it's a pure category fetch (no search)
-        if (!search) {
-          shopCache.current.set(cacheKey, mapped)
-        }
-        
-        setShopProducts(mapped)
-      } catch (e) {
-        console.error('Shop fetch error', e)
-        setShopProducts([])
-      } finally {
-        setShopLoading(false)
-      }
-    }
-
-    fetchShopProducts()
-  }, [searchParams])
-
-  // Use local shopProducts (server-filtered) instead of global data.products
-  const products = shopProducts.length > 0 ? shopProducts : (data?.products ?? [])
+  // Use global data products
+  const products = data?.products ?? []
   const allCategories = data?.categories ?? []
 
   // Update URL when category changes
@@ -362,7 +293,7 @@ export default function ShopPage() {
   // Memoized filter logic: robust multi-strategy category matching
   const filteredProducts = useMemo(() => {
     // If we have shopProducts, they are already filtered by category on the server.
-    const isServerFiltered = shopProducts.length > 0
+    const isServerFiltered = products.length > 0
 
     return products.filter((p) => {
       let matchesCategory = true
@@ -395,10 +326,13 @@ export default function ShopPage() {
 
       const matchesPrice = p.price >= priceRange[0] && p.price <= priceRange[1]
       const category = allCategories.find(c => c.id === p.categoryId)
+      const parentCategory = category?.parentId ? allCategories.find(c => c.id === category.parentId) : null
+      
       const matchesSearch = !searchQuery ||
         p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         p.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        category?.name.toLowerCase().includes(searchQuery.toLowerCase())
+        category?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        parentCategory?.name.toLowerCase().includes(searchQuery.toLowerCase())
       const matchesStock = !inStockOnly || p.inStock
 
       return matchesCategory && matchesPrice && matchesSearch && matchesStock
@@ -474,7 +408,7 @@ export default function ShopPage() {
                     </button>
 
                     <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] whitespace-nowrap">
-                      {shopLoading || isLoading || isSyncing ? 'Scanning...' : `${sortedProducts.length} Items`}
+                      {isLoading || isSyncing ? 'Scanning...' : `${sortedProducts.length} Items`}
                     </p>
                   </div>
 
@@ -502,7 +436,7 @@ export default function ShopPage() {
             >
               <div className="pt-8">
                 {/* Grid */}
-                {shopLoading || isLoading || (isSyncing && sortedProducts.length === 0) ? (
+                {isLoading || (isSyncing && sortedProducts.length === 0) ? (
                   <div className="grid grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-8">
                     {[...Array(6)].map((_, i) => (
                       <div key={i} className="aspect-square bg-muted animate-pulse border border-border" />

@@ -71,8 +71,8 @@ interface CatalogContextType {
     totalPages: number
     hasMore: boolean
   }
-  refresh: (category?: string, limit?: number, search?: string) => Promise<void>
-  loadMore: (category?: string, search?: string) => Promise<void>
+  refresh: (category?: string, limit?: number) => Promise<void>
+  loadMore: (category?: string) => Promise<void>
   toggleWishlist: (productId: string) => Promise<void>
   
   // Persistence States
@@ -117,15 +117,51 @@ export function resolveImageUrl(url: string | null | undefined): string {
 }
 
 const CATEGORY_DESIGN_DATA: Record<string, { color: string, description: string, imageOverride?: string }> = {
-  'tote-bags': { color: '#c084fc', description: 'Aesthetic tote bags for every vibe' },
-  'die-cast-cars-and-bikes': { color: '#f97316', description: 'Premium 1:24 scale die-cast models' },
-  'perfumes': { color: '#d4af37', description: 'Premium imported fragrances' },
-  'wall-posters': { color: '#06b6d4', description: 'High-quality wall art and posters' },
-  'anime-figures': { color: '#f43f5e', description: 'Detailed anime & superhero collectibles' },
-  'hot-wheels': { color: '#ef4444', description: '1:64 scale Hot Wheels collectibles' },
-  'keychains': { color: '#10b981', description: 'Unique collectible keychains' },
-  'chocolate-and-beverages': { color: '#92400e', description: 'Imported chocolates and exotic drinks' },
-  'aesthetic-items': { color: '#8b5cf6', description: 'Curated décor for modern spaces' },
+  'tote-bags': { 
+    color: '#c084fc', 
+    description: 'Aesthetic tote bags for every vibe',
+    imageOverride: 'https://res.cloudinary.com/dirjsc8qf/image/upload/v1777186869/crazzzy/tote-bags/gbaylic6gcnqit999jwo.webp'
+  },
+  'die-cast-cars-and-bikes': { 
+    color: '#f97316', 
+    description: 'Premium 1:24 scale die-cast models',
+    imageOverride: 'https://res.cloudinary.com/dirjsc8qf/image/upload/v1777186788/crazzzy/die-cast-cars-and-bikes/td5ug9upn6s16l1qltfh.webp'
+  },
+  'perfumes': { 
+    color: '#d4af37', 
+    description: 'Premium imported fragrances',
+    imageOverride: 'https://res.cloudinary.com/dirjsc8qf/image/upload/v1777186851/crazzzy/perfumes/uc3girj0dwptv1hf3040.webp'
+  },
+  'wall-posters': { 
+    color: '#06b6d4', 
+    description: 'High-quality wall art and posters',
+    imageOverride: 'https://res.cloudinary.com/dirjsc8qf/image/upload/v1776965151/crazzzy/wall-posters/sports/yznvjz2taakgtxzgm6mq.webp'
+  },
+  'anime-figures': { 
+    color: '#f43f5e', 
+    description: 'Detailed anime & superhero collectibles',
+    imageOverride: 'https://res.cloudinary.com/dirjsc8qf/image/upload/v1777186708/crazzzy/anime-figures/zg04zajuuucn0sd5nsjt.webp'
+  },
+  'hot-wheels': { 
+    color: '#ef4444', 
+    description: '1:64 scale Hot Wheels collectibles',
+    imageOverride: 'https://res.cloudinary.com/dirjsc8qf/image/upload/v1777186813/crazzzy/hotwheels/o71okiiuombsgla0bjzl.webp'
+  },
+  'keychains': { 
+    color: '#10b981', 
+    description: 'Unique collectible keychains',
+    imageOverride: 'https://res.cloudinary.com/dirjsc8qf/image/upload/v1777186826/crazzzy/keychains/xuiugwhuuqw9yhbp8g5y.webp'
+  },
+  'chocolate-and-beverages': { 
+    color: '#92400e', 
+    description: 'Imported chocolates and exotic drinks',
+    imageOverride: 'https://res.cloudinary.com/dirjsc8qf/image/upload/v1777995621/crazzzy_uploads/bagxpmzvfpihq75zq6ui.jpg'
+  },
+  'aesthetic-items': { 
+    color: '#8b5cf6', 
+    description: 'Curated décor for modern spaces',
+    imageOverride: 'https://res.cloudinary.com/dirjsc8qf/image/upload/v1777186738/crazzzy/asthetic-items/xnveesel3xupchpbnmai.webp'
+  },
 }
 
 /**
@@ -207,7 +243,7 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
-  const fetchCatalog = useCallback(async (categorySlug?: string, page = 1, limit = 200, append = false, search?: string) => {
+  const fetchCatalog = useCallback(async (categorySlug?: string, page = 1, limit = 200, append = false) => {
     if (fetchingRef.current) return
     fetchingRef.current = true
 
@@ -222,7 +258,6 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
       // Build query params
       const params = new URLSearchParams({ limit: String(limit), page: String(page) })
       if (categorySlug) params.set('category', categorySlug)
-      if (search) params.set('search', search)
 
       const [categoriesData, productsData, offersData] = await Promise.all([
         page === 1 ? api.get<any>('/categories').catch(() => ({ data: [] })) : Promise.resolve({ data: dataRef.current?.categories }),
@@ -311,13 +346,13 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
-  const loadMore = useCallback(async (categorySlug?: string, search?: string) => {
+  const loadMore = useCallback(async (categorySlug?: string) => {
     if (!pagination.hasMore || isSyncing) return
-    await fetchCatalog(categorySlug, pagination.page + 1, 50, true, search)
+    await fetchCatalog(categorySlug, pagination.page + 1, 50, true)
   }, [pagination.hasMore, isSyncing, fetchCatalog, pagination.page])
 
-  const refresh = useCallback(async (categorySlug?: string, limit = 200, search?: string) => {
-    await fetchCatalog(categorySlug, 1, limit, false, search)
+  const refresh = useCallback(async (categorySlug?: string, limit = 200) => {
+    await fetchCatalog(categorySlug, 1, limit, false)
   }, [fetchCatalog])
 
   useEffect(() => {

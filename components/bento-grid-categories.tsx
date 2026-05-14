@@ -15,6 +15,7 @@ import { useMemo } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { useCatalog } from '@/lib/catalog/use-catalog'
+import { resolveImageUrl } from '@/lib/catalog/catalog-context'
 import Image from 'next/image'
 import { ArrowUpRight } from 'lucide-react'
 
@@ -265,7 +266,7 @@ export function BentoGridCategories() {
       >
         {bentoCategories.map((category, idx) => {
           const cfg = AREA_MAP[idx]
-          const displayImage = categoryImages[category.id] || category.image
+          const displayImage = resolveImageUrl(categoryImages[category.id] || category.image)
 
           return (
             <motion.div
@@ -298,7 +299,7 @@ export function BentoGridCategories() {
           viewport={{ once: true, margin: '-60px' }}
         >
           {breakCategories.map((category) => {
-            const displayImage = categoryImages[category.id] || category.image
+            const displayImage = resolveImageUrl(categoryImages[category.id] || category.image)
 
             return (
               <motion.div
@@ -335,7 +336,7 @@ export function BentoGridCategories() {
         viewport={{ once: true, margin: '-60px' }}
       >
         {categories.map((category) => {
-          const displayImage = categoryImages[category.id] || category.image
+          const displayImage = resolveImageUrl(categoryImages[category.id] || category.image)
 
           return (
             <motion.div

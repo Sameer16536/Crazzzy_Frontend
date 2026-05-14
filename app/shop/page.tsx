@@ -8,6 +8,7 @@ import { Filter, X, Search, ChevronDown, SlidersHorizontal, ChevronRight } from 
 import { useCatalog, CatalogCategory } from '@/lib/catalog/catalog-context'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useCustomFilters } from '@/hooks/use-custom-filters'
+import { api } from '@/lib/api-client'
 
 interface FilterPanelProps {
   rootCategories: CatalogCategory[]
@@ -249,20 +250,93 @@ export default function ShopPage() {
 
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false)
 
-  // Infinite Scroll Observer
+  // ── Local shop products state ─────────────────────────────────────────────
+  // Fetches products PER CATEGORY from the API.
+  // Never poisons the global catalog cache, preserving Home page diversity.
+  const [shopProducts, setShopProducts] = useState<any[]>([])
+  const [shopPagination, setShopPagination] = useState({ page: 1, hasMore: false })
+  const [shopLoading, setShopLoading] = useState(false)
+
+  const mapProduct = (p: any) => ({
+    id: String(p.id),
+    name: p.title,
+    categoryId: String(p.categoryId || p.category_id || p.category?.id || ''),
+    categorySlug: p.category?.slug || undefined,
+    price: parseFloat(p.price),
+    originalPrice: p.originalPrice ? parseFloat(p.originalPrice) : undefined,
+    rating: parseFloat(p.ratingAvg || 0),
+    reviews: p.reviewCount || 0,
+    imageUrl: p.imageUrl,
+    images: p.images?.length > 0
+      ? p.images.map((img: any) => img.imageUrl)
+      : [p.imageUrl],
+    description: p.description || '',
+    inStock: p.stock > 0,
+    soldOut: p.stock === 0,
+    featured: p.isFeatured,
+    dealOfTheDay: p.isDealOfTheDay,
+    slug: p.slug,
+    variants: p.variants,
+  })
+
+  const fetchShopProducts = async (page: number, append: boolean = false) => {
+    const cat = searchParams.get('category')
+    const search = searchParams.get('search')
+    
+    setShopLoading(true)
+    try {
+      const params = new URLSearchParams({ 
+        limit: '100', 
+        page: String(page) 
+      })
+      if (cat) params.set('category', cat)
+      if (search) params.set('search', search)
+      
+      const res = await api.get<any>(`/products?${params.toString()}`)
+      
+      const raw = res?.data || []
+      const mapped = raw.map(mapProduct)
+      
+      if (append) {
+        setShopProducts(prev => {
+          const existingIds = new Set(prev.map(p => p.id))
+          const uniqueNew = mapped.filter((p: any) => !existingIds.has(p.id))
+          return [...prev, ...uniqueNew]
+        })
+      } else {
+        setShopProducts(mapped)
+      }
+
+      if (res?.meta) {
+        setShopPagination({
+          page: res.meta.page,
+          hasMore: res.meta.page < res.meta.totalPages
+        })
+      } else {
+        setShopPagination(prev => ({ ...prev, hasMore: false }))
+      }
+    } catch (e) {
+      console.error('Shop fetch error', e)
+      if (!append) setShopProducts([])
+    } finally {
+      setShopLoading(false)
+    }
+  }
+
+  // Infinite Scroll Observer — uses local shop pagination
   const observer = useRef<IntersectionObserver | null>(null)
   const lastElementRef = useCallback((node: HTMLDivElement | null) => {
-    if (isLoading || isSyncing) return
+    if (shopLoading || isLoading || isSyncing) return
     if (observer.current) observer.current.disconnect()
     observer.current = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting && pagination.hasMore) {
-        loadMore(selectedCategorySlug || undefined, searchQuery)
+      if (entries[0].isIntersecting && shopPagination.hasMore) {
+        fetchShopProducts(shopPagination.page + 1, true)
       }
     }, { rootMargin: '400px' })
     if (node) observer.current.observe(node)
-  }, [isLoading, isSyncing, pagination.hasMore, loadMore, selectedCategorySlug, searchQuery])
+  }, [shopLoading, isLoading, isSyncing, shopPagination.hasMore, shopPagination.page, searchParams])
 
-  // Initialize from URL — fetch server-side via unified refresh logic
+  // Initialize from URL — fetch locally to preserve global catalog
   useEffect(() => {
     const cat = searchParams.get('category')
     const search = searchParams.get('search')
@@ -272,12 +346,12 @@ export default function ShopPage() {
     
     if (search) setSearchQuery(search)
 
-    // Trigger global refresh which handles search + category in one go
-    refresh(cat || undefined, 200, search || undefined)
-  }, [searchParams, refresh])
+    // Reset to page 1 and fetch fresh results
+    fetchShopProducts(1, false)
+  }, [searchParams])
 
-  // Use global data products
-  const products = data?.products ?? []
+  // Use local shopProducts
+  const products = shopProducts
   const allCategories = data?.categories ?? []
 
   // Update URL when category changes
@@ -328,11 +402,13 @@ export default function ShopPage() {
       const category = allCategories.find(c => c.id === p.categoryId)
       const parentCategory = category?.parentId ? allCategories.find(c => c.id === category.parentId) : null
       
+      // If server-side search is active, trust it if local category data is missing
       const matchesSearch = !searchQuery ||
         p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         p.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        category?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        parentCategory?.name.toLowerCase().includes(searchQuery.toLowerCase())
+        (category?.name.toLowerCase().includes(searchQuery.toLowerCase()) ?? false) ||
+        (parentCategory?.name.toLowerCase().includes(searchQuery.toLowerCase()) ?? false) ||
+        (isServerFiltered && !allCategories.length) // Trust server if local categories are still loading
       const matchesStock = !inStockOnly || p.inStock
 
       return matchesCategory && matchesPrice && matchesSearch && matchesStock
@@ -408,7 +484,7 @@ export default function ShopPage() {
                     </button>
 
                     <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] whitespace-nowrap">
-                      {isLoading || isSyncing ? 'Scanning...' : `${sortedProducts.length} Items`}
+                      {shopLoading || isLoading || isSyncing ? 'Scanning...' : `${sortedProducts.length} Items`}
                     </p>
                   </div>
 
@@ -436,7 +512,8 @@ export default function ShopPage() {
             >
               <div className="pt-8">
                 {/* Grid */}
-                {isLoading || (isSyncing && sortedProducts.length === 0) ? (
+                {/* Full-page skeleton only on initial load or if empty */}
+                {((shopLoading || isSyncing) && sortedProducts.length === 0) || isLoading ? (
                   <div className="grid grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-8">
                     {[...Array(6)].map((_, i) => (
                       <div key={i} className="aspect-square bg-muted animate-pulse border border-border" />
@@ -476,24 +553,30 @@ export default function ShopPage() {
                 )}
 
                 {/* Infinite Scroll Sentinel */}
-                {sortedProducts.length > 0 && pagination.hasMore && (
+                {sortedProducts.length > 0 && shopPagination.hasMore && (
                   <div
                     ref={lastElementRef}
                     className="py-12 flex flex-col items-center justify-center gap-4 border-t border-white/5 mt-12"
                   >
-                    <div className="flex items-center gap-2">
-                      <div className="w-1 h-1 bg-primary rounded-full animate-ping" />
-                      <div className="w-1 h-1 bg-primary rounded-full animate-ping [animation-delay:0.2s]" />
-                      <div className="w-1 h-1 bg-primary rounded-full animate-ping [animation-delay:0.4s]" />
-                    </div>
-                    <p className="text-[10px] font-mono text-muted-foreground uppercase tracking-[0.4em] animate-pulse">
-                      Syncing more droplets...
-                    </p>
+                    {(shopLoading || isSyncing) ? (
+                      <div className="flex flex-col items-center gap-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-1 h-1 bg-primary rounded-full animate-ping" />
+                          <div className="w-1 h-1 bg-primary rounded-full animate-ping [animation-delay:0.2s]" />
+                          <div className="w-1 h-1 bg-primary rounded-full animate-ping [animation-delay:0.4s]" />
+                        </div>
+                        <p className="text-[10px] font-mono text-primary uppercase tracking-[0.4em] animate-pulse">
+                          Syncing more droplets...
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="w-1 h-1 rounded-full bg-primary/10" />
+                    )}
                   </div>
                 )}
 
                 {/* End of results indicator */}
-                {sortedProducts.length > 0 && !pagination.hasMore && (
+                {sortedProducts.length > 0 && !shopPagination.hasMore && (
                   <div className="py-12 text-center border-t border-white/5 mt-12">
                     <p className="text-[10px] font-mono text-muted-foreground/30 uppercase tracking-[0.4em]">
                       — Universe Boundary Reached —

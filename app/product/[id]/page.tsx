@@ -47,26 +47,31 @@ function WallMockup({ posterSrc, alt, roomSrc, posterStyles, showBadge = true, i
           style={{ boxShadow: '0 8px 40px rgba(0,0,0,0.3), inset 0 0 1px rgba(0,0,0,0.2)' }}
         >
           {/* 4. The Actual Poster Image */}
-          <Image
-            src={posterSrc}
-            alt={alt}
-            fill
-            unoptimized
-            className="object-cover"
-            style={{
-              // 1. Force the browser to use a higher-quality scaling algorithm
-              imageRendering: 'high-quality' as any, 
-              // 2. Improves contrast and sharpness on Webkit browsers
-              WebkitPrintColorAdjust: 'exact',
-              // 3. The "Secret Sauce": A tiny blur and sub-pixel transform
-              // This removes the jagged "staircase" effect on line art
-              filter: 'blur(0.2px) contrast(1.05)',
-              transform: `translateZ(0) ${isLandscape ? 'rotate(-90deg)' : ''}`, // Forces hardware acceleration + auto-rotate
-              backfaceVisibility: 'hidden',
-              // 4. "Warm up" the sticker white to match the room lighting
-              opacity: 0.98,
-            }}
-          />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Image
+              src={posterSrc}
+              alt={alt}
+              fill={!isLandscape}
+              width={isLandscape ? 1000 : undefined}
+              height={isLandscape ? 1400 : undefined}
+              unoptimized
+              className="object-cover"
+              style={{
+                width: isLandscape ? '71.5%' : '100%',
+                height: isLandscape ? '140%' : '100%',
+                // 1. Force the browser to use a higher-quality scaling algorithm
+                imageRendering: 'high-quality' as any, 
+                // 2. Improves contrast and sharpness on Webkit browsers
+                WebkitPrintColorAdjust: 'exact',
+                // 3. The "Secret Sauce": A tiny blur and sub-pixel transform
+                filter: 'blur(0.2px) contrast(1.05)',
+                transform: `translateZ(0) ${isLandscape ? 'rotate(-90deg)' : ''}`, // Forces hardware acceleration + auto-rotate
+                backfaceVisibility: 'hidden',
+                // 4. "Warm up" the sticker white to match the room lighting
+                opacity: 0.98,
+              }}
+            />
+          </div>
 
           {/* 5. Realistic Lighting Overlay (Gradient) 
               Simulates light coming from the side */}
@@ -265,6 +270,42 @@ export default function ProductPage() {
 
   const isLandscape = product.name?.toUpperCase().includes('LANDSCAPE')
 
+  const totalImages = (product.images?.length || 0) + (isWallPoster ? 3 : 0)
+  const currentImageIndex = selectedImage < 0 ? (product.images?.length || 0) + Math.abs(selectedImage) - 1 : selectedImage
+
+  const nextImage = () => {
+    if (selectedImage === WALL_MOCKUP_CONCRETE_INDEX) {
+      setSelectedImage(0)
+    } else if (selectedImage === WALL_MOCKUP_DESK_INDEX) {
+      setSelectedImage(WALL_MOCKUP_PLANT_INDEX)
+    } else if (selectedImage === WALL_MOCKUP_PLANT_INDEX) {
+      setSelectedImage(WALL_MOCKUP_CONCRETE_INDEX)
+    } else {
+      const nextIdx = selectedImage + 1
+      if (nextIdx >= (product.images?.length || 0)) {
+        if (isWallPoster) setSelectedImage(WALL_MOCKUP_DESK_INDEX)
+        else setSelectedImage(0)
+      } else {
+        setSelectedImage(nextIdx)
+      }
+    }
+  }
+
+  const prevImage = () => {
+    if (selectedImage === 0) {
+      if (isWallPoster) setSelectedImage(WALL_MOCKUP_CONCRETE_INDEX)
+      else setSelectedImage((product.images?.length || 0) - 1)
+    } else if (selectedImage === WALL_MOCKUP_DESK_INDEX) {
+      setSelectedImage((product.images?.length || 0) - 1)
+    } else if (selectedImage === WALL_MOCKUP_PLANT_INDEX) {
+      setSelectedImage(WALL_MOCKUP_DESK_INDEX)
+    } else if (selectedImage === WALL_MOCKUP_CONCRETE_INDEX) {
+      setSelectedImage(WALL_MOCKUP_PLANT_INDEX)
+    } else {
+      setSelectedImage(selectedImage - 1)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-background text-foreground selection:bg-primary selection:text-primary-foreground" style={{ isolation: 'isolate' }}>
       <Navbar />
@@ -363,20 +404,44 @@ export default function ProductPage() {
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.3 }}
-                    className="absolute inset-0 p-10"
+                    className="absolute inset-0 p-10 cursor-grab active:cursor-grabbing"
+                    drag="x"
+                    dragConstraints={{ left: 0, right: 0 }}
+                    onDragEnd={(e, { offset, velocity }) => {
+                      const swipe = offset.x
+                      if (swipe < -50) nextImage()
+                      else if (swipe > 50) prevImage()
+                    }}
                   >
                     <Image
                       src={product.images?.[selectedImage] || '/placeholder.jpg'}
                       alt={product.name}
                       fill
                       unoptimized
-                      className="object-contain"
+                      className="object-contain pointer-events-none"
                       priority
                     />
                   </motion.div>
                 )}
               </AnimatePresence>
-              <div className="absolute inset-0 bg-gradient-to-t from-black/5 via-transparent to-transparent pointer-events-none" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/5 via-transparent to-transparent pointer-events-none" />
+              
+              {/* Navigation Arrows */}
+              <button
+                onClick={(e) => { e.stopPropagation(); prevImage(); }}
+                className="absolute left-4 top-1/2 -translate-y-1/2 z-40 p-3 bg-black/20 hover:bg-black/60 text-white backdrop-blur-sm transition-all rounded-full opacity-0 group-hover:opacity-100"
+                aria-label="Previous image"
+              >
+                <ChevronRight className="rotate-180" size={20} />
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); nextImage(); }}
+                className="absolute right-4 top-1/2 -translate-y-1/2 z-40 p-3 bg-black/20 hover:bg-black/60 text-white backdrop-blur-sm transition-all rounded-full opacity-0 group-hover:opacity-100"
+                aria-label="Next image"
+              >
+                <ChevronRight size={20} />
+              </button>
+
               {!product.inStock && (
                 <div className="absolute inset-0 bg-background/60 backdrop-blur-sm flex items-center justify-center z-10">
                   <span className="text-foreground font-black text-4xl uppercase tracking-[0.2em] border-2 border-foreground px-8 py-4">Sold Out</span>

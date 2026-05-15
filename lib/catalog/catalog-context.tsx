@@ -262,7 +262,7 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
       const [categoriesData, productsData, offersData] = await Promise.all([
         page === 1 ? api.get<any>('/categories').catch(() => ({ data: [] })) : Promise.resolve({ data: dataRef.current?.categories }),
         api.get<any>(`/products?${params.toString()}`).catch(() => ({ data: [] })),
-        page === 1 ? api.get<any>('/category-offers').catch(() => []) : Promise.resolve(dataRef.current?.categoryOffers || [])
+        page === 1 ? api.get<any>('/settings/category-offers').catch(() => []) : Promise.resolve(dataRef.current?.categoryOffers || [])
       ])
 
       const rawCategories = categoriesData.data || []

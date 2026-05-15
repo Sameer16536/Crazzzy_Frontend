@@ -31,7 +31,7 @@ export default function AdminCategoryOffersPage() {
   const fetchOffers = async () => {
     try {
       setLoading(true)
-      const res = await api.get<CategoryOffer[]>('/category-offers')
+      const res = await api.get<CategoryOffer[]>('/settings/category-offers')
       setOffers(Array.isArray(res) ? res : [])
     } catch (error: any) {
       toast.error('Failed to fetch offers')
@@ -58,7 +58,7 @@ export default function AdminCategoryOffersPage() {
   const handleSave = async () => {
     if (!formData.categorySlug) return toast.error('Please select a category')
     try {
-      await api.post('/category-offers', formData)
+      await api.post('/settings/category-offers', formData)
       toast.success('Automatic offer established')
       setIsCreating(false)
       fetchOffers()
@@ -69,7 +69,7 @@ export default function AdminCategoryOffersPage() {
 
   const handleToggle = async (offer: CategoryOffer) => {
     try {
-      await api.put(`/category-offers/${offer.id}`, { isActive: !offer.isActive })
+      await api.put(`/settings/category-offers/${offer.id}`, { isActive: !offer.isActive })
       setOffers(prev => prev.map(o => o.id === offer.id ? { ...o, isActive: !o.isActive } : o))
       toast.success(`Offer ${!offer.isActive ? 'activated' : 'deactivated'}`)
     } catch (error: any) {
@@ -80,7 +80,7 @@ export default function AdminCategoryOffersPage() {
   const handleDelete = async (id: number) => {
     if (!confirm('Are you sure you want to delete this offer?')) return
     try {
-      await api.delete(`/category-offers/${id}`)
+      await api.delete(`/settings/category-offers/${id}`)
       setOffers(prev => prev.filter(o => o.id !== id))
       toast.success('Offer removed from registry')
     } catch (error: any) {

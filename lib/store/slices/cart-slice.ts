@@ -26,10 +26,10 @@ export interface CategoryOffer {
 }
 
 export interface CatalogCategory {
-  id: number;
+  id: string | number;
   name: string;
   slug: string;
-  parentId?: number | null;
+  parentId?: string | number | null;
 }
 
 type CartState = {
@@ -72,18 +72,56 @@ export const cartSlice = createSlice({
       upsertItem(state.items, action.payload)
       state.lastUpdatedAt = Date.now()
     },
-    setQuantity(state, action: PayloadAction<{ productId: string; variantId?: number; quantity: number }>) {
-      const item = state.items.find((i) => 
-        i.productId === action.payload.productId && i.variantId === action.payload.variantId
+    setQuantity(state, action: PayloadAction<{ productId: string; variantId?: number; bundleId?: string | number; quantity: number }>) {
+      const { productId, variantId, bundleId, quantity } = action.payload;
+      const itemIndex = state.items.findIndex((i) => 
+        i.productId === productId && i.variantId === variantId && i.bundleId === bundleId
       )
-      if (!item) return
-      item.quantity = Math.max(1, Math.floor(action.payload.quantity))
+      if (itemIndex === -1) return
+      
+      const item = state.items[itemIndex]
+
+      if (quantity <= 0) {
+        if (item.bundleId) {
+          const bId = item.bundleId;
+          state.items.splice(itemIndex, 1);
+          const siblings = state.items.filter(i => i.bundleId === bId);
+          state.items = state.items.filter(i => i.bundleId !== bId);
+          siblings.forEach(s => upsertItem(state.items, { ...s, bundleId: undefined, bundlePrice: undefined }));
+        } else {
+          state.items.splice(itemIndex, 1);
+        }
+      } else {
+        if (item.bundleId) {
+          const bId = item.bundleId;
+          item.quantity = Math.floor(quantity);
+          const family = state.items.filter(i => i.bundleId === bId);
+          state.items = state.items.filter(i => i.bundleId !== bId);
+          family.forEach(f => upsertItem(state.items, { ...f, bundleId: undefined, bundlePrice: undefined }));
+        } else {
+          item.quantity = Math.floor(quantity)
+        }
+      }
       state.lastUpdatedAt = Date.now()
     },
-    removeFromCart(state, action: PayloadAction<{ productId: string; variantId?: number }>) {
-      state.items = state.items.filter((i) => 
-        !(i.productId === action.payload.productId && i.variantId === action.payload.variantId)
+    removeFromCart(state, action: PayloadAction<{ productId: string; variantId?: number; bundleId?: string | number }>) {
+      const { productId, variantId, bundleId } = action.payload;
+      const itemIndex = state.items.findIndex((i) => 
+        i.productId === productId && i.variantId === variantId && i.bundleId === bundleId
       )
+      if (itemIndex === -1) return
+      
+      const item = state.items[itemIndex]
+
+      if (item.bundleId) {
+        const bId = item.bundleId;
+        state.items.splice(itemIndex, 1);
+        const siblings = state.items.filter(i => i.bundleId === bId);
+        state.items = state.items.filter(i => i.bundleId !== bId);
+        siblings.forEach(s => upsertItem(state.items, { ...s, bundleId: undefined, bundlePrice: undefined }));
+      } else {
+        state.items.splice(itemIndex, 1);
+      }
       state.lastUpdatedAt = Date.now()
     },
     clearCart(state) {

@@ -158,7 +158,7 @@ export default function CartPage() {
                               variant="ghost"
                               size="icon"
                               aria-label="Remove item"
-                              onClick={() => dispatch(removeFromCart({ productId: item.productId, variantId: item.variantId }))}
+                              onClick={() => dispatch(removeFromCart({ productId: item.productId, variantId: item.variantId, bundleId: item.bundleId }))}
                             >
                               <Trash2 />
                             </Button>
@@ -171,7 +171,7 @@ export default function CartPage() {
                               variant="ghost"
                               size="icon-sm"
                               aria-label="Decrease quantity"
-                              onClick={() => dispatch(setQuantity({ productId: item.productId, variantId: item.variantId, quantity: item.quantity - 1 }))}
+                              onClick={() => dispatch(setQuantity({ productId: item.productId, variantId: item.variantId, bundleId: item.bundleId, quantity: item.quantity - 1 }))}
                             >
                               <Minus />
                             </Button>
@@ -180,7 +180,7 @@ export default function CartPage() {
                               variant="ghost"
                               size="icon-sm"
                               aria-label="Increase quantity"
-                              onClick={() => dispatch(setQuantity({ productId: item.productId, variantId: item.variantId, quantity: item.quantity + 1 }))}
+                              onClick={() => dispatch(setQuantity({ productId: item.productId, variantId: item.variantId, bundleId: item.bundleId, quantity: item.quantity + 1 }))}
                             >
                               <Plus />
                             </Button>

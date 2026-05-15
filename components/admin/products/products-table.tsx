@@ -111,8 +111,8 @@ export function ProductsTable() {
     if (!confirmDeleteId) return
     setIsDecommissioning(true)
     try {
-      await api.delete(`/admin/products/${confirmDeleteId}`)
-      toast.success('Artifact decommissioned')
+      const res = await api.delete<any>(`/admin/products/${confirmDeleteId}`)
+      toast.success(res.message || 'Artifact decommissioned')
       setConfirmDeleteId(null)
       fetchProducts(selectedCategory || undefined, searchQuery || undefined, currentPage)
     } catch (error: any) {

@@ -17,6 +17,21 @@ export type CartItem = {
   bundlePrice?: number
 }
 
+export interface CategoryOffer {
+  id: number;
+  categorySlug: string;
+  buyQuantity: number;
+  getQuantity: number;
+  isActive: boolean;
+}
+
+export interface CatalogCategory {
+  id: number;
+  name: string;
+  slug: string;
+  parentId?: number | null;
+}
+
 type CartState = {
   items: CartItem[]
   lastUpdatedAt: number | null
@@ -47,6 +62,10 @@ export const cartSlice = createSlice({
   reducers: {
     hydrateFromCookie(state, action: PayloadAction<{ items: CartItem[] }>) {
       state.items = Array.isArray(action.payload.items) ? action.payload.items : []
+      state.lastUpdatedAt = Date.now()
+    },
+    setCartItems(state, action: PayloadAction<CartItem[]>) {
+      state.items = action.payload
       state.lastUpdatedAt = Date.now()
     },
     addToCart(state, action: PayloadAction<Omit<CartItem, 'quantity'> & { quantity?: number }>) {
@@ -87,7 +106,7 @@ export const cartSlice = createSlice({
   },
 })
 
-export const { addToCart, removeFromCart, setQuantity, clearCart, hydrateFromCookie, addBundle } = cartSlice.actions
+export const { addToCart, removeFromCart, setQuantity, clearCart, hydrateFromCookie, addBundle, setCartItems } = cartSlice.actions
 export default cartSlice.reducer
 
 // ─── Selectors ────────────────────────────────────────────────────────────────
@@ -215,9 +234,3 @@ export function calculateComboOffer(
 }
 
 
-/** Returns true if this specific cart item has at least 1 free unit from the combo offer */
-export function selectItemFreeCount(state: RootState, item: CartItem): number {
-  const { freeByKey } = selectComboOffer(state)
-  const key = `${item.productId}__${item.variantId ?? 'base'}`
-  return freeByKey[key] || 0
-}

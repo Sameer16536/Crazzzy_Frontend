@@ -9,6 +9,8 @@ import { AuthProvider } from '@/lib/auth/auth-context'
 import { CatalogProvider } from '@/lib/catalog/use-catalog'
 import { Toaster } from '@/components/ui/sonner'
 
+import { CartSync } from '@/components/cart/cart-sync'
+
 export function Providers({ children }: { children: React.ReactNode }) {
   const storeRef = useRef<AppStore | null>(null)
   if (!storeRef.current) storeRef.current = makeStore()
@@ -27,6 +29,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <LenisProvider>
         <AuthProvider>
           <CatalogProvider>
+            <CartSync />
             <CustomCursor />
             {children}
             <Toaster />

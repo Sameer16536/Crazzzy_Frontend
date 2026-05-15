@@ -253,7 +253,8 @@ export default function ShopPage() {
   // ── Local shop products state ─────────────────────────────────────────────
   // Fetches products PER CATEGORY from the API.
   // Never poisons the global catalog cache, preserving Home page diversity.
-  const [shopProducts, setShopProducts] = useState<any[]>([])
+  const [inStockProducts, setInStockProducts] = useState<any[]>([])
+  const [soldOutProducts, setSoldOutProducts] = useState<any[]>([])
   const [shopPagination, setShopPagination] = useState({ page: 1, hasMore: false })
   const [shopLoading, setShopLoading] = useState(false)
 
@@ -297,14 +298,23 @@ export default function ShopPage() {
       const raw = res?.data || []
       const mapped = raw.map(mapProduct)
       
+      const newInStock = mapped.filter((p: any) => p.inStock)
+      const newSoldOut = mapped.filter((p: any) => !p.inStock)
+
       if (append) {
-        setShopProducts(prev => {
+        setInStockProducts(prev => {
           const existingIds = new Set(prev.map(p => p.id))
-          const uniqueNew = mapped.filter((p: any) => !existingIds.has(p.id))
+          const uniqueNew = newInStock.filter((p: any) => !existingIds.has(p.id))
+          return [...prev, ...uniqueNew]
+        })
+        setSoldOutProducts(prev => {
+          const existingIds = new Set(prev.map(p => p.id))
+          const uniqueNew = newSoldOut.filter((p: any) => !existingIds.has(p.id))
           return [...prev, ...uniqueNew]
         })
       } else {
-        setShopProducts(mapped)
+        setInStockProducts(newInStock)
+        setSoldOutProducts(newSoldOut)
       }
 
       if (res?.meta) {
@@ -317,7 +327,10 @@ export default function ShopPage() {
       }
     } catch (e) {
       console.error('Shop fetch error', e)
-      if (!append) setShopProducts([])
+      if (!append) {
+        setInStockProducts([])
+        setSoldOutProducts([])
+      }
     } finally {
       setShopLoading(false)
     }
@@ -350,8 +363,8 @@ export default function ShopPage() {
     fetchShopProducts(1, false)
   }, [searchParams])
 
-  // Use local shopProducts
-  const products = shopProducts
+  // Combine lists: In-Stock items ALWAYS first, Sold-Out items ALWAYS last
+  const products = useMemo(() => [...inStockProducts, ...soldOutProducts], [inStockProducts, soldOutProducts])
   const allCategories = data?.categories ?? []
 
   // Update URL when category changes
@@ -364,36 +377,22 @@ export default function ShopPage() {
     // Refresh will be triggered by the useEffect observing searchParams
   }
 
-  // Memoized filter logic: robust multi-strategy category matching
-  const filteredProducts = useMemo(() => {
-    // If we have shopProducts, they are already filtered by category on the server.
-    const isServerFiltered = products.length > 0
-
-    return products.filter((p) => {
+  // ── Unified Filtering Logic ──────────────────────────────────────────────
+  const filteredInStock = useMemo(() => {
+    return inStockProducts.filter((p) => {
       let matchesCategory = true
-      if (selectedCategorySlug && !isServerFiltered) {
+      if (selectedCategorySlug) {
         const category = allCategories.find(c => c.slug === selectedCategorySlug)
         if (category) {
           const isParent = !category.parentId
           if (isParent) {
-            // Parent selected: show products from parent AND all its children
-            // Match by categoryId (parent or child ID) OR by categorySlug (parent slug)
             const childrenIds = getSubcategories(category.id).map(s => s.id)
             const childrenSlugs = getSubcategories(category.id).map(s => s.slug)
-            matchesCategory =
-              p.categoryId === category.id ||
-              childrenIds.includes(p.categoryId) ||
-              p.categorySlug === category.slug ||
-              (p.categorySlug !== undefined && childrenSlugs.includes(p.categorySlug))
+            matchesCategory = p.categoryId === category.id || childrenIds.includes(p.categoryId) || p.categorySlug === category.slug || (p.categorySlug !== undefined && childrenSlugs.includes(p.categorySlug))
           } else {
-            // Subcategory selected: match by ID OR by slug (backend may return either)
-            // This handles cases where products are tagged with parent ID but correct slug
-            matchesCategory =
-              p.categoryId === category.id ||
-              p.categorySlug === selectedCategorySlug
+            matchesCategory = p.categoryId === category.id || p.categorySlug === selectedCategorySlug
           }
         } else {
-          // Category not found in local data — fall back to slug match on product
           matchesCategory = p.categorySlug === selectedCategorySlug
         }
       }
@@ -401,29 +400,60 @@ export default function ShopPage() {
       const matchesPrice = p.price >= priceRange[0] && p.price <= priceRange[1]
       const category = allCategories.find(c => c.id === p.categoryId)
       const parentCategory = category?.parentId ? allCategories.find(c => c.id === category.parentId) : null
+      const matchesSearch = !searchQuery || p.name.toLowerCase().includes(searchQuery.toLowerCase()) || p.description.toLowerCase().includes(searchQuery.toLowerCase()) || (category?.name.toLowerCase().includes(searchQuery.toLowerCase()) ?? false) || (parentCategory?.name.toLowerCase().includes(searchQuery.toLowerCase()) ?? false)
       
-      // If server-side search is active, trust it if local category data is missing
-      const matchesSearch = !searchQuery ||
-        p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (category?.name.toLowerCase().includes(searchQuery.toLowerCase()) ?? false) ||
-        (parentCategory?.name.toLowerCase().includes(searchQuery.toLowerCase()) ?? false) ||
-        (isServerFiltered && !allCategories.length) // Trust server if local categories are still loading
-      const matchesStock = !inStockOnly || p.inStock
-
-      return matchesCategory && matchesPrice && matchesSearch && matchesStock
+      return matchesCategory && matchesPrice && matchesSearch
     })
-  }, [products, selectedCategorySlug, priceRange, searchQuery, inStockOnly, allCategories, getSubcategories])
+  }, [inStockProducts, selectedCategorySlug, priceRange, searchQuery, allCategories, getSubcategories])
 
-  const sortedProducts = useMemo(() => {
-    return [...filteredProducts].sort((a, b) => {
+  const filteredSoldOut = useMemo(() => {
+    return soldOutProducts.filter((p) => {
+      let matchesCategory = true
+      if (selectedCategorySlug) {
+        const category = allCategories.find(c => c.slug === selectedCategorySlug)
+        if (category) {
+          const isParent = !category.parentId
+          if (isParent) {
+            const childrenIds = getSubcategories(category.id).map(s => s.id)
+            const childrenSlugs = getSubcategories(category.id).map(s => s.slug)
+            matchesCategory = p.categoryId === category.id || childrenIds.includes(p.categoryId) || p.categorySlug === category.slug || (p.categorySlug !== undefined && childrenSlugs.includes(p.categorySlug))
+          } else {
+            matchesCategory = p.categoryId === category.id || p.categorySlug === selectedCategorySlug
+          }
+        } else {
+          matchesCategory = p.categorySlug === selectedCategorySlug
+        }
+      }
+
+      const matchesPrice = p.price >= priceRange[0] && p.price <= priceRange[1]
+      const category = allCategories.find(c => c.id === p.categoryId)
+      const parentCategory = category?.parentId ? allCategories.find(c => c.id === category.parentId) : null
+      const matchesSearch = !searchQuery || p.name.toLowerCase().includes(searchQuery.toLowerCase()) || p.description.toLowerCase().includes(searchQuery.toLowerCase()) || (category?.name.toLowerCase().includes(searchQuery.toLowerCase()) ?? false) || (parentCategory?.name.toLowerCase().includes(searchQuery.toLowerCase()) ?? false)
+      
+      return matchesCategory && matchesPrice && matchesSearch
+    })
+  }, [soldOutProducts, selectedCategorySlug, priceRange, searchQuery, allCategories, getSubcategories])
+
+  // ── Independent Sorting ───────────────────────────────────────────────────
+  const sortedInStock = useMemo(() => {
+    return [...filteredInStock].sort((a, b) => {
       if (sortBy === 'price_asc') return a.price - b.price
       if (sortBy === 'price_desc') return b.price - a.price
       if (sortBy === 'popularity') return (b.reviews || 0) - (a.reviews || 0)
       if (sortBy === 'newest') return Number(b.id) - Number(a.id)
       return 0
     })
-  }, [filteredProducts, sortBy])
+  }, [filteredInStock, sortBy])
+
+  const sortedSoldOut = useMemo(() => {
+    return [...filteredSoldOut].sort((a, b) => {
+      if (sortBy === 'price_asc') return a.price - b.price
+      if (sortBy === 'price_desc') return b.price - a.price
+      if (sortBy === 'popularity') return (b.reviews || 0) - (a.reviews || 0)
+      if (sortBy === 'newest') return Number(b.id) - Number(a.id)
+      return 0
+    })
+  }, [filteredSoldOut, sortBy])
 
   const filterProps: FilterPanelProps = {
     rootCategories,
@@ -484,7 +514,7 @@ export default function ShopPage() {
                     </button>
 
                     <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] whitespace-nowrap">
-                      {shopLoading || isLoading || isSyncing ? 'Scanning...' : `${sortedProducts.length} Items`}
+                      {shopLoading || isLoading || isSyncing ? 'Scanning...' : `${sortedInStock.length + sortedSoldOut.length} Items`}
                     </p>
                   </div>
 
@@ -513,33 +543,90 @@ export default function ShopPage() {
               <div className="pt-8">
                 {/* Grid */}
                 {/* Full-page skeleton only on initial load or if empty */}
-                {((shopLoading || isSyncing) && sortedProducts.length === 0) || isLoading ? (
+                {/* Grid */}
+                {((shopLoading || isSyncing) && sortedInStock.length === 0 && sortedSoldOut.length === 0) || isLoading ? (
                   <div className="grid grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-8">
                     {[...Array(6)].map((_, i) => (
                       <div key={i} className="aspect-square bg-muted animate-pulse border border-border" />
                     ))}
                   </div>
-                ) : sortedProducts.length > 0 ? (
-                  <motion.div
-                    className="grid grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-8"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                  >
-                    <AnimatePresence mode="popLayout">
-                      {sortedProducts.map((p, i) => (
-                        <motion.div
-                          key={p.id}
-                          layout
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, scale: 0.95 }}
-                          transition={{ duration: 0.3 }}
-                        >
-                          <ProductCard product={p} />
-                        </motion.div>
-                      ))}
-                    </AnimatePresence>
-                  </motion.div>
+                ) : (sortedInStock.length > 0 || sortedSoldOut.length > 0) ? (
+                  <div className="space-y-20">
+                    {/* 1. IN-STOCK GRID */}
+                    {sortedInStock.length > 0 && (
+                      <motion.div
+                        className="grid grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-8"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                      >
+                        <AnimatePresence mode="popLayout">
+                          {sortedInStock.map((p) => (
+                            <motion.div
+                              key={p.id}
+                              layout
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, scale: 0.95 }}
+                              transition={{ duration: 0.3 }}
+                            >
+                              <ProductCard product={p} />
+                            </motion.div>
+                          ))}
+                        </AnimatePresence>
+                      </motion.div>
+                    )}
+
+                    {/* 2. INFINITE SCROLL SENTINEL (Trigger) */}
+                    {shopPagination.hasMore && (
+                      <div
+                        ref={lastElementRef}
+                        className="py-12 flex flex-col items-center justify-center gap-4 border-t border-white/5"
+                      >
+                        {(shopLoading || isSyncing) ? (
+                          <div className="flex flex-col items-center gap-3">
+                            <div className="flex items-center gap-2">
+                              <div className="w-1 h-1 bg-primary rounded-full animate-ping" />
+                              <div className="w-1 h-1 bg-primary rounded-full animate-ping [animation-delay:0.2s]" />
+                              <div className="w-1 h-1 bg-primary rounded-full animate-ping [animation-delay:0.4s]" />
+                            </div>
+                            <p className="text-[10px] font-mono text-primary uppercase tracking-[0.4em] animate-pulse">
+                              Syncing more droplets...
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="w-1 h-1 rounded-full bg-primary/10" />
+                        )}
+                      </div>
+                    )}
+
+                    {/* 3. SOLD OUT SECTION */}
+                    {sortedSoldOut.length > 0 && (
+                      <div className="mt-20">
+                        <div className="flex items-center gap-4 mb-8">
+                          <div className="h-[1px] flex-1 bg-border/30" />
+                          <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground/50">
+                            Sold Out Archive
+                          </h3>
+                          <div className="h-[1px] flex-1 bg-border/30" />
+                        </div>
+                        
+                        <div className="grid grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-8 opacity-60 grayscale-[0.5] hover:grayscale-0 hover:opacity-100 transition-all duration-700">
+                          {sortedSoldOut.map((p) => (
+                            <ProductCard key={p.id} product={p} />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* End of results indicator */}
+                    {!shopPagination.hasMore && (
+                      <div className="py-12 text-center border-t border-white/5 mt-12">
+                        <p className="text-[10px] font-mono text-muted-foreground/30 uppercase tracking-[0.4em]">
+                          — Universe Boundary Reached —
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 ) : (
                   <div className="py-32 text-center border border-dashed border-border">
                     <p className="text-muted-foreground text-xs uppercase tracking-[0.3em] mb-6 font-light">No artifacts match your search parameters.</p>
@@ -549,38 +636,6 @@ export default function ShopPage() {
                     >
                       Reset Universe
                     </button>
-                  </div>
-                )}
-
-                {/* Infinite Scroll Sentinel */}
-                {sortedProducts.length > 0 && shopPagination.hasMore && (
-                  <div
-                    ref={lastElementRef}
-                    className="py-12 flex flex-col items-center justify-center gap-4 border-t border-white/5 mt-12"
-                  >
-                    {(shopLoading || isSyncing) ? (
-                      <div className="flex flex-col items-center gap-3">
-                        <div className="flex items-center gap-2">
-                          <div className="w-1 h-1 bg-primary rounded-full animate-ping" />
-                          <div className="w-1 h-1 bg-primary rounded-full animate-ping [animation-delay:0.2s]" />
-                          <div className="w-1 h-1 bg-primary rounded-full animate-ping [animation-delay:0.4s]" />
-                        </div>
-                        <p className="text-[10px] font-mono text-primary uppercase tracking-[0.4em] animate-pulse">
-                          Syncing more droplets...
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="w-1 h-1 rounded-full bg-primary/10" />
-                    )}
-                  </div>
-                )}
-
-                {/* End of results indicator */}
-                {sortedProducts.length > 0 && !shopPagination.hasMore && (
-                  <div className="py-12 text-center border-t border-white/5 mt-12">
-                    <p className="text-[10px] font-mono text-muted-foreground/30 uppercase tracking-[0.4em]">
-                      — Universe Boundary Reached —
-                    </p>
                   </div>
                 )}
               </div>

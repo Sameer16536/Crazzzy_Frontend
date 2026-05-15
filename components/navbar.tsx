@@ -7,7 +7,7 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Search, ShoppingCart, Menu, LayoutDashboard, LogOut, User as UserIcon, ShieldCheck, ChevronRight, Plus, Minus } from 'lucide-react'
 import { useCatalog } from '@/lib/catalog/use-catalog'
@@ -109,6 +109,27 @@ export function Navbar() {
     }
     return () => {
       document.body.style.overflow = 'unset'
+    }
+  }, [searchOpen])
+
+  const searchRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        // Also check if the click was on the search trigger button to avoid double-toggle
+        const trigger = document.getElementById('navbar-search')
+        if (trigger && trigger.contains(event.target as Node)) return
+        
+        setSearchOpen(false)
+      }
+    }
+
+    if (searchOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
     }
   }, [searchOpen])
 
@@ -556,6 +577,7 @@ export function Navbar() {
 
             {/* Mega-Menu Search Dropdown */}
             <motion.div
+              ref={searchRef}
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}

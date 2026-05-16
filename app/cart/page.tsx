@@ -111,7 +111,10 @@ export default function CartPage() {
                 return (
                   <Card key={`${item.productId}-${item.variantId || 'base'}-${item.bundleId || 'none'}-${idx}`} className="p-4 sm:p-5">
                     <div className="flex gap-4">
-                      <div className="relative size-20 sm:size-24 rounded-lg overflow-hidden bg-white border border-black/5 p-4">
+                      <Link 
+                        href={`/product/${item.slug || item.productId}`}
+                        className="relative size-20 sm:size-24 rounded-lg overflow-hidden bg-white border border-black/5 p-4 hover:opacity-80 transition-opacity cursor-pointer flex-shrink-0"
+                      >
                         {item.image ? (
                           <Image src={item.image} alt={item.name} fill className="object-contain" />
                         ) : (
@@ -119,12 +122,14 @@ export default function CartPage() {
                             Image
                           </div>
                         )}
-                      </div>
+                      </Link>
 
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0">
-                            <p className="font-semibold text-foreground truncate uppercase">{item.name}</p>
+                            <Link href={`/product/${item.slug || item.productId}`} className="font-semibold text-foreground truncate uppercase hover:text-primary transition-colors cursor-pointer block">
+                              {item.name}
+                            </Link>
                             {item.variantName ? (
                               <p className="text-[10px] uppercase tracking-widest text-muted-foreground mt-0.5">{item.variantName}</p>
                             ) : (

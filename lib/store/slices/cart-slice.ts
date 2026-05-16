@@ -15,6 +15,8 @@ export type CartItem = {
   bundleId?: string | number
   /** Total price for the entire bundle (shared across items) */
   bundlePrice?: number
+  /** Product slug for detailed view links */
+  slug?: string
 }
 
 export interface CategoryOffer {
@@ -128,7 +130,7 @@ export const cartSlice = createSlice({
       state.items = []
       state.lastUpdatedAt = Date.now()
     },
-    addBundle(state, action: PayloadAction<{ bundleId: string | number; price: number; items: Omit<CartItem, 'quantity' | 'bundleId' | 'bundlePrice'>[] }>) {
+    addBundle(state, action: PayloadAction<{ bundleId: string | number; price: number; items: (Omit<CartItem, 'quantity'> & { quantity?: number })[] }>) {
       const { bundleId, price, items } = action.payload
       // Each item in the bundle is added with quantity 1
       items.forEach(item => {

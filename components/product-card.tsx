@@ -43,6 +43,7 @@ interface ProductCardProps {
       additionalPrice: string
       stock: number
     }[]
+    slug: string
   }
   /** Pass true for the first 1-2 cards visible above the fold (LCP optimization) */
   priority?: boolean
@@ -260,6 +261,7 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
                       variantId,
                       variantName,
                       categorySlug: product.categorySlug,
+                      slug: product.slug,
                     }),
                   )
                   toast.success(`Added ${variantName ? `${product.name} (${variantName})` : product.name} to cart`)

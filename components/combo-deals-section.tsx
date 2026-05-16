@@ -82,7 +82,8 @@ export function ComboDealsSection() {
             name: p.title,
             price: parseFloat(p.price),
             imageUrl: p.imageUrl,
-            categorySlug: p.category?.slug
+            categorySlug: p.category?.slug,
+            slug: p.slug
           }))
           setExtraProducts(prev => [...prev, ...mapped])
         } catch (error) {
@@ -106,7 +107,8 @@ export function ComboDealsSection() {
         name: p.name,
         price: p.price,
         image: p.imageUrl,
-        categorySlug: p.categorySlug
+        categorySlug: p.categorySlug,
+        slug: p.slug
       }))
     }))
     toast.success(`${deal.title} added to cart!`, {
@@ -230,9 +232,13 @@ export function ComboDealsSection() {
                   <div className="flex items-center gap-8 pt-4">
                     <div className="flex -space-x-3">
                       {dealProducts.slice(0, 4).map((p, i) => (
-                        <div key={p.id} className="w-10 h-10 rounded-full border-2 border-black bg-zinc-900 overflow-hidden relative">
+                        <Link 
+                          key={p.id} 
+                          href={`/product/${p.slug || p.id}`}
+                          className="w-10 h-10 rounded-full border-2 border-black bg-zinc-900 overflow-hidden relative hover:z-10 hover:scale-110 transition-transform cursor-pointer"
+                        >
                           <Image src={p.imageUrl} alt={p.name} fill className="object-cover" />
-                        </div>
+                        </Link>
                       ))}
                       {dealProducts.length > 4 && (
                         <div className="w-10 h-10 rounded-full border-2 border-black bg-zinc-800 flex items-center justify-center text-[10px] font-black text-primary">
@@ -258,13 +264,16 @@ export function ComboDealsSection() {
                           animate={{ opacity: 1, scale: 1 }}
                           transition={{ delay: i * 0.1 }}
                           className={cn(
-                            "relative overflow-hidden rounded-[2rem] border border-white/10 group/img shadow-2xl",
+                            "relative overflow-hidden rounded-[2rem] border border-white/10 group/img shadow-2xl cursor-pointer",
                             i === 0 && "rounded-tl-[5rem]",
                             i === 1 && "rounded-tr-[5rem]",
                             i === 2 && "rounded-bl-[5rem]",
                             i === 3 && "rounded-br-[5rem]"
                           )}
                         >
+                          <Link href={`/product/${p.slug || p.id}`} className="absolute inset-0 z-10">
+                            <span className="sr-only">View {p.name}</span>
+                          </Link>
                           <Image
                             src={p.imageUrl}
                             alt={p.name}

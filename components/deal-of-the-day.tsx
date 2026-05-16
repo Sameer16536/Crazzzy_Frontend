@@ -147,7 +147,7 @@ function DealCard({ product, isActive }: { product: any; isActive: boolean }) {
           style={{ animation: 'pulse 4s ease-in-out infinite' }}
         />
 
-        <div className="relative w-full max-w-md aspect-square rounded-2xl overflow-hidden border border-black/5 bg-white group p-10 shadow-2xl">
+        <Link href={`/product/${product.slug || product.id}`} className="relative w-full max-w-md aspect-square rounded-2xl overflow-hidden border border-black/5 bg-white group p-10 shadow-2xl cursor-pointer">
           <Image
             src={product.images[0] || '/placeholder.jpg'}
             alt={product.name}
@@ -157,7 +157,7 @@ function DealCard({ product, isActive }: { product: any; isActive: boolean }) {
             priority={isActive}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
-        </div>
+        </Link>
 
         {/* LIVE badge */}
         <motion.div

@@ -113,7 +113,7 @@ export default function DealPage() {
       <div className="pt-20" />
 
       {/* Hero Section */}
-      <section className="relative py-20 px-4 sm:px-6 lg:px-8 border-b border-white/5 overflow-hidden">
+      <section className="relative py-12 sm:py-20 px-4 sm:px-6 lg:px-8 border-b border-white/5 overflow-hidden">
         <div className="absolute inset-0 bg-primary/5 blur-[120px] -z-10 pointer-events-none translate-y-[-50%]" />
         
         <div className="max-w-7xl mx-auto">
@@ -136,7 +136,7 @@ export default function DealPage() {
               </div>
 
               <div className="space-y-2">
-                <h1 className="text-4xl sm:text-7xl font-black text-white uppercase tracking-tighter leading-tight">
+                <h1 className="text-3xl sm:text-7xl font-black text-white uppercase tracking-tighter leading-tight">
                   {deal.title}
                 </h1>
                 <p className="text-white/60 text-lg sm:text-xl max-w-2xl leading-relaxed font-medium">
@@ -149,27 +149,27 @@ export default function DealPage() {
               <Zap className="absolute -right-6 -top-6 w-32 h-32 text-white/5 -rotate-12 group-hover:text-primary/10 transition-colors duration-500" />
               
               <div className="space-y-6 relative z-10">
-                <div className="flex justify-between items-end border-b border-white/5 pb-6">
+                <div className="flex justify-between items-end border-b border-white/5 pb-4 sm:pb-6">
                   <div className="space-y-1">
                     <p className="text-[10px] font-mono text-white/40 uppercase tracking-widest">Original Price</p>
-                    <p className="text-lg font-black text-white/40 line-through uppercase tracking-tighter font-price">₹{originalTotal}</p>
+                    <p className="text-base sm:text-lg font-black text-white/40 line-through uppercase tracking-tighter font-price">₹{originalTotal}</p>
                   </div>
                   <div className="text-right space-y-1">
                     <p className="text-[10px] font-mono text-primary uppercase tracking-widest font-black">Bundle Offer</p>
-                    <p className="text-5xl font-black text-primary font-price leading-none tracking-tighter">₹{deal.bundlePrice}</p>
+                    <p className="text-3xl sm:text-5xl font-black text-primary font-price leading-none tracking-tighter">₹{deal.bundlePrice}</p>
                   </div>
                 </div>
 
-                <div className="flex justify-between items-center bg-white/5 px-4 py-3 rounded-xl border border-white/10">
+                <div className="flex justify-between items-center bg-white/5 px-4 py-2.5 sm:py-3 rounded-xl border border-white/10">
                   <span className="text-[10px] font-black text-white/60 uppercase tracking-widest">You Save</span>
-                  <span className="text-2xl font-black text-primary uppercase tracking-tighter font-price">₹{savings}</span>
+                  <span className="text-xl sm:text-2xl font-black text-primary uppercase tracking-tighter font-price">₹{savings}</span>
                 </div>
 
                 <button 
                   onClick={handleClaim}
-                  className="w-full py-5 bg-primary text-black font-black text-xs uppercase tracking-[0.2em] rounded-2xl hover:scale-[1.02] active:scale-95 transition-all shadow-[0_10px_30px_rgba(212,175,55,0.4)] flex items-center justify-center gap-3"
+                  className="w-full py-3.5 sm:py-5 bg-primary text-black font-black text-xs sm:text-sm uppercase tracking-[0.2em] rounded-2xl hover:scale-[1.02] active:scale-95 transition-all shadow-[0_10px_30px_rgba(212,175,55,0.4)] flex items-center justify-center gap-3"
                 >
-                  <ShoppingBag size={18} />
+                  <ShoppingBag size={20} className="sm:w-5 sm:h-5" strokeWidth={2.5} />
                   Claim Entire Bundle
                 </button>
               </div>

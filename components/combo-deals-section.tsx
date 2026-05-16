@@ -121,7 +121,7 @@ export function ComboDealsSection() {
 
   return (
     <section
-      className="relative py-24 overflow-hidden border-y border-white/5 bg-black"
+      className="relative py-12 sm:py-24 overflow-hidden border-y border-white/5 bg-black"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -130,7 +130,7 @@ export function ComboDealsSection() {
       <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[140px] pointer-events-none -z-10 opacity-30" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 sm:mb-16 gap-4 sm:gap-6">
           <div className="space-y-4">
             <motion.div
               className="flex items-center gap-3"
@@ -145,7 +145,7 @@ export function ComboDealsSection() {
               </span>
             </motion.div>
             <motion.h2
-              className="text-5xl sm:text-7xl font-black text-white leading-tight uppercase tracking-tighter"
+              className="text-3xl sm:text-7xl font-black text-white leading-tight uppercase tracking-tighter"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -173,7 +173,7 @@ export function ComboDealsSection() {
           )}
         </div>
 
-        <div className="relative min-h-[500px]">
+        <div className="relative min-h-[350px] sm:min-h-[500px]">
           <AnimatePresence mode="wait">
             <motion.div
               key={currentDeal.id}
@@ -193,7 +193,7 @@ export function ComboDealsSection() {
                     </div>
 
                     <div className="space-y-3">
-                      <h3 className="text-4xl sm:text-5xl font-black text-white uppercase tracking-tight leading-[0.95]">
+                      <h3 className="text-3xl sm:text-5xl font-black text-white uppercase tracking-tight leading-[0.95]">
                         {currentDeal.title}
                       </h3>
                       <p className="text-white/60 text-lg leading-relaxed font-medium">
@@ -203,28 +203,28 @@ export function ComboDealsSection() {
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="p-6 bg-white/[0.03] border border-white/5 rounded-3xl space-y-1">
+                    <div className="p-4 sm:p-6 bg-white/[0.03] border border-white/5 rounded-3xl space-y-1">
                       <p className="text-[10px] font-mono text-white/30 uppercase tracking-[0.2em]">Total Value</p>
-                      <p className="text-2xl font-black text-white/40 line-through tracking-tighter font-price">₹{originalTotal}</p>
+                      <p className="text-xl sm:text-2xl font-black text-white/40 line-through tracking-tighter font-price">₹{originalTotal}</p>
                     </div>
-                    <div className="p-6 bg-primary/10 border border-primary/20 rounded-3xl space-y-1 relative overflow-hidden group">
+                    <div className="p-4 sm:p-6 bg-primary/10 border border-primary/20 rounded-3xl space-y-1 relative overflow-hidden group">
                       <Zap className="absolute -right-4 -bottom-4 w-16 h-16 text-primary/5 -rotate-12" />
                       <p className="text-[10px] font-mono text-primary uppercase tracking-[0.2em] font-black">Bundle Price</p>
-                      <p className="text-4xl font-black text-primary tracking-tighter font-price">₹{currentDeal.bundlePrice}</p>
+                      <p className="text-3xl sm:text-4xl font-black text-primary tracking-tighter font-price">₹{currentDeal.bundlePrice}</p>
                     </div>
                   </div>
 
                   <div className="flex flex-col sm:flex-row gap-4 pt-4">
                     <button
                       onClick={() => handleClaim(currentDeal, dealProducts)}
-                      className="flex-1 py-5 bg-primary text-black font-black text-xs uppercase tracking-[0.2em] rounded-2xl hover:scale-[1.02] active:scale-95 transition-all shadow-[0_10px_40px_rgba(212,175,55,0.3)] flex items-center justify-center gap-3"
+                      className="flex-1 py-3.5 sm:py-5 bg-primary text-black font-black text-xs sm:text-sm uppercase tracking-[0.2em] rounded-2xl hover:scale-[1.02] active:scale-95 transition-all shadow-[0_10px_40px_rgba(212,175,55,0.3)] flex items-center justify-center gap-3"
                     >
-                      <ShoppingBag size={18} />
+                      <ShoppingBag size={20} className="sm:w-5 sm:h-5" strokeWidth={2.5} />
                       Claim Bundle Deal
                     </button>
                     <Link
                       href={`/deals/${currentDeal.id}`}
-                      className="flex items-center justify-center px-8 py-5 border border-white/10 text-white font-black text-xs uppercase tracking-widest rounded-2xl hover:bg-white/5 transition-all"
+                      className="flex items-center justify-center px-8 py-3.5 sm:py-5 border border-white/10 text-white font-black text-xs sm:text-sm uppercase tracking-widest rounded-2xl hover:bg-white/5 transition-all"
                     >
                       Learn More
                     </Link>
@@ -253,47 +253,142 @@ export function ComboDealsSection() {
                   </div>
                 </div>
 
-                {/* Right: Large Bundle Visuals */}
+                {/* Right: Streetwear Collage Visuals */}
                 <div className="lg:col-span-7 order-1 lg:order-2">
-                  <div className="relative aspect-[4/3] lg:aspect-square w-full">
-                    {/* Visual Grid of Products */}
-                    <div className="grid grid-cols-2 gap-4 h-full">
-                      {dealProducts.slice(0, 4).map((p, i) => (
-                        <motion.div
-                          key={p.id}
-                          initial={{ opacity: 0, scale: 0.9 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          transition={{ delay: i * 0.1 }}
-                          className={cn(
-                            "relative overflow-hidden rounded-[2rem] border border-white/10 group/img shadow-2xl cursor-pointer",
-                            i === 0 && "rounded-tl-[5rem]",
-                            i === 1 && "rounded-tr-[5rem]",
-                            i === 2 && "rounded-bl-[5rem]",
-                            i === 3 && "rounded-br-[5rem]"
-                          )}
-                        >
-                          <Link href={`/product/${p.slug || p.id}`} className="absolute inset-0 z-10">
-                            <span className="sr-only">View {p.name}</span>
-                          </Link>
-                          <Image
-                            src={p.imageUrl}
-                            alt={p.name}
-                            fill
-                            className="object-cover transition-transform duration-700 group-hover/img:scale-110"
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover/img:opacity-100 transition-opacity duration-500 p-6 flex flex-col justify-end">
-                            <p className="text-xs font-black text-primary uppercase tracking-widest mb-1">{p.name}</p>
-                            <p className="text-[10px] font-bold text-white/60 uppercase">Original: ₹{p.price}</p>
-                          </div>
-                        </motion.div>
-                      ))}
+                  <div className="relative aspect-[4/3] lg:aspect-square w-full flex items-center justify-center p-4">
+                    
+                    {/* Center savings badge (Price Sticker) */}
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 sm:w-28 sm:h-28 bg-[#facc15] shadow-[4px_4px_0px_#000] flex flex-col items-center justify-center z-50 border-2 border-black rotate-12 transition-transform hover:rotate-6 cursor-default">
+                      <p className="text-[8px] sm:text-[10px] font-black text-black uppercase leading-none mb-0.5 sm:mb-1">SAVE</p>
+                      <p className="text-xl sm:text-3xl font-black text-black tracking-tighter font-price">₹{savings}</p>
+                      <p className="text-[7px] sm:text-[8px] font-bold text-black/60 uppercase mt-0.5 sm:mt-1">OFF TOTAL</p>
+                      <div className="absolute top-0.5 right-0.5 w-1.5 h-1.5 bg-black/10 rounded-full" />
                     </div>
 
-                    {/* Center savings badge */}
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-primary rounded-full flex flex-col items-center justify-center shadow-[0_0_50px_rgba(212,175,55,0.5)] z-20 border-4 border-black">
-                      <p className="text-[10px] font-black text-black uppercase leading-none">Save</p>
-                      <p className="text-2xl font-black text-black tracking-tighter">₹{savings}</p>
-                      <p className="text-[8px] font-bold text-black/60 uppercase">Off Total</p>
+                    {/* Dynamic Layout System */}
+                    <div className="relative w-full h-full max-w-2xl mx-auto">
+                      {/* 2 ITEMS: SIDE BY SIDE PORTRAIT */}
+                      {dealProducts.length === 2 && (
+                        <div className="grid grid-cols-2 gap-8 w-full h-full p-4">
+                          {dealProducts.map((p, i) => {
+                            const rotations = [-3, 3];
+                            return (
+                              <motion.div
+                                key={p.id}
+                                initial={{ opacity: 0, scale: 0.9, rotate: rotations[i] * 2 }}
+                                animate={{ opacity: 1, scale: 1, rotate: rotations[i] }}
+                                className="relative aspect-[3/4] border-[3px] border-white shadow-[12px_12px_30px_rgba(0,0,0,0.5)] overflow-hidden group self-center"
+                              >
+                                <Link href={`/product/${p.slug || p.id}`} className="absolute inset-0 z-10" />
+                                <Image src={p.imageUrl} alt={p.name} fill className="object-cover transition-transform duration-500 group-hover:scale-110" />
+                              </motion.div>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      {/* 3 ITEMS: STACK LAYOUT */}
+                      {dealProducts.length === 3 && (
+                        <div className="relative w-full h-full">
+                          {dealProducts.map((p, i) => {
+                            const rotations = [-4, 2, 5];
+                            const positions = [
+                              "top-[10%] left-[10%] w-[65%]",
+                              "top-[20%] right-[5%] w-[60%] z-10",
+                              "bottom-[10%] left-[20%] w-[60%] z-20"
+                            ];
+                            return (
+                              <motion.div
+                                key={p.id}
+                                initial={{ opacity: 0, scale: 0.8, rotate: rotations[i] - 10 }}
+                                animate={{ opacity: 1, scale: 1, rotate: rotations[i] }}
+                                className={cn(
+                                  "absolute aspect-[3/4] border-[3px] border-white shadow-[8px_8px_20px_rgba(0,0,0,0.4)] overflow-hidden group",
+                                  positions[i]
+                                )}
+                              >
+                                <Link href={`/product/${p.slug || p.id}`} className="absolute inset-0 z-10" />
+                                <Image src={p.imageUrl} alt={p.name} fill className="object-cover transition-transform duration-500 group-hover:scale-110" />
+                              </motion.div>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      {/* 4 ITEMS: UNEVEN GRID */}
+                      {dealProducts.length === 4 && (
+                        <div className="grid grid-cols-2 gap-6 w-full h-full p-8">
+                          {dealProducts.map((p, i) => {
+                            const rotations = [-2, 3, 2, -3];
+                            return (
+                              <motion.div
+                                key={p.id}
+                                initial={{ opacity: 0, y: 20, rotate: rotations[i] * 2 }}
+                                animate={{ opacity: 1, y: 0, rotate: rotations[i] }}
+                                className={cn(
+                                  "relative aspect-square border-[3px] border-white shadow-[10px_10px_25px_rgba(0,0,0,0.5)] overflow-hidden group",
+                                  i === 1 ? "translate-y-8" : "",
+                                  i === 2 ? "-translate-y-8" : ""
+                                )}
+                              >
+                                <Link href={`/product/${p.slug || p.id}`} className="absolute inset-0 z-10" />
+                                <Image src={p.imageUrl} alt={p.name} fill className="object-cover transition-transform duration-500 group-hover:scale-110" />
+                              </motion.div>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      {/* 5 ITEMS: MOSAIC */}
+                      {dealProducts.length >= 5 && (
+                        <div className="relative w-full h-full grid grid-cols-6 grid-rows-6 gap-3 p-4">
+                          {/* Large Hero */}
+                          <motion.div
+                            initial={{ opacity: 0, scale: 0.9, rotate: -2 }}
+                            animate={{ opacity: 1, scale: 1, rotate: -1 }}
+                            className="col-span-4 row-span-4 border-[3px] border-white shadow-[15px_15px_30px_rgba(0,0,0,0.6)] overflow-hidden relative group z-10"
+                          >
+                            <Link href={`/product/${dealProducts[0].slug || dealProducts[0].id}`} className="absolute inset-0 z-10" />
+                            <Image src={dealProducts[0].imageUrl} alt={dealProducts[0].name} fill className="object-cover transition-transform duration-500 group-hover:scale-110" />
+                          </motion.div>
+
+                          {/* Smaller ones around */}
+                          {dealProducts.slice(1, 5).map((p, i) => {
+                            const gridPos = [
+                              "col-span-2 row-span-2 col-start-5 row-start-1 rotate-3",
+                              "col-span-2 row-span-2 col-start-5 row-start-3 -rotate-2",
+                              "col-span-2 row-span-2 col-start-1 row-start-5 rotate-2",
+                              "col-span-2 row-span-2 col-start-3 row-start-5 rotate-4"
+                            ];
+                            return (
+                              <motion.div
+                                key={p.id}
+                                initial={{ opacity: 0, x: 10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: i * 0.1 }}
+                                className={cn(
+                                  "border-2 border-white shadow-[8px_8px_15px_rgba(0,0,0,0.4)] overflow-hidden relative group",
+                                  gridPos[i]
+                                )}
+                              >
+                                <Link href={`/product/${p.slug || p.id}`} className="absolute inset-0 z-10" />
+                                <Image src={p.imageUrl} alt={p.name} fill className="object-cover transition-transform duration-500 group-hover:scale-110" />
+                              </motion.div>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      {/* Fallback for other counts */}
+                      {![2, 3, 4, 5].includes(dealProducts.length) && dealProducts.length > 0 && (
+                         <div className="grid grid-cols-2 gap-4 h-full w-full">
+                          {dealProducts.slice(0, 4).map((p, i) => (
+                            <div key={p.id} className="relative border-2 border-white shadow-xl overflow-hidden aspect-square">
+                              <Image src={p.imageUrl} alt={p.name} fill className="object-cover" />
+                            </div>
+                          ))}
+                         </div>
+                      )}
                     </div>
                   </div>
                 </div>

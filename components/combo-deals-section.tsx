@@ -34,17 +34,27 @@ export function ComboDealsSection() {
     setActiveIndex((prev) => (prev - 1 + activeDeals.length) % activeDeals.length)
   }, [activeDeals.length])
 
-  // Auto-play
+  // Stable auto-advance function
+  const startAutoPlay = useCallback(() => {
+    if (autoPlayTimer.current) clearInterval(autoPlayTimer.current)
+    if (activeDeals.length <= 1 || isHovered) return
+
+    autoPlayTimer.current = setInterval(() => {
+      setActiveIndex(i => (i + 1) % activeDeals.length)
+    }, 10000)
+  }, [activeDeals.length, isHovered])
+
   useEffect(() => {
-    if (activeDeals.length <= 1 || isHovered) {
-      if (autoPlayTimer.current) clearInterval(autoPlayTimer.current)
-      return
+    startAutoPlay()
+    return () => { if (autoPlayTimer.current) clearInterval(autoPlayTimer.current) }
+  }, [startAutoPlay])
+
+  // Safety: Keep index in bounds
+  useEffect(() => {
+    if (activeIndex >= activeDeals.length && activeDeals.length > 0) {
+      setActiveIndex(0)
     }
-    autoPlayTimer.current = setInterval(next, 8000)
-    return () => {
-      if (autoPlayTimer.current) clearInterval(autoPlayTimer.current)
-    }
-  }, [activeDeals.length, isHovered, next])
+  }, [activeDeals.length, activeIndex])
 
 
   // Combine global products with extra fetched products
@@ -121,7 +131,7 @@ export function ComboDealsSection() {
 
   return (
     <section
-      className="relative py-12 sm:py-24 overflow-hidden border-y border-white/5 bg-black"
+      className="relative py-10 sm:py-16 overflow-hidden border-y border-white/5 bg-black"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -130,7 +140,7 @@ export function ComboDealsSection() {
       <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[140px] pointer-events-none -z-10 opacity-30" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 sm:mb-16 gap-4 sm:gap-6">
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-4 sm:mb-10 gap-4 sm:gap-6">
           <div className="space-y-4">
             <motion.div
               className="flex items-center gap-3"
@@ -173,20 +183,20 @@ export function ComboDealsSection() {
           )}
         </div>
 
-        <div className="relative min-h-[350px] sm:min-h-[500px]">
+        <div className="relative min-h-[300px] sm:min-h-[450px]">
           <AnimatePresence mode="wait">
             <motion.div
               key={currentDeal.id}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 1.02 }}
+              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
               className="w-full"
             >
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
                 {/* Left: Bundle Info */}
-                <div className="lg:col-span-5 space-y-10 order-2 lg:order-1">
-                  <div className="space-y-6">
+                <div className="lg:col-span-5 space-y-6 sm:space-y-8 order-2 lg:order-1">
+                  <div className="space-y-4">
                     <div className="inline-flex items-center gap-3 bg-primary/10 border border-primary/20 px-4 py-1.5 rounded-full">
                       <Gift className="text-primary" size={16} />
                       <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Curated Bundle Deal</span>
@@ -194,22 +204,22 @@ export function ComboDealsSection() {
 
                     <div className="space-y-3">
                       <h3 className="text-3xl sm:text-5xl font-black text-white uppercase tracking-tight leading-[0.95]">
-                        {currentDeal.title}
+                        {currentDeal.title.replace(/POSTER\b/i, dealProducts.length > 1 ? "POSTERS" : "POSTER")}
                       </h3>
-                      <p className="text-white/60 text-lg leading-relaxed font-medium">
+                      <p className="text-white/60 text-lg leading-[1.6] font-medium">
                         {currentDeal.description || `Claim this hand-picked set of ${dealProducts.length} items for a unified flat price.`}
                       </p>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="p-4 sm:p-6 bg-white/[0.03] border border-white/5 rounded-3xl space-y-1">
-                      <p className="text-[10px] font-mono text-white/30 uppercase tracking-[0.2em]">Total Value</p>
+                   <div className="grid grid-cols-2 gap-4">
+                    <div className="p-4 sm:p-6 bg-white/[0.03] border border-white/5 rounded-3xl space-y-2">
+                      <p className="text-[9px] font-mono text-white/50 uppercase tracking-[0.3em]">Total Value</p>
                       <p className="text-xl sm:text-2xl font-black text-white/40 line-through tracking-tighter font-price">₹{originalTotal}</p>
                     </div>
-                    <div className="p-4 sm:p-6 bg-primary/10 border border-primary/20 rounded-3xl space-y-1 relative overflow-hidden group">
+                    <div className="p-4 sm:p-6 bg-primary/10 border border-primary/20 rounded-3xl space-y-2 relative overflow-hidden group">
                       <Zap className="absolute -right-4 -bottom-4 w-16 h-16 text-primary/5 -rotate-12" />
-                      <p className="text-[10px] font-mono text-primary uppercase tracking-[0.2em] font-black">Bundle Price</p>
+                      <p className="text-[9px] font-mono text-primary/80 uppercase tracking-[0.3em] font-black">Bundle Price</p>
                       <p className="text-3xl sm:text-4xl font-black text-primary tracking-tighter font-price">₹{currentDeal.bundlePrice}</p>
                     </div>
                   </div>
@@ -217,14 +227,14 @@ export function ComboDealsSection() {
                   <div className="flex flex-col sm:flex-row gap-4 pt-4">
                     <button
                       onClick={() => handleClaim(currentDeal, dealProducts)}
-                      className="flex-1 py-3.5 sm:py-5 bg-primary text-black font-black text-xs sm:text-sm uppercase tracking-[0.2em] rounded-2xl hover:scale-[1.02] active:scale-95 transition-all shadow-[0_10px_40px_rgba(212,175,55,0.3)] flex items-center justify-center gap-3"
+                      className="w-full py-3.5 sm:py-5 bg-primary text-black font-bold text-sm sm:text-base rounded-2xl hover:scale-[1.02] active:scale-95 transition-all shadow-[0_10px_30px_rgba(212,175,55,0.4)] flex items-center justify-center gap-3"
                     >
-                      <ShoppingBag size={20} className="sm:w-5 sm:h-5" strokeWidth={2.5} />
+                      <ShoppingBag size={20} className="sm:w-5 sm:h-5" strokeWidth={2} />
                       Claim Bundle Deal
                     </button>
                     <Link
                       href={`/deals/${currentDeal.id}`}
-                      className="flex items-center justify-center px-8 py-3.5 sm:py-5 border border-white/10 text-white font-black text-xs sm:text-sm uppercase tracking-widest rounded-2xl hover:bg-white/5 transition-all"
+                      className="flex items-center justify-center px-6 py-3.5 sm:py-5 border border-white/10 text-white/60 font-black text-[10px] uppercase tracking-[0.25em] rounded-2xl hover:bg-white/5 hover:text-white transition-all whitespace-nowrap"
                     >
                       Learn More
                     </Link>
@@ -233,8 +243,8 @@ export function ComboDealsSection() {
                   <div className="flex items-center gap-8 pt-4">
                     <div className="flex -space-x-3">
                       {dealProducts.slice(0, 4).map((p, i) => (
-                        <Link 
-                          key={p.id} 
+                        <Link
+                          key={p.id}
                           href={`/product/${p.slug || p.id}`}
                           className="w-10 h-10 rounded-full border-2 border-black bg-zinc-900 overflow-hidden relative hover:z-10 hover:scale-110 transition-transform cursor-pointer"
                         >
@@ -256,9 +266,9 @@ export function ComboDealsSection() {
                 {/* Right: Streetwear Collage Visuals */}
                 <div className="lg:col-span-7 order-1 lg:order-2">
                   <div className="relative aspect-[4/3] lg:aspect-square w-full flex items-center justify-center p-4">
-                    
+
                     {/* Center savings badge (Price Sticker) */}
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 sm:w-28 sm:h-28 bg-[#facc15] shadow-[4px_4px_0px_#000] flex flex-col items-center justify-center z-50 border-2 border-black rotate-12 transition-transform hover:rotate-6 cursor-default">
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 sm:w-28 sm:h-28 bg-[#facc15] shadow-[4px_4px_0px_#000,0_10px_30px_rgba(0,0,0,0.4)] flex flex-col items-center justify-center z-50 border-2 border-black rotate-12 transition-transform hover:rotate-6 cursor-default">
                       <p className="text-[8px] sm:text-[10px] font-black text-black uppercase leading-none mb-0.5 sm:mb-1">SAVE</p>
                       <p className="text-xl sm:text-3xl font-black text-black tracking-tighter font-price">₹{savings}</p>
                       <p className="text-[7px] sm:text-[8px] font-bold text-black/60 uppercase mt-0.5 sm:mt-1">OFF TOTAL</p>
@@ -381,13 +391,13 @@ export function ComboDealsSection() {
 
                       {/* Fallback for other counts */}
                       {![2, 3, 4, 5].includes(dealProducts.length) && dealProducts.length > 0 && (
-                         <div className="grid grid-cols-2 gap-4 h-full w-full">
+                        <div className="grid grid-cols-2 gap-4 h-full w-full">
                           {dealProducts.slice(0, 4).map((p, i) => (
                             <div key={p.id} className="relative border-2 border-white shadow-xl overflow-hidden aspect-square">
                               <Image src={p.imageUrl} alt={p.name} fill className="object-cover" />
                             </div>
                           ))}
-                         </div>
+                        </div>
                       )}
                     </div>
                   </div>

@@ -335,7 +335,14 @@ export default function ProductPage() {
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.3 }}
-                    className="absolute inset-0"
+                    className="absolute inset-0 cursor-grab active:cursor-grabbing"
+                    drag="x"
+                    dragConstraints={{ left: 0, right: 0 }}
+                    onDragEnd={(e, { offset }) => {
+                      const swipe = offset.x
+                      if (swipe < -50) nextImage()
+                      else if (swipe > 50) prevImage()
+                    }}
                   >
                     <WallMockup
                       posterSrc={primaryImage}
@@ -358,7 +365,14 @@ export default function ProductPage() {
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.3 }}
-                    className="absolute inset-0"
+                    className="absolute inset-0 cursor-grab active:cursor-grabbing"
+                    drag="x"
+                    dragConstraints={{ left: 0, right: 0 }}
+                    onDragEnd={(e, { offset }) => {
+                      const swipe = offset.x
+                      if (swipe < -50) nextImage()
+                      else if (swipe > 50) prevImage()
+                    }}
                   >
                     <WallMockup
                       posterSrc={primaryImage}
@@ -381,7 +395,14 @@ export default function ProductPage() {
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.3 }}
-                    className="absolute inset-0"
+                    className="absolute inset-0 cursor-grab active:cursor-grabbing"
+                    drag="x"
+                    dragConstraints={{ left: 0, right: 0 }}
+                    onDragEnd={(e, { offset }) => {
+                      const swipe = offset.x
+                      if (swipe < -50) nextImage()
+                      else if (swipe > 50) prevImage()
+                    }}
                   >
                     <WallMockup
                       posterSrc={primaryImage}

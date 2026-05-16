@@ -82,6 +82,7 @@ export function ComboDealsSection() {
             name: p.title,
             price: parseFloat(p.price),
             imageUrl: p.imageUrl,
+            images: p.images?.length > 0 ? p.images.map((img: any) => img.imageUrl) : [p.imageUrl],
             categorySlug: p.category?.slug,
             slug: p.slug
           }))
@@ -204,19 +205,19 @@ export function ComboDealsSection() {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="p-6 bg-white/[0.03] border border-white/5 rounded-3xl space-y-1">
                       <p className="text-[10px] font-mono text-white/30 uppercase tracking-[0.2em]">Total Value</p>
-                      <p className="text-2xl font-black text-white/40 line-through tracking-tighter">₹{originalTotal}</p>
+                      <p className="text-2xl font-black text-white/40 line-through tracking-tighter font-price">₹{originalTotal}</p>
                     </div>
                     <div className="p-6 bg-primary/10 border border-primary/20 rounded-3xl space-y-1 relative overflow-hidden group">
                       <Zap className="absolute -right-4 -bottom-4 w-16 h-16 text-primary/5 -rotate-12" />
                       <p className="text-[10px] font-mono text-primary uppercase tracking-[0.2em] font-black">Bundle Price</p>
-                      <p className="text-4xl font-black text-primary tracking-tighter">₹{currentDeal.bundlePrice}</p>
+                      <p className="text-4xl font-black text-primary tracking-tighter font-price">₹{currentDeal.bundlePrice}</p>
                     </div>
                   </div>
 
                   <div className="flex flex-col sm:flex-row gap-4 pt-4">
                     <button
                       onClick={() => handleClaim(currentDeal, dealProducts)}
-                      className="flex-1 py-5 bg-primary text-black font-black text-sm uppercase tracking-widest rounded-2xl hover:scale-[1.02] active:scale-95 transition-all shadow-[0_10px_40px_rgba(212,175,55,0.3)] flex items-center justify-center gap-3"
+                      className="flex-1 py-5 bg-primary text-black font-black text-xs uppercase tracking-[0.2em] rounded-2xl hover:scale-[1.02] active:scale-95 transition-all shadow-[0_10px_40px_rgba(212,175,55,0.3)] flex items-center justify-center gap-3"
                     >
                       <ShoppingBag size={18} />
                       Claim Bundle Deal

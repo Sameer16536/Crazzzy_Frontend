@@ -1,6 +1,8 @@
 'use client'
 
+import { useState, useEffect, useMemo } from 'react'
 import { useParams } from 'next/navigation'
+import { api } from '@/lib/api-client'
 import { Navbar } from '@/components/navbar'
 import { Footer } from '@/components/footer'
 import { useComboDeals } from '@/hooks/use-combo-deals'
@@ -23,7 +25,57 @@ export default function DealPage() {
   const dealId = params.id as string
   const deal = deals.find(d => String(d.id) === dealId)
   const allProducts = catalogData?.products ?? []
-  const dealProducts = allProducts.filter(p => deal?.eligibleProductIds.includes(p.id))
+  
+  const [extraProducts, setExtraProducts] = useState<any[]>([])
+
+  // Combine global products with extra fetched products
+  const combinedProducts = useMemo(() => {
+    const map = new Map<string, any>()
+    allProducts.forEach(p => map.set(String(p.id), p))
+    extraProducts.forEach(p => map.set(String(p.id), p))
+    return Array.from(map.values())
+  }, [allProducts, extraProducts])
+
+  // Robust filtering: compare as strings to avoid type issues
+  const dealProducts = useMemo(() => {
+    if (!deal) return []
+    const eligibleIds = deal.eligibleProductIds.map(String)
+    return combinedProducts.filter(p => eligibleIds.includes(String(p.id)))
+  }, [deal, combinedProducts])
+
+  // Fetch missing products if needed
+  useEffect(() => {
+    if (!deal || deal.eligibleProductIds.length === 0) return
+
+    const eligibleIds = deal.eligibleProductIds.map(String)
+    const existingIds = new Set(combinedProducts.map(p => String(p.id)))
+    const missingIds = eligibleIds.filter(id => !existingIds.has(id))
+
+    if (missingIds.length > 0) {
+      const fetchMissing = async () => {
+        try {
+          const res = await api.get<any>(`/products?ids=${missingIds.join(',')}&limit=100`)
+          const products = res?.data || []
+          const mapped = products.map((p: any) => ({
+            id: String(p.id),
+            name: p.title,
+            price: parseFloat(p.price),
+            imageUrl: p.imageUrl,
+            images: p.images?.length > 0 ? p.images.map((img: any) => img.imageUrl) : [p.imageUrl],
+            categorySlug: p.category?.slug,
+            slug: p.slug,
+            inStock: p.stock > 0,
+            rating: parseFloat(p.ratingAvg || 0),
+            reviews: p.reviewCount || 0
+          }))
+          setExtraProducts(prev => [...prev, ...mapped])
+        } catch (error) {
+          console.error('Failed to fetch missing bundle items', error)
+        }
+      }
+      fetchMissing()
+    }
+  }, [deal, combinedProducts])
 
   if (!mounted || isLoading) return <div className="min-h-screen bg-black" />
   if (!deal) return (
@@ -100,22 +152,22 @@ export default function DealPage() {
                 <div className="flex justify-between items-end border-b border-white/5 pb-6">
                   <div className="space-y-1">
                     <p className="text-[10px] font-mono text-white/40 uppercase tracking-widest">Original Price</p>
-                    <p className="text-lg font-bold text-white/40 line-through uppercase tracking-tighter">₹{originalTotal}</p>
+                    <p className="text-lg font-black text-white/40 line-through uppercase tracking-tighter font-price">₹{originalTotal}</p>
                   </div>
                   <div className="text-right space-y-1">
                     <p className="text-[10px] font-mono text-primary uppercase tracking-widest font-black">Bundle Offer</p>
-                    <p className="text-5xl font-black text-primary font-mono leading-none tracking-tighter">₹{deal.bundlePrice}</p>
+                    <p className="text-5xl font-black text-primary font-price leading-none tracking-tighter">₹{deal.bundlePrice}</p>
                   </div>
                 </div>
 
                 <div className="flex justify-between items-center bg-white/5 px-4 py-3 rounded-xl border border-white/10">
                   <span className="text-[10px] font-black text-white/60 uppercase tracking-widest">You Save</span>
-                  <span className="text-xl font-black text-primary uppercase tracking-tighter">₹{savings}</span>
+                  <span className="text-2xl font-black text-primary uppercase tracking-tighter font-price">₹{savings}</span>
                 </div>
 
                 <button 
                   onClick={handleClaim}
-                  className="w-full py-5 bg-primary text-black font-black text-sm uppercase tracking-widest rounded-2xl hover:scale-[1.02] active:scale-95 transition-all shadow-[0_10px_30px_rgba(212,175,55,0.4)] flex items-center justify-center gap-3"
+                  className="w-full py-5 bg-primary text-black font-black text-xs uppercase tracking-[0.2em] rounded-2xl hover:scale-[1.02] active:scale-95 transition-all shadow-[0_10px_30px_rgba(212,175,55,0.4)] flex items-center justify-center gap-3"
                 >
                   <ShoppingBag size={18} />
                   Claim Entire Bundle

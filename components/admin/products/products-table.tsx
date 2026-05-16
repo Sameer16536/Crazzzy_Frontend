@@ -226,8 +226,8 @@ export function ProductsTable() {
                               className="object-contain p-1 group-hover:scale-110 transition-transform duration-500" 
                             />
                           </div>
-                          <div className="min-w-0">
-                            <p className="text-sm font-black uppercase tracking-tight truncate text-foreground mb-1">{p.title}</p>
+                          <div className="min-w-0 flex-1 max-w-[300px] xl:max-w-[500px]">
+                            <p className="text-sm font-black uppercase tracking-tight line-clamp-2 text-foreground mb-1">{p.title}</p>
                             <p className="text-[9px] text-muted-foreground/60 uppercase tracking-[0.2em] font-bold">
                               ID: #{p.id} <span className="mx-2 text-border">|</span> {p.category?.name?.toUpperCase() || 'UNCATEGORIZED'}
                             </p>

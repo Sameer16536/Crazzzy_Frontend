@@ -25,6 +25,7 @@ import { motion } from 'framer-motion'
 import { useRef, useState, useEffect, useMemo } from 'react'
 import { DealOfTheDay } from '@/components/deal-of-the-day'
 import { ComboDealsSection } from '@/components/combo-deals-section'
+import { PromotionTicker } from '@/components/promotion-ticker'
 
 // ─── ShowcaseCard ─────────────────────────────────────────────────────────────
 function ShowcaseCard({ product, index = 0 }: { product: any; index?: number }) {
@@ -235,13 +236,16 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
+      <div className="pt-16">
+        <PromotionTicker />
+      </div>
 
       {/* ════════════════════════════════════════════════════════════════════
           HERO SECTION — Two-column: Text left | Product Showcase right
           ════════════════════════════════════════════════════════════════════ */}
       <section
         ref={heroRef}
-        className="relative min-h-screen w-full flex items-center justify-center overflow-hidden pt-20 md:pt-0"
+        className="relative min-h-[600px] sm:min-h-[800px] w-full flex flex-col items-center justify-start pt-12 sm:pt-24 overflow-hidden"
       >
         {/* Rich gradient background — replaces video */}
         <div

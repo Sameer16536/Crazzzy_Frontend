@@ -27,11 +27,11 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       {
-        url: '/main-icon.png',
-        type: 'image/png',
+        url: '/icon.svg',
+        type: 'image/svg+xml',
       },
     ],
-    apple: '/main-icon.png',
+    apple: '/icon.svg',
   },
   openGraph: {
     title: 'Crazzzy Store — Curated for Your Kind.',

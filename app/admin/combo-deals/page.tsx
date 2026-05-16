@@ -24,6 +24,8 @@ export default function AdminComboDealsPage() {
     eligibleProductIds: [] as string[],
     isActive: true
   })
+  const [editingId, setEditingId] = useState<number | null>(null)
+
 
   // Filtering states
   const [searchQuery, setSearchQuery] = useState('')
@@ -70,13 +72,21 @@ export default function AdminComboDealsPage() {
     }
   }, [selectedCategory, searchQuery, isCreating, fetchProducts])
 
-  const handleSaveNew = () => {
+  const handleSave = () => {
     if (!formData.title) return toast.error('Title is required')
     if (formData.requiredQuantity < 2) return toast.error('Required quantity must be at least 2')
     if (formData.bundlePrice < 1) return toast.error('Bundle price must be valid')
 
-    addDeal(formData)
+    if (editingId) {
+      updateDeal(editingId, formData)
+      toast.success('Combo deal updated')
+    } else {
+      addDeal(formData)
+      toast.success('Combo deal created')
+    }
+    
     setIsCreating(false)
+    setEditingId(null)
     setFormData({
       title: '',
       description: '',
@@ -85,7 +95,20 @@ export default function AdminComboDealsPage() {
       eligibleProductIds: [],
       isActive: true
     })
-    toast.success('Combo deal created')
+  }
+
+  const handleEdit = (deal: any) => {
+    setEditingId(deal.id)
+    setFormData({
+      title: deal.title,
+      description: deal.description || '',
+      requiredQuantity: deal.requiredQuantity,
+      bundlePrice: deal.bundlePrice,
+      eligibleProductIds: deal.eligibleProductIds.map(String),
+      isActive: deal.isActive
+    })
+    setIsCreating(true)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   const toggleProductSelection = (productId: string) => {
@@ -267,8 +290,10 @@ export default function AdminComboDealsPage() {
             </div>
 
             <div className="flex justify-end gap-3 pt-6 border-t border-border">
-              <Button variant="ghost" onClick={() => setIsCreating(false)} className="text-[10px] font-black uppercase tracking-widest">Abort</Button>
-              <Button onClick={handleSaveNew} className="text-[10px] font-black uppercase tracking-widest px-8 shadow-lg shadow-primary/10">Establish Bundle</Button>
+              <Button variant="ghost" onClick={() => { setIsCreating(false); setEditingId(null); }} className="text-[10px] font-black uppercase tracking-widest">Abort</Button>
+              <Button onClick={handleSave} className="text-[10px] font-black uppercase tracking-widest px-8 shadow-lg shadow-primary/10">
+                {editingId ? 'Update Bundle' : 'Establish Bundle'}
+              </Button>
             </div>
           </div>
         )}
@@ -309,6 +334,14 @@ export default function AdminComboDealsPage() {
               </div>
 
               <div className="flex items-center gap-3">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => handleEdit(deal)}
+                  className="text-[9px] font-black uppercase tracking-widest h-10 px-6 text-foreground border-white/10 hover:border-primary/50"
+                >
+                  EDIT
+                </Button>
                 <Button 
                   variant="outline" 
                   size="sm"

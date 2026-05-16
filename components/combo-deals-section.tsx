@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useComboDeals } from '@/hooks/use-combo-deals'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Gift, Zap, ArrowRight, Sparkles, CheckCircle2, ChevronLeft, ChevronRight, ShoppingBag } from 'lucide-react'
@@ -11,16 +11,19 @@ import { useAppDispatch } from '@/lib/store/hooks'
 import { addBundle } from '@/lib/store/slices/cart-slice'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
+import { api } from '@/lib/api-client'
 
 export function ComboDealsSection() {
   const { activeDeals, mounted, isLoading } = useComboDeals()
   const { data: catalogData } = useCatalog()
   const dispatch = useAppDispatch()
-  
+
   const allProducts = catalogData?.products ?? []
   const [activeIndex, setActiveIndex] = useState(0)
   const [isHovered, setIsHovered] = useState(false)
+  const [extraProducts, setExtraProducts] = useState<any[]>([])
   const autoPlayTimer = useRef<NodeJS.Timeout | null>(null)
+
 
   // Carousel controls
   const next = useCallback(() => {
@@ -43,14 +46,56 @@ export function ComboDealsSection() {
     }
   }, [activeDeals.length, isHovered, next])
 
-  if (!mounted || isLoading || activeDeals.length === 0) return null
+
+  // Combine global products with extra fetched products
+  const combinedProducts = useMemo(() => {
+    const map = new Map<string, any>()
+    allProducts.forEach(p => map.set(String(p.id), p))
+    extraProducts.forEach(p => map.set(String(p.id), p))
+    return Array.from(map.values())
+  }, [allProducts, extraProducts])
 
   const currentDeal = activeDeals[activeIndex]
-  const dealProducts = allProducts.filter(p => currentDeal.eligibleProductIds.includes(p.id))
-  
+
+  // Robust filtering: compare as strings to avoid type issues
+  const dealProducts = useMemo(() => {
+    if (!currentDeal) return []
+    const eligibleIds = currentDeal.eligibleProductIds.map(String)
+    return combinedProducts.filter(p => eligibleIds.includes(String(p.id)))
+  }, [currentDeal, combinedProducts])
+
+  // Fetch missing products if needed
+  useEffect(() => {
+    if (!currentDeal || currentDeal.eligibleProductIds.length === 0) return
+
+    const eligibleIds = currentDeal.eligibleProductIds.map(String)
+    const existingIds = new Set(combinedProducts.map(p => String(p.id)))
+    const missingIds = eligibleIds.filter(id => !existingIds.has(id))
+
+    if (missingIds.length > 0) {
+      const fetchMissing = async () => {
+        try {
+          const res = await api.get<any>(`/products?ids=${missingIds.join(',')}&limit=100`)
+          const products = res?.data || []
+          const mapped = products.map((p: any) => ({
+            id: String(p.id),
+            name: p.title,
+            price: parseFloat(p.price),
+            imageUrl: p.imageUrl,
+            categorySlug: p.category?.slug
+          }))
+          setExtraProducts(prev => [...prev, ...mapped])
+        } catch (error) {
+          console.error('Failed to fetch missing bundle items', error)
+        }
+      }
+      fetchMissing()
+    }
+  }, [currentDeal, combinedProducts])
+
   // Savings calculation
   const originalTotal = dealProducts.reduce((sum, p) => sum + p.price, 0)
-  const savings = originalTotal - currentDeal.bundlePrice
+  const savings = originalTotal - (currentDeal?.bundlePrice || 0)
 
   const handleClaim = (deal: any, items: any[]) => {
     dispatch(addBundle({
@@ -69,8 +114,10 @@ export function ComboDealsSection() {
     })
   }
 
+  if (!mounted || isLoading || activeDeals.length === 0) return null
+
   return (
-    <section 
+    <section
       className="relative py-24 overflow-hidden border-y border-white/5 bg-black"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -82,7 +129,7 @@ export function ComboDealsSection() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
           <div className="space-y-4">
-            <motion.div 
+            <motion.div
               className="flex items-center gap-3"
               initial={{ opacity: 0, x: -20 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -94,7 +141,7 @@ export function ComboDealsSection() {
                 Special Bundles
               </span>
             </motion.div>
-            <motion.h2 
+            <motion.h2
               className="text-5xl sm:text-7xl font-black text-white leading-tight uppercase tracking-tighter"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -104,16 +151,16 @@ export function ComboDealsSection() {
               Combo <span className="text-primary">Deals</span>
             </motion.h2>
           </div>
-          
+
           {activeDeals.length > 1 && (
             <div className="flex items-center gap-3">
-              <button 
+              <button
                 onClick={prev}
                 className="w-12 h-12 rounded-full border border-white/10 flex items-center justify-center hover:bg-white/5 transition-colors text-white/60 hover:text-white"
               >
                 <ChevronLeft size={24} />
               </button>
-              <button 
+              <button
                 onClick={next}
                 className="w-12 h-12 rounded-full border border-white/10 flex items-center justify-center hover:bg-white/5 transition-colors text-white/60 hover:text-white"
               >
@@ -141,7 +188,7 @@ export function ComboDealsSection() {
                       <Gift className="text-primary" size={16} />
                       <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Curated Bundle Deal</span>
                     </div>
-                    
+
                     <div className="space-y-3">
                       <h3 className="text-4xl sm:text-5xl font-black text-white uppercase tracking-tight leading-[0.95]">
                         {currentDeal.title}
@@ -165,14 +212,14 @@ export function ComboDealsSection() {
                   </div>
 
                   <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                    <button 
+                    <button
                       onClick={() => handleClaim(currentDeal, dealProducts)}
                       className="flex-1 py-5 bg-primary text-black font-black text-sm uppercase tracking-widest rounded-2xl hover:scale-[1.02] active:scale-95 transition-all shadow-[0_10px_40px_rgba(212,175,55,0.3)] flex items-center justify-center gap-3"
                     >
                       <ShoppingBag size={18} />
                       Claim Bundle Deal
                     </button>
-                    <Link 
+                    <Link
                       href={`/deals/${currentDeal.id}`}
                       className="flex items-center justify-center px-8 py-5 border border-white/10 text-white font-black text-xs uppercase tracking-widest rounded-2xl hover:bg-white/5 transition-all"
                     >
@@ -205,7 +252,7 @@ export function ComboDealsSection() {
                     {/* Visual Grid of Products */}
                     <div className="grid grid-cols-2 gap-4 h-full">
                       {dealProducts.slice(0, 4).map((p, i) => (
-                        <motion.div 
+                        <motion.div
                           key={p.id}
                           initial={{ opacity: 0, scale: 0.9 }}
                           animate={{ opacity: 1, scale: 1 }}
@@ -218,11 +265,11 @@ export function ComboDealsSection() {
                             i === 3 && "rounded-br-[5rem]"
                           )}
                         >
-                          <Image 
-                            src={p.imageUrl} 
-                            alt={p.name} 
-                            fill 
-                            className="object-cover transition-transform duration-700 group-hover/img:scale-110" 
+                          <Image
+                            src={p.imageUrl}
+                            alt={p.name}
+                            fill
+                            className="object-cover transition-transform duration-700 group-hover/img:scale-110"
                           />
                           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover/img:opacity-100 transition-opacity duration-500 p-6 flex flex-col justify-end">
                             <p className="text-xs font-black text-primary uppercase tracking-widest mb-1">{p.name}</p>
@@ -231,7 +278,7 @@ export function ComboDealsSection() {
                         </motion.div>
                       ))}
                     </div>
-                    
+
                     {/* Center savings badge */}
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-primary rounded-full flex flex-col items-center justify-center shadow-[0_0_50px_rgba(212,175,55,0.5)] z-20 border-4 border-black">
                       <p className="text-[10px] font-black text-black uppercase leading-none">Save</p>

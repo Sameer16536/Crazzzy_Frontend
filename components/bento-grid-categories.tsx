@@ -168,7 +168,6 @@ export function BentoGridCategories() {
 
     // 1. Define the exact order you want by slug
     const PREFERRED_ORDER = [
-      'aesthetic-items',
       'anime-figures',
       'chocolate-and-beverages',
       'wall-posters',
@@ -176,6 +175,7 @@ export function BentoGridCategories() {
       'hot-wheels',
       'keychains',
       'perfumes',
+      'aesthetic-items',
       'tote-bags'
     ]
 

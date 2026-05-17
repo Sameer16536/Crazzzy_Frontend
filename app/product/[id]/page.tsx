@@ -570,6 +570,35 @@ export default function ProductPage() {
                 {product.name}
               </h1>
 
+              {(() => {
+                const activeProductOffer = data?.productOffers?.find(o => String(o.productId) === String(product?.id) && o.isActive)
+                if (!activeProductOffer) return null
+                
+                let freeIds: number[] = []
+                try {
+                  freeIds = JSON.parse(activeProductOffer.freeProductIds)
+                } catch(e) {}
+                
+                let offerBadgeText = ''
+                if (freeIds.includes(Number(product.id))) {
+                  offerBadgeText = `BUY ${activeProductOffer.buyQuantity} GET 1 FREE`
+                } else {
+                  const freeProductNames = freeIds
+                    .map(fid => data?.products.find(p => String(p.id) === String(fid))?.name)
+                    .filter(Boolean)
+                    .join(' & ')
+                  offerBadgeText = `BUY ${activeProductOffer.buyQuantity} GET ${freeProductNames || 'SPECIAL GIFT'} FREE`
+                }
+
+                return (
+                  <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/30 rounded px-3 py-1.5 text-primary">
+                    <span className="text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5">
+                      🎁 {offerBadgeText}
+                    </span>
+                  </div>
+                )
+              })()}
+
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-1 text-primary">
                   {[...Array(5)].map((_, i) => (

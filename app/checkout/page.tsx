@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { Navbar } from '@/components/navbar'
 import { useAppDispatch, useAppSelector } from '@/lib/store/hooks'
-import { clearCart } from '@/lib/store/slices/cart-slice'
+import { clearCart, calculateComboOffer, calculateProductOffers } from '@/lib/store/slices/cart-slice'
+import { useCatalog } from '@/lib/catalog/catalog-context'
 import { api } from '@/lib/api-client'
 import { openRazorpay } from '@/lib/razorpay'
 import { toast } from 'sonner'
@@ -197,7 +198,31 @@ export default function CheckoutPage() {
     }
   }
 
-  const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0)
+  const { data: catalogData } = useCatalog()
+  const offers = catalogData?.categoryOffers || []
+  const categories = catalogData?.categories || []
+  const productOffers = catalogData?.productOffers || []
+  const products = catalogData?.products || []
+
+  // Compute regular items subtotal and fixed bundles total
+  const regularSubtotal = items.filter(i => !i.bundleId).reduce((sum, i) => sum + i.price * i.quantity, 0)
+  
+  const processedBundles = new Set<string | number>()
+  const bundlesTotal = items.filter(i => i.bundleId).reduce((sum, i) => {
+    if (i.bundleId && !processedBundles.has(i.bundleId)) {
+      processedBundles.add(i.bundleId)
+      return sum + (i.bundlePrice || 0)
+    }
+    return sum
+  }, 0)
+
+  const subtotal = regularSubtotal + bundlesTotal
+
+  // Solve promotions
+  const comboOffer = calculateComboOffer(items, offers, categories)
+  const productOfferResult = calculateProductOffers(items, productOffers, products)
+
+  const promoDiscount = comboOffer.totalSavings + productOfferResult.totalSavings
   
   const handleApplyCoupon = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -207,7 +232,7 @@ export default function CheckoutPage() {
     try {
       const res = await api.post<any>('/orders/apply-coupon', { 
         code: couponCodeInput.trim(), 
-        cartTotal: subtotal 
+        cartTotal: subtotal - promoDiscount
       })
       
       if (res.success && res.coupon) {
@@ -229,7 +254,7 @@ export default function CheckoutPage() {
   }
 
   const discountAmount = appliedCoupon ? appliedCoupon.discountAmount : 0
-  const finalSubtotal = Math.max(0, subtotal - discountAmount)
+  const finalSubtotal = Math.max(0, subtotal - promoDiscount - discountAmount)
   const shipping = finalSubtotal >= 999 ? 0 : 99
   const total = finalSubtotal + shipping
 
@@ -521,27 +546,19 @@ export default function CheckoutPage() {
                   </button>
                 </form>
                 
-                {appliedCoupon && (
-                  <div className="mt-3 flex items-center justify-between p-3 bg-green-500/10 border border-green-500/20 text-green-600 dark:text-green-400">
-                    <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest">
-                      <CheckCircle2 size={14} />
-                      Code '{appliedCoupon.code}' Applied
-                    </div>
-                    <button type="button" onClick={removeCoupon} className="hover:opacity-70 transition-opacity">
-                      <X size={14} />
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              <div className="space-y-5 pt-6 border-t border-border/50 mt-6">
-                <div className="flex justify-between text-xs text-muted-foreground">
+                                 <div className="flex justify-between text-xs text-muted-foreground">
                   <span className="uppercase tracking-widest font-bold">Subtotal</span>
                   <span className="font-mono text-foreground font-bold">₹{subtotal.toLocaleString('en-IN')}</span>
                 </div>
+                {promoDiscount > 0 && (
+                  <div className="flex justify-between text-xs text-primary font-bold">
+                    <span className="uppercase tracking-widest">Promo Discount</span>
+                    <span className="font-mono">-₹{promoDiscount.toLocaleString('en-IN')}</span>
+                  </div>
+                )}
                 {appliedCoupon && (
                   <div className="flex justify-between text-xs text-green-600 dark:text-green-400">
-                    <span className="uppercase tracking-widest font-bold">Discount</span>
+                    <span className="uppercase tracking-widest font-bold">Coupon Savings</span>
                     <span className="font-mono font-bold">-₹{appliedCoupon.discountAmount.toLocaleString('en-IN')}</span>
                   </div>
                 )}

@@ -273,4 +273,150 @@ export function calculateComboOffer(
   return { totalFreeUnits, freeByKey, itemOffers, totalSavings, upsell }
 }
 
+export interface ProductOffer {
+  id: number
+  productId: number
+  buyQuantity: number
+  freeProductIds: string // stringified JSON array
+  isActive: boolean
+}
+
+export interface ProductOfferResult {
+  totalSavings: number
+  freeByKey: Record<string, number>
+  itemOffers: Record<string, { buy: number; get: number; label: string }>
+  suggestions: {
+    needed: number
+    triggerProductSlug: string
+    triggerProductName: string
+    freeProductId: string
+    freeProductName: string
+    freeProductSlug: string
+    freeProductImage: string
+    label: string
+  }[]
+}
+
+export function calculateProductOffers(
+  items: CartItem[],
+  offers: ProductOffer[],
+  products: any[] = []
+): ProductOfferResult {
+  const freeByKey: Record<string, number> = {}
+  const itemOffers: Record<string, { buy: number; get: number; label: string }> = {}
+  let totalSavings = 0
+  const suggestions: ProductOfferResult['suggestions'] = []
+
+  const activeOffers = (offers || []).filter(o => o.isActive)
+
+  for (const offer of activeOffers) {
+    const triggerId = String(offer.productId)
+    // Find trigger items in cart (excluding fixed bundles)
+    const triggerItems = items.filter(item => item.productId === triggerId && !item.bundleId)
+    const triggerQty = triggerItems.reduce((sum, item) => sum + item.quantity, 0)
+
+    let freeProductIds: number[] = []
+    try {
+      freeProductIds = JSON.parse(offer.freeProductIds) as number[]
+    } catch (e) {
+      console.error('Failed to parse freeProductIds in client:', e)
+      continue
+    }
+
+    const isSameProduct = freeProductIds.includes(Number(offer.productId))
+
+    if (isSameProduct) {
+      // BOGO style: Buy X get 1 same product free (e.g. buy 1 get 1 means cycle = 2)
+      const cycle = offer.buyQuantity + 1
+      const freeUnits = Math.floor(triggerQty / cycle)
+      
+      // Suggest adding 1 more if trigger items are present but not completing the free cycle
+      const remainder = triggerQty % cycle
+      if (remainder === offer.buyQuantity) {
+        const triggerProduct = products.find(p => String(p.id) === triggerId)
+        if (triggerProduct) {
+          suggestions.push({
+            needed: 1,
+            triggerProductSlug: triggerProduct.slug || '',
+            triggerProductName: triggerProduct.name || triggerProduct.title || '',
+            freeProductId: triggerId,
+            freeProductName: triggerProduct.name || triggerProduct.title || '',
+            freeProductSlug: triggerProduct.slug || '',
+            freeProductImage: triggerProduct.imageUrl || '',
+            label: `Add 1 more ${triggerProduct.name || triggerProduct.title} to get it for FREE!`
+          })
+        }
+      }
+
+      if (freeUnits > 0) {
+        let remainingFree = freeUnits
+        const sortedTriggerItems = [...triggerItems].sort((a, b) => a.price - b.price)
+
+        for (const item of sortedTriggerItems) {
+          if (remainingFree <= 0) break
+          const take = Math.min(item.quantity, remainingFree)
+          const itemKey = `${item.productId}__${item.variantId ?? 'base'}`
+          freeByKey[itemKey] = (freeByKey[itemKey] || 0) + take
+          itemOffers[itemKey] = {
+            buy: offer.buyQuantity,
+            get: 1,
+            label: `Buy ${offer.buyQuantity} Get 1 Free`
+          }
+          totalSavings += take * item.price
+          remainingFree -= take
+        }
+      }
+    } else {
+      // Cross-product offer: Buy X triggers, get Y free products free
+      const triggerCycles = Math.floor(triggerQty / offer.buyQuantity)
+
+      for (const freeIdNum of freeProductIds) {
+        const freeId = String(freeIdNum)
+        const freeItems = items.filter(item => item.productId === freeId && !item.bundleId)
+        const freeQtyInCart = freeItems.reduce((sum, item) => sum + item.quantity, 0)
+
+        // If trigger is bought but free product not in cart (or not enough units), suggest adding it
+        const desiredFreeQty = triggerCycles > 0 ? triggerCycles : 1
+        if (triggerQty >= offer.buyQuantity && freeQtyInCart < desiredFreeQty) {
+          const triggerProduct = products.find(p => String(p.id) === triggerId)
+          const freeProduct = products.find(p => String(p.id) === freeId)
+          if (triggerProduct && freeProduct) {
+            suggestions.push({
+              needed: desiredFreeQty - freeQtyInCart,
+              triggerProductSlug: triggerProduct.slug || '',
+              triggerProductName: triggerProduct.name || triggerProduct.title || '',
+              freeProductId: freeId,
+              freeProductName: freeProduct.name || freeProduct.title || '',
+              freeProductSlug: freeProduct.slug || '',
+              freeProductImage: freeProduct.imageUrl || '',
+              label: `Add ${freeProduct.name || freeProduct.title} to your cart to get it for FREE!`
+            })
+          }
+        }
+
+        if (triggerCycles > 0 && freeQtyInCart > 0) {
+          let remainingFree = Math.min(freeQtyInCart, triggerCycles)
+          const sortedFreeItems = [...freeItems].sort((a, b) => a.price - b.price)
+
+          for (const item of sortedFreeItems) {
+            if (remainingFree <= 0) break
+            const take = Math.min(item.quantity, remainingFree)
+            const itemKey = `${item.productId}__${item.variantId ?? 'base'}`
+            freeByKey[itemKey] = (freeByKey[itemKey] || 0) + take
+            itemOffers[itemKey] = {
+              buy: offer.buyQuantity,
+              get: 1,
+              label: `Buy ${offer.buyQuantity} Get Free Gift`
+            }
+            totalSavings += take * item.price
+            remainingFree -= take
+          }
+        }
+      }
+    }
+  }
+
+  return { totalSavings, freeByKey, itemOffers, suggestions }
+}
+
 

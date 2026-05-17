@@ -26,6 +26,14 @@ export type CategoryOffer = {
   isActive: boolean
 }
 
+export type ProductOffer = {
+  id: number
+  productId: number
+  buyQuantity: number
+  freeProductIds: string // stringified JSON array
+  isActive: boolean
+}
+
 /**
  * Represents a product in the catalog.
  */
@@ -61,6 +69,7 @@ interface CatalogContextType {
     categories: CatalogCategory[]
     products: CatalogProduct[]
     categoryOffers: CategoryOffer[]
+    productOffers: ProductOffer[]
   } | null
   wishlistIds: Set<string>
   isLoading: boolean
@@ -259,10 +268,11 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
       const params = new URLSearchParams({ limit: String(limit), page: String(page) })
       if (categorySlug) params.set('category', categorySlug)
 
-      const [categoriesData, productsData, offersData] = await Promise.all([
+      const [categoriesData, productsData, offersData, productOffersData] = await Promise.all([
         page === 1 ? api.get<any>('/categories').catch(() => ({ data: [] })) : Promise.resolve({ data: dataRef.current?.categories }),
         api.get<any>(`/products?${params.toString()}`).catch(() => ({ data: [] })),
-        page === 1 ? api.get<any>('/settings/category-offers').catch(() => []) : Promise.resolve(dataRef.current?.categoryOffers || [])
+        page === 1 ? api.get<any>('/settings/category-offers').catch(() => []) : Promise.resolve(dataRef.current?.categoryOffers || []),
+        page === 1 ? api.get<any>('/settings/product-offers').catch(() => []) : Promise.resolve(dataRef.current?.productOffers || [])
       ])
 
       const rawCategories = categoriesData.data || []
@@ -312,15 +322,19 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
         ? (Array.isArray(offersData) ? offersData : offersData?.data || [])
         : (dataRef.current?.categoryOffers || [])
 
+      const productOffers = page === 1
+        ? (Array.isArray(productOffersData) ? productOffersData : productOffersData?.data || [])
+        : (dataRef.current?.productOffers || [])
+
       if (append) {
         setData(prev => {
-          if (!prev) return { categories, products, categoryOffers }
+          if (!prev) return { categories, products, categoryOffers, productOffers }
           const existingIds = new Set(prev.products.map(p => p.id))
           const uniqueNew = products.filter(p => !existingIds.has(p.id))
-          return { ...prev, products: [...prev.products, ...uniqueNew], categoryOffers }
+          return { ...prev, products: [...prev.products, ...uniqueNew], categoryOffers, productOffers }
         })
       } else {
-        setData({ categories, products, categoryOffers })
+        setData({ categories, products, categoryOffers, productOffers })
       }
 
       if (productsData.meta) {

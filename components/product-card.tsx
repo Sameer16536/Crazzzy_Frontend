@@ -91,14 +91,14 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
       >
         {/* Image Container */}
         <div
-          className="relative w-full aspect-square bg-card rounded-xl md:rounded-2xl overflow-hidden mb-3 md:mb-4 flex-shrink-0 transition-transform duration-300 group-hover:scale-[1.02]"
+          className="relative w-full aspect-square bg-[#121212] border border-white/5 rounded-xl md:rounded-2xl overflow-hidden mb-3 md:mb-4 flex-shrink-0 transition-transform duration-300 group-hover:scale-[1.02]"
           onMouseEnter={() => setIsImageHovered(true)}
           onMouseLeave={() => setIsImageHovered(false)}
         >
           {/* Main Image */}
           {product.images?.[0] ? (
             <div
-              className="absolute inset-0 p-6 bg-white transition-opacity duration-400"
+              className="absolute inset-0 p-6 bg-transparent transition-opacity duration-400"
               style={{ opacity: isImageHovered && product.images[1] ? 0 : 1 }}
             >
               <Image
@@ -120,7 +120,7 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
           {/* Secondary Image - Cross-fade on hover */}
           {product.images?.[1] && (
             <div
-              className="absolute inset-0 p-6 bg-white transition-opacity duration-400"
+              className="absolute inset-0 p-6 bg-transparent transition-opacity duration-400"
               style={{ opacity: isImageHovered ? 1 : 0 }}
             >
               <Image

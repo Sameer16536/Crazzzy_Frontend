@@ -144,6 +144,35 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
           {product.soldOut && <PremiumBadge label="Sold Out" variant="sold" />}
           {product.limited && product.inStock && <PremiumBadge label="Limited" variant="limited" />}
 
+          {/* Collector's Edition Ribbon */}
+          {product.name.toLowerCase().includes("collector's edition") && (
+            <div className="absolute top-0 left-0 z-20 pointer-events-none w-28 h-28 overflow-hidden rounded-tl-xl md:rounded-tl-2xl">
+              <div 
+                className="absolute top-[22px] left-[-36px] w-[140px] py-1 bg-gradient-to-r from-violet-600 via-fuchsia-500 to-pink-500 text-white text-center -rotate-45 shadow-[0_2px_8px_rgba(0,0,0,0.4)] border-y border-white/20 select-none overflow-hidden font-script"
+                style={{
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.2)',
+                  textShadow: '1px 1px 2px rgba(0,0,0,0.6)'
+                }}
+              >
+                {/* Shimmer Glint */}
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent"
+                  animate={{
+                    x: ['-100%', '100%'],
+                  }}
+                  transition={{
+                    repeat: Infinity,
+                    repeatType: 'loop',
+                    duration: 2,
+                    ease: 'easeInOut',
+                    repeatDelay: 1.5
+                  }}
+                />
+                <span className="relative z-10 normal-case text-[12px] md:text-[13px] tracking-normal font-semibold">Collector's edition</span>
+              </div>
+            </div>
+          )}
+
           {/* Wishlist Button */}
           <button
             className={cn(

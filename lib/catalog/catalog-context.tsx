@@ -129,7 +129,7 @@ const CATEGORY_DESIGN_DATA: Record<string, { color: string, description: string,
   'tote-bags': {
     color: '#c084fc',
     description: 'Aesthetic tote bags for every vibe',
-    imageOverride: 'https://res.cloudinary.com/dirjsc8qf/image/upload/v1777186869/crazzzy/tote-bags/gbaylic6gcnqit999jwo.webp'
+    imageOverride: 'https://res.cloudinary.com/dirjsc8qf/image/upload/v1779467281/crazzzy/tote-bags/k7plceba7rjstx9kkstp.webp'
   },
   'die-cast-cars-and-bikes': {
     color: '#f97316',
@@ -139,7 +139,7 @@ const CATEGORY_DESIGN_DATA: Record<string, { color: string, description: string,
   'perfumes': {
     color: '#d4af37',
     description: 'Premium imported fragrances',
-    imageOverride: 'https://res.cloudinary.com/dirjsc8qf/image/upload/v1777186851/crazzzy/perfumes/uc3girj0dwptv1hf3040.webp'
+    imageOverride: 'https://res.cloudinary.com/dirjsc8qf/image/upload/v1779467854/crazzzy/perfumes/e77anupmk4j3nhhjjtpn.webp'
   },
   'wall-posters': {
     color: '#06b6d4',
@@ -149,7 +149,7 @@ const CATEGORY_DESIGN_DATA: Record<string, { color: string, description: string,
   'anime-figures': {
     color: '#f43f5e',
     description: 'Detailed anime & superhero collectibles',
-    imageOverride: 'https://res.cloudinary.com/dirjsc8qf/image/upload/v1777186708/crazzzy/anime-figures/zg04zajuuucn0sd5nsjt.webp'
+    imageOverride: 'https://res.cloudinary.com/dirjsc8qf/image/upload/v1779466657/crazzzy/anime-figures/kydn00pjuevh8w2yceyv.webp'
   },
   'hot-wheels': {
     color: '#ef4444',

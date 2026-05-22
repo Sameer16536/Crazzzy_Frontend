@@ -34,6 +34,7 @@ async function request<T>(endpoint: string, options: RequestInit = {}, isMultipa
   const response = await fetch(`${API_URL}${endpoint}`, {
     ...options,
     headers,
+    cache: 'no-store', // Prevent Next.js / browser from serving stale API data
   });
 
   // Handle 401 Unauthorized (Token Expired)

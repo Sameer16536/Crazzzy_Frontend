@@ -46,6 +46,8 @@ export function ProductForm({ productId }: { productId?: string }) {
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
+  // IDs of existing images staged for deletion — actual delete happens only on "Update Product"
+  const [imagesToDelete, setImagesToDelete] = useState<number[]>([])
 
   const [formData, setFormData] = useState<FormData>({
     title: '',
@@ -153,8 +155,16 @@ export function ProductForm({ productId }: { productId?: string }) {
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
-  const removeExistingImage = (index: number) => {
-    setExistingImages(prev => prev.filter((_, i) => i !== index))
+  // Stage an existing image for deletion (does NOT call backend yet)
+  const stageImageForDeletion = (img: ExistingImage) => {
+    if (!img.id) return
+    setImagesToDelete(prev => [...prev, img.id!])
+  }
+
+  // Undo a staged deletion
+  const unstageImageDeletion = (img: ExistingImage) => {
+    if (!img.id) return
+    setImagesToDelete(prev => prev.filter(id => id !== img.id))
   }
 
   const removeNewFile = (index: number) => {
@@ -173,7 +183,16 @@ export function ProductForm({ productId }: { productId?: string }) {
 
     setSubmitting(true)
     try {
-      // Build FormData — required for multipart file upload
+      // 1. Delete any staged images first (backend: DB + Cloudinary)
+      if (productId && imagesToDelete.length > 0) {
+        await Promise.all(
+          imagesToDelete.map(imgId =>
+            api.delete(`/admin/products/${productId}/images/${imgId}`).catch(() => {})
+          )
+        )
+      }
+
+      // 2. Build FormData — required for multipart file upload
       const fd = new FormData()
 
       // Text fields
@@ -268,7 +287,9 @@ export function ProductForm({ productId }: { productId?: string }) {
     }))
   }
 
-  const totalImageCount = existingImages.length + newFiles.length
+  // Images staged for deletion don't count toward the product (for validation purposes)
+  const activeExistingCount = existingImages.filter(img => !img.id || !imagesToDelete.includes(img.id)).length
+  const totalImageCount = activeExistingCount + newFiles.length
 
   if (loading) {
     return (
@@ -562,20 +583,54 @@ export function ProductForm({ productId }: { productId?: string }) {
           {totalImageCount > 0 && (
             <div className="grid grid-cols-3 gap-2">
               {/* Existing images (edit mode) */}
-              {existingImages.map((img, i) => (
-                <div key={`existing-${i}`} className="aspect-square bg-white border border-border rounded-lg relative overflow-hidden group">
-                  <Image src={resolveImageUrl(img.imageUrl)} alt={`Product image ${i + 1}`} fill className="object-contain p-1" />
-                  <button
-                    type="button"
-                    onClick={() => removeExistingImage(i)}
-                    className="absolute inset-0 bg-red-500/80 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
-                    title="Remove image"
+              {existingImages.map((img, i) => {
+                const isStaged = !!img.id && imagesToDelete.includes(img.id)
+                return (
+                  <div
+                    key={`existing-${i}`}
+                    className={`aspect-square bg-white border rounded-lg relative overflow-hidden group transition-all ${
+                      isStaged ? 'border-red-500/60 opacity-50' : 'border-border'
+                    }`}
                   >
-                    <X size={18} className="text-white" />
-                  </button>
-                  <div className="absolute bottom-1 left-1 bg-black/60 text-white text-[8px] px-1 rounded">saved</div>
-                </div>
-              ))}
+                    <Image
+                      src={resolveImageUrl(img.imageUrl)}
+                      alt={`Product image ${i + 1}`}
+                      fill
+                      className={`object-contain p-1 transition-all ${isStaged ? 'grayscale' : ''}`}
+                    />
+
+                    {isStaged ? (
+                      // STAGED: show undo overlay
+                      <>
+                        <div className="absolute inset-0 bg-red-500/20 flex flex-col items-center justify-center gap-1">
+                          <span className="text-[8px] font-black uppercase tracking-widest text-red-600">Will delete</span>
+                          <button
+                            type="button"
+                            onClick={() => unstageImageDeletion(img)}
+                            className="text-[8px] font-black uppercase tracking-widest bg-white text-red-600 border border-red-400 px-2 py-0.5 rounded hover:bg-red-50 transition-colors"
+                          >
+                            Undo
+                          </button>
+                        </div>
+                        <div className="absolute bottom-1 left-1 bg-red-500 text-white text-[8px] px-1 rounded">staged</div>
+                      </>
+                    ) : (
+                      // NORMAL: show X on hover
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => stageImageForDeletion(img)}
+                          className="absolute inset-0 bg-red-500/80 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
+                          title="Mark for deletion (confirmed on save)"
+                        >
+                          <X size={18} className="text-white" />
+                        </button>
+                        <div className="absolute bottom-1 left-1 bg-black/60 text-white text-[8px] px-1 rounded">saved</div>
+                      </>
+                    )}
+                  </div>
+                )
+              })}
 
               {/* New files (local preview) */}
               {newFilePreviews.map((preview, i) => (
@@ -598,6 +653,11 @@ export function ProductForm({ productId }: { productId?: string }) {
           {totalImageCount === 0 && (
             <p className="text-[10px] text-red-400/80 uppercase tracking-widest text-center font-bold">
               ⚠ At least 1 image required
+            </p>
+          )}
+          {imagesToDelete.length > 0 && (
+            <p className="text-[10px] text-amber-500/90 uppercase tracking-widest text-center font-bold">
+              ⚠ {imagesToDelete.length} image{imagesToDelete.length > 1 ? 's' : ''} will be deleted on save
             </p>
           )}
 

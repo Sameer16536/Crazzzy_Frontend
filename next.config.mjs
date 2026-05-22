@@ -28,18 +28,6 @@ const nextConfig = {
       },
     ],
   },
-  async headers() {
-    return [
-      {
-        // Prevent Vercel Edge / CDN from caching any API proxy responses
-        source: '/api-proxy/:path*',
-        headers: [
-          { key: 'Cache-Control', value: 'no-store, no-cache, must-revalidate' },
-          { key: 'Pragma', value: 'no-cache' },
-        ],
-      },
-    ]
-  },
   async rewrites() {
     return [
       {

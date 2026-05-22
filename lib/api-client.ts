@@ -34,7 +34,9 @@ async function request<T>(endpoint: string, options: RequestInit = {}, isMultipa
   const response = await fetch(`${API_URL}${endpoint}`, {
     ...options,
     headers,
-    cache: 'no-store', // Prevent Next.js / browser from serving stale API data
+    // Cache behaviour is governed by the backend's Cache-Control response headers:
+    //   GET  → public, max-age=30  (fast, short-lived CDN/browser cache)
+    //   POST/PUT/PATCH/DELETE → no-store  (mutations always fresh)
   });
 
   // Handle 401 Unauthorized (Token Expired)

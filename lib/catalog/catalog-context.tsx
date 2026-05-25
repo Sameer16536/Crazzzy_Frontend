@@ -151,7 +151,7 @@ const CATEGORY_DESIGN_DATA: Record<string, { color: string, description: string,
     description: 'Detailed anime & superhero collectibles',
     imageOverride: 'https://res.cloudinary.com/dirjsc8qf/image/upload/v1779466657/crazzzy/anime-figures/kydn00pjuevh8w2yceyv.webp'
   },
-  'hot-wheels': {
+  'hotwheels': {
     color: '#ef4444',
     description: '1:64 scale Hot Wheels collectibles',
     imageOverride: 'https://res.cloudinary.com/dirjsc8qf/image/upload/v1778999452/crazzzy/hotwheels/e7fmblmn7r6idmp1z55i.webp'

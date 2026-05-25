@@ -634,7 +634,7 @@ export default function ProductPage() {
                 )}
               </div>
               <p className="text-[10px] text-muted-foreground font-medium tracking-wide uppercase font-body opacity-60">
-                * Prices inclusive of all taxes. Worldwide shipping available.
+                * Prices inclusive of all taxes. PAN INDIA shipping available.
               </p>
             </div>
 

@@ -134,7 +134,7 @@ const CATEGORY_DESIGN_DATA: Record<string, { color: string, description: string,
   'die-cast-cars-and-bikes': {
     color: '#f97316',
     description: 'Premium 1:24 scale die-cast models',
-    imageOverride: 'https://res.cloudinary.com/dirjsc8qf/image/upload/v1777186788/crazzzy/die-cast-cars-and-bikes/td5ug9upn6s16l1qltfh.webp'
+    imageOverride: 'https://res.cloudinary.com/dirjsc8qf/image/upload/v1779000515/crazzzy/die-cast-cars-and-bikes/aaso6k3bwb1ozultgee7.webp'
   },
   'perfumes': {
     color: '#d4af37',
@@ -154,7 +154,7 @@ const CATEGORY_DESIGN_DATA: Record<string, { color: string, description: string,
   'hot-wheels': {
     color: '#ef4444',
     description: '1:64 scale Hot Wheels collectibles',
-    imageOverride: 'https://res.cloudinary.com/dirjsc8qf/image/upload/v1777186813/crazzzy/hotwheels/o71okiiuombsgla0bjzl.webp'
+    imageOverride: 'https://res.cloudinary.com/dirjsc8qf/image/upload/v1778999452/crazzzy/hotwheels/e7fmblmn7r6idmp1z55i.webp'
   },
   'keychains': {
     color: '#10b981',

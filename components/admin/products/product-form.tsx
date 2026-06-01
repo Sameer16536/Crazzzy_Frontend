@@ -29,7 +29,7 @@ interface FormData {
   isFeatured: boolean
   isDealOfTheDay: boolean
   isActive: boolean
-  variants: { variantName: string; price: string; stock: string }[]
+  variants: { variantName: string; price: string; stock: string; isDefault?: boolean }[]
 }
 
 // Existing images from Cloudinary (URL based)
@@ -101,13 +101,25 @@ export function ProductForm({ productId }: { productId?: string }) {
           isFeatured: !!product.isFeatured,
           isDealOfTheDay: !!product.isDealOfTheDay,
           isActive: product.isActive !== false,
-          variants: Array.isArray(product.variants)
-            ? product.variants.map((v: any) => ({
-              variantName: v.variantName,
-              price: String(Number(product.price || 0) + Number(v.additionalPrice || 0)),
-              stock: String(v.stock || '0'),
-            }))
-            : [],
+          variants: (() => {
+            let foundDefault = false
+            const parsed = Array.isArray(product.variants)
+              ? product.variants.map((v: any) => {
+                  const isDefault = !foundDefault && Number(v.additionalPrice || 0) === 0
+                  if (isDefault) foundDefault = true
+                  return {
+                    variantName: v.variantName,
+                    price: isDefault ? String(product.price) : String(Number(product.price || 0) + Number(v.additionalPrice || 0)),
+                    stock: isDefault ? String(product.stock) : String(v.stock || '0'),
+                    isDefault
+                  }
+                })
+              : []
+            if (parsed.length > 0 && !foundDefault) {
+              parsed[0].isDefault = true
+            }
+            return parsed
+          })(),
         })
 
         // Load existing images
@@ -214,15 +226,24 @@ export function ProductForm({ productId }: { productId?: string }) {
       fd.append('isFeatured', String(formData.isFeatured))
       fd.append('isDealOfTheDay', String(formData.isDealOfTheDay))
       fd.append('isActive', String(formData.isActive))
-      
+
       // Calculate under-the-hood additionalPrice (variantPrice - basePrice) for the database/backend
       const basePrice = parseFloat(formData.price) || 0
+      const baseStock = parseInt(formData.stock, 10) || 0
       const formattedVariants = formData.variants.map(v => {
-        const variantPrice = parseFloat(v.price) || basePrice
+        if (v.isDefault) {
+          return {
+            variantName: v.variantName,
+            additionalPrice: 0,
+            stock: baseStock
+          }
+        }
+        const variantPrice = v.price ? (parseFloat(v.price) || 0) : basePrice
+        const variantStock = v.stock ? (parseInt(v.stock, 10) || 0) : baseStock
         return {
           variantName: v.variantName,
           additionalPrice: variantPrice - basePrice,
-          stock: parseInt(v.stock, 10) || 0
+          stock: variantStock
         }
       })
       fd.append('variants', JSON.stringify(formattedVariants))
@@ -272,12 +293,23 @@ export function ProductForm({ productId }: { productId?: string }) {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target
+    let val: any = value
     if (type === 'checkbox') {
-      const checked = (e.target as HTMLInputElement).checked
-      setFormData(prev => ({ ...prev, [name]: checked }))
-    } else {
-      setFormData(prev => ({ ...prev, [name]: value }))
+      val = (e.target as HTMLInputElement).checked
     }
+    
+    setFormData(prev => {
+      const updated = { ...prev, [name]: val }
+      if (name === 'price' || name === 'stock') {
+        updated.variants = prev.variants.map(v => {
+          if (v.isDefault) {
+            return { ...v, [name === 'price' ? 'price' : 'stock']: val }
+          }
+          return v
+        })
+      }
+      return updated
+    })
   }
 
   const isPosterCategory = () => {
@@ -289,14 +321,46 @@ export function ProductForm({ productId }: { productId?: string }) {
   }
 
   const addVariant = () => {
-    setFormData(prev => ({
-      ...prev,
-      variants: [...prev.variants, { variantName: '', price: prev.price || '0', stock: '100' }],
-    }))
+    setFormData(prev => {
+      const isDefault = prev.variants.length === 0
+      return {
+        ...prev,
+        variants: [
+          ...prev.variants,
+          {
+            variantName: '',
+            price: isDefault ? prev.price : '0',
+            stock: isDefault ? prev.stock : '100',
+            isDefault
+          }
+        ]
+      }
+    })
   }
 
   const removeVariant = (index: number) => {
-    setFormData(prev => ({ ...prev, variants: prev.variants.filter((_, i) => i !== index) }))
+    setFormData(prev => {
+      const wasDefault = prev.variants[index]?.isDefault
+      const filtered = prev.variants.filter((_, i) => i !== index)
+      if (wasDefault && filtered.length > 0) {
+        filtered[0].isDefault = true
+        filtered[0].price = prev.price
+        filtered[0].stock = prev.stock
+      }
+      return { ...prev, variants: filtered }
+    })
+  }
+
+  const setDefaultVariant = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      variants: prev.variants.map((v, i) => ({
+        ...v,
+        isDefault: i === index,
+        price: i === index ? prev.price : v.price,
+        stock: i === index ? prev.stock : v.stock,
+      })),
+    }))
   }
 
   const updateVariant = (index: number, field: string, value: string) => {
@@ -478,7 +542,23 @@ export function ProductForm({ productId }: { productId?: string }) {
                 </div>
               ) : (
                 formData.variants.map((variant, index) => (
-                  <div key={index} className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 border border-border bg-muted/20 relative group rounded-lg">
+                  <div key={index} className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 border border-border bg-muted/20 relative group rounded-lg pt-6">
+                    {/* Default Selector Radio */}
+                    <div className="flex items-center gap-2 md:col-span-4 border-b border-border pb-3 mb-2">
+                      <input
+                        type="radio"
+                        id={`default-variant-${index}`}
+                        name="defaultVariant"
+                        checked={!!variant.isDefault}
+                        onChange={() => setDefaultVariant(index)}
+                        className="w-3.5 h-3.5 accent-primary cursor-pointer"
+                      />
+                      <label htmlFor={`default-variant-${index}`} className="text-[10px] font-black uppercase tracking-[0.2em] text-primary cursor-pointer flex items-center gap-1">
+                        Use Pricing & Inventory values as Default
+                        {variant.isDefault && <span className="text-[8px] bg-primary/20 text-primary border border-primary/30 px-1.5 py-0.5 rounded font-black tracking-widest uppercase ml-2">Active Default</span>}
+                      </label>
+                    </div>
+
                     <div className="space-y-2 md:col-span-2">
                       <label className="text-[9px] font-black uppercase tracking-[0.3em] text-muted-foreground">Variant Name</label>
                       <input
@@ -493,20 +573,30 @@ export function ProductForm({ productId }: { productId?: string }) {
                       <label className="text-[9px] font-black uppercase tracking-[0.3em] text-muted-foreground">Price (₹)</label>
                       <input
                         type="number"
-                        value={variant.price}
+                        value={variant.isDefault ? formData.price : variant.price}
                         onChange={(e) => updateVariant(index, 'price', e.target.value)}
-                        required
-                        className="w-full bg-background border border-border px-4 py-2 text-xs font-mono font-bold focus:border-primary/40 outline-none text-foreground rounded"
+                        disabled={variant.isDefault}
+                        placeholder={formData.price || '0'}
+                        className={`w-full border px-4 py-2 text-xs font-mono font-bold focus:border-primary/40 outline-none rounded ${
+                          variant.isDefault 
+                            ? 'bg-muted/40 text-muted-foreground border-border/40 cursor-not-allowed' 
+                            : 'bg-background border-border text-foreground'
+                        }`}
                       />
                     </div>
                     <div className="space-y-2">
                       <label className="text-[9px] font-black uppercase tracking-[0.3em] text-muted-foreground">Stock</label>
                       <input
                         type="number"
-                        value={variant.stock}
+                        value={variant.isDefault ? formData.stock : variant.stock}
                         onChange={(e) => updateVariant(index, 'stock', e.target.value)}
-                        required
-                        className="w-full bg-background border border-border px-4 py-2 text-xs font-mono font-bold focus:border-primary/40 outline-none text-foreground rounded"
+                        disabled={variant.isDefault}
+                        placeholder={formData.stock || '100'}
+                        className={`w-full border px-4 py-2 text-xs font-mono font-bold focus:border-primary/40 outline-none rounded ${
+                          variant.isDefault 
+                            ? 'bg-muted/40 text-muted-foreground border-border/40 cursor-not-allowed' 
+                            : 'bg-background border-border text-foreground'
+                        }`}
                       />
                     </div>
                     <button

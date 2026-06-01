@@ -29,7 +29,7 @@ interface FormData {
   isFeatured: boolean
   isDealOfTheDay: boolean
   isActive: boolean
-  variants: { variantName: string; additionalPrice: string; stock: string }[]
+  variants: { variantName: string; price: string; stock: string }[]
 }
 
 // Existing images from Cloudinary (URL based)
@@ -103,10 +103,10 @@ export function ProductForm({ productId }: { productId?: string }) {
           isActive: product.isActive !== false,
           variants: Array.isArray(product.variants)
             ? product.variants.map((v: any) => ({
-                variantName: v.variantName,
-                additionalPrice: String(v.additionalPrice || '0'),
-                stock: String(v.stock || '0'),
-              }))
+              variantName: v.variantName,
+              price: String(Number(product.price || 0) + Number(v.additionalPrice || 0)),
+              stock: String(v.stock || '0'),
+            }))
             : [],
         })
 
@@ -114,8 +114,8 @@ export function ProductForm({ productId }: { productId?: string }) {
         const imgs: ExistingImage[] = Array.isArray(product.images) && product.images.length > 0
           ? product.images.map((img: any) => ({ id: img.id, imageUrl: img.imageUrl, publicId: img.publicId }))
           : product.imageUrl
-          ? [{ imageUrl: product.imageUrl, publicId: product.publicId }]
-          : []
+            ? [{ imageUrl: product.imageUrl, publicId: product.publicId }]
+            : []
         setExistingImages(imgs)
       }
     } catch (error) {
@@ -144,6 +144,14 @@ export function ProductForm({ productId }: { productId?: string }) {
     const totalImages = existingImages.length + newFiles.length + selected.length
     if (totalImages > 5) {
       toast.error('Maximum 5 images allowed per product')
+      return
+    }
+
+    // Enforce 5MB limit per file (as described in the dropzone placeholder text)
+    const MAX_SIZE = 5 * 1024 * 1024 // 5MB
+    const oversizedFiles = selected.filter(f => f.size > MAX_SIZE)
+    if (oversizedFiles.length > 0) {
+      toast.error(`The following files exceed the 5MB size limit: ${oversizedFiles.map(f => f.name).join(', ')}`)
       return
     }
 
@@ -187,7 +195,7 @@ export function ProductForm({ productId }: { productId?: string }) {
       if (productId && imagesToDelete.length > 0) {
         await Promise.all(
           imagesToDelete.map(imgId =>
-            api.delete(`/admin/products/${productId}/images/${imgId}`).catch(() => {})
+            api.delete(`/admin/products/${productId}/images/${imgId}`).catch(() => { })
           )
         )
       }
@@ -206,7 +214,18 @@ export function ProductForm({ productId }: { productId?: string }) {
       fd.append('isFeatured', String(formData.isFeatured))
       fd.append('isDealOfTheDay', String(formData.isDealOfTheDay))
       fd.append('isActive', String(formData.isActive))
-      fd.append('variants', JSON.stringify(formData.variants))
+      
+      // Calculate under-the-hood additionalPrice (variantPrice - basePrice) for the database/backend
+      const basePrice = parseFloat(formData.price) || 0
+      const formattedVariants = formData.variants.map(v => {
+        const variantPrice = parseFloat(v.price) || basePrice
+        return {
+          variantName: v.variantName,
+          additionalPrice: variantPrice - basePrice,
+          stock: parseInt(v.stock, 10) || 0
+        }
+      })
+      fd.append('variants', JSON.stringify(formattedVariants))
 
       // Attach new image files under field name "images" (matches backend: upload.array('images', 5))
       newFiles.forEach(file => fd.append('images', file))
@@ -272,7 +291,7 @@ export function ProductForm({ productId }: { productId?: string }) {
   const addVariant = () => {
     setFormData(prev => ({
       ...prev,
-      variants: [...prev.variants, { variantName: '', additionalPrice: '0', stock: '100' }],
+      variants: [...prev.variants, { variantName: '', price: prev.price || '0', stock: '100' }],
     }))
   }
 
@@ -471,11 +490,11 @@ export function ProductForm({ productId }: { productId?: string }) {
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-[9px] font-black uppercase tracking-[0.3em] text-muted-foreground">Add. Price (₹)</label>
+                      <label className="text-[9px] font-black uppercase tracking-[0.3em] text-muted-foreground">Price (₹)</label>
                       <input
                         type="number"
-                        value={variant.additionalPrice}
-                        onChange={(e) => updateVariant(index, 'additionalPrice', e.target.value)}
+                        value={variant.price}
+                        onChange={(e) => updateVariant(index, 'price', e.target.value)}
                         required
                         className="w-full bg-background border border-border px-4 py-2 text-xs font-mono font-bold focus:border-primary/40 outline-none text-foreground rounded"
                       />
@@ -588,9 +607,8 @@ export function ProductForm({ productId }: { productId?: string }) {
                 return (
                   <div
                     key={`existing-${i}`}
-                    className={`aspect-square bg-white border rounded-lg relative overflow-hidden group transition-all ${
-                      isStaged ? 'border-red-500/60 opacity-50' : 'border-border'
-                    }`}
+                    className={`aspect-square bg-white border rounded-lg relative overflow-hidden group transition-all ${isStaged ? 'border-red-500/60 opacity-50' : 'border-border'
+                      }`}
                   >
                     <Image
                       src={resolveImageUrl(img.imageUrl)}

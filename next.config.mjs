@@ -3,6 +3,9 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  experimental: {
+    middlewareClientMaxBodySize: '30mb',
+  },
   images: {
     unoptimized: true,
     remotePatterns: [

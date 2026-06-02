@@ -231,7 +231,7 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
                 return Math.max(...allPrices).toLocaleString('en-IN')
               })()}
             </span>
-            {product.originalPrice && product.originalPrice > product.price && (
+            {!!product.originalPrice && product.originalPrice > product.price && (
               <>
                 <span className="text-[10px] md:text-sm text-muted-foreground line-through">
                   ₹{product.originalPrice.toLocaleString('en-IN')}

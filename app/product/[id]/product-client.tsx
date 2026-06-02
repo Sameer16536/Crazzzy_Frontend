@@ -627,7 +627,7 @@ export default function ProductPage() {
                 <span className="text-5xl font-black text-foreground font-price">
                   ₹{displayPrice.toLocaleString('en-IN')}
                 </span>
-                {product.originalPrice && (
+                {!!product.originalPrice && (
                   <span className="text-2xl text-muted-foreground line-through font-light font-price">
                     ₹{Number(product.originalPrice).toLocaleString('en-IN')}
                   </span>

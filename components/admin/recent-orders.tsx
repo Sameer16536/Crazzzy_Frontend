@@ -75,7 +75,7 @@ export function RecentOrders() {
                     <span className={`text-[10px] font-black uppercase tracking-widest ${status.color}`}>{status.label}</span>
                  </div>
                  <p className="text-lg font-black font-mono">₹{parseFloat(order.totalAmount).toLocaleString('en-IN')}</p>
-                 <Link href={`/admin/orders/${order.id}`} className="p-2 text-white/20 hover:text-primary transition-colors">
+                 <Link href={`/account/orders/${order.id}`} className="p-2 text-white/20 hover:text-primary transition-colors">
                     <ChevronRight size={18} />
                  </Link>
               </div>

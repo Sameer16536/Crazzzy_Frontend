@@ -106,8 +106,8 @@ export default function OrderDetailsPage() {
     return (
       <div className="min-h-screen bg-background text-foreground flex flex-col items-center justify-center p-4">
         <h1 className="text-2xl font-black uppercase mb-4 text-foreground">Order Not Found</h1>
-        <Link href="/account/orders" className="text-primary hover:underline uppercase text-[10px] font-bold tracking-widest">
-          Back to Orders
+        <Link href={user?.role === 'ADMIN' ? "/admin/orders" : "/account/orders"} className="text-primary hover:underline uppercase text-[10px] font-bold tracking-widest">
+          {user?.role === 'ADMIN' ? "Back to Admin Registry" : "Back to Orders"}
         </Link>
       </div>
     )
@@ -123,11 +123,11 @@ export default function OrderDetailsPage() {
         
         {/* Navigation */}
         <Link 
-          href="/account/orders" 
+          href={user?.role === 'ADMIN' ? "/admin/orders" : "/account/orders"} 
           className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground hover:text-foreground transition-colors mb-12"
         >
           <ChevronLeft size={14} />
-          Return to Orders
+          {user?.role === 'ADMIN' ? "Return to Admin Registry" : "Return to Orders"}
         </Link>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">

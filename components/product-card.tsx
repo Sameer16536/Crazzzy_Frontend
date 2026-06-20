@@ -222,14 +222,11 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
 
           {/* Price Section */}
           <div className="flex items-baseline gap-1.5 md:gap-2 py-0.5 md:py-1">
+            {product.variants && product.variants.length > 0 && (
+              <span className="text-[9px] md:text-xs text-muted-foreground font-medium">From</span>
+            )}
             <span className="text-sm md:text-lg font-bold text-foreground">
-              ₹{(() => {
-                const allPrices = [
-                  product.price,
-                  ...(product.variants || []).map(v => product.price + (Number(v.additionalPrice) || 0))
-                ]
-                return Math.max(...allPrices).toLocaleString('en-IN')
-              })()}
+              ₹{product.price.toLocaleString('en-IN')}
             </span>
             {!!product.originalPrice && product.originalPrice > product.price && (
               <>

@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   title: 'Crazzzy Store — Curated for Your Kind.',
   description: 'Shop exclusive high-quality posters, authentic anime figures, premium perfumes, die-cast cars, and limited edition aesthetic collectibles. Crazzzy Store is the ultimate destination for premium wall art and home decor.',
   keywords: [
-    'Posters', 'Wall Art', 'Anime Figures', 'Collectibles', 'Premium Perfumes', 
+    'Posters', 'Wall Art', 'Anime Figures', 'Collectibles', 'Premium Perfumes',
     'Die-cast Cars', 'Streetwear', 'Home Decor', 'Aesthetic Decor', 'Crazzzy Store',
     'Limited Edition', 'Pop Culture', 'Gaming Gear', 'Designer Toys'
   ],
@@ -25,17 +25,9 @@ export const metadata: Metadata = {
     telephone: false,
   },
   icons: {
-    icon: [
-      {
-        url: '/icon.svg',
-        type: 'image/svg+xml',
-      },
-      {
-        url: '/favicon.ico',
-        sizes: 'any',
-      },
-    ],
-    apple: '/icon.svg',
+    icon: '/main-icon.png',
+    shortcut: '/main-icon.png',
+    apple: '/main-icon.png',
   },
   openGraph: {
     title: 'Crazzzy Store — Curated for Your Kind.',
@@ -77,6 +69,9 @@ export default async function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className={theme === 'dark' ? 'dark' : undefined}>
       <head>
+        <link rel="icon" href="/brand-icon.png?v=3" type="image/png" />
+        <link rel="shortcut icon" href="/brand-icon.png?v=3" type="image/png" />
+        <link rel="apple-touch-icon" href="/brand-icon.png?v=3" />
       </head>
       <body className="font-sans antialiased">
         <Providers>

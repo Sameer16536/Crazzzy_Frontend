@@ -159,7 +159,7 @@ const CATEGORY_DESIGN_DATA: Record<string, { color: string, description: string,
   'keychains': {
     color: '#10b981',
     description: 'Unique collectible keychains',
-    imageOverride: 'https://res.cloudinary.com/dirjsc8qf/image/upload/v1779722745/crazzzy/keychains/hs0ouqnxab1fu3c4puhr.jpg'
+    imageOverride: 'https://res.cloudinary.com/dirjsc8qf/image/upload/v1781365436/crazzzy/keychains/dtm9vqacyd5kueyd0adk.webp'
   },
   'chocolate-and-beverages': {
     color: '#92400e',

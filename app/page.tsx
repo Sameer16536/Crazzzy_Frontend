@@ -1,15 +1,8 @@
 /**
- * Home Page — Cinematic Premium E-Commerce Hero v2
+ * Home Page — Poster Marquee Hero
  *
- * Upgrades in this version:
- *  - Two-column hero: text left | Cinematic SVG-clipped video portal right
- *  - Hero-scoped grain overlay (5% opacity, filmic look)
- *  - rAF-throttled mouse parallax: text floats against cursor, portal floats with it
- *  - Magnetic 'Start Shopping' button (pulls toward cursor)
- *  - Bento grid rebuilt with CSS grid-template-areas + staggered entrance
- *  - next/image priority on first 2 featured product cards (LCP)
- *  - All animated elements use will-change: transform for GPU compositing
- *  - Smooth 0.5 s dark/light mode body transition (in globals.css)
+ * Hero: full-width two-row horizontal right-to-left poster card marquee.
+ * No text column — pure product imagery with a floating title overlay.
  */
 
 'use client'
@@ -18,195 +11,98 @@ import { Navbar } from '@/components/navbar'
 import { ProductCard } from '@/components/product-card'
 import Link from 'next/link'
 import Image from 'next/image'
-import { ArrowRight, ChevronDown } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 import { BentoGridCategories } from '@/components/bento-grid-categories'
 import { useCatalog } from '@/lib/catalog/use-catalog'
 import { motion } from 'framer-motion'
-import { useRef, useState, useEffect, useMemo } from 'react'
+import { useState, useEffect } from 'react'
+import { api } from '@/lib/api-client'
 import { DealOfTheDay } from '@/components/deal-of-the-day'
 import { ComboDealsSection } from '@/components/combo-deals-section'
 import { PromotionTicker } from '@/components/promotion-ticker'
 
-// ─── ShowcaseCard ─────────────────────────────────────────────────────────────
-function ShowcaseCard({ product, index = 0 }: { product: any; index?: number }) {
-  const imageUrl = product.images?.[0]?.imageUrl ?? product.imageUrl ?? null
-  return (
-    <Link href={`/product/${product.slug ?? product.id}`} className="group block flex-shrink-0">
-      <div
-        className="relative w-full overflow-hidden bg-white/[0.03] border border-white/[0.07] group-hover:border-primary/50 transition-all duration-500"
-        style={{
-          aspectRatio: '3/4',
-          boxShadow: '0 0 0 0 rgba(212,175,55,0)',
-          transition: 'border-color 0.5s, box-shadow 0.5s',
-        }}
-        onMouseEnter={(e) => {
-          ; (e.currentTarget as HTMLDivElement).style.boxShadow = '0 0 24px rgba(212,175,55,0.12)'
-        }}
-        onMouseLeave={(e) => {
-          ; (e.currentTarget as HTMLDivElement).style.boxShadow = '0 0 0 0 rgba(212,175,55,0)'
-        }}
-      >
-        {imageUrl ? (
-          <Image
-            src={imageUrl}
-            alt={product.title ?? product.name ?? ''}
-            fill
-            unoptimized
-            priority={index < 4}
-            loading={index < 4 ? 'eager' : 'lazy'}
-            className="object-cover transition-transform duration-700 group-hover:scale-105"
-            sizes="(max-width: 768px) 110px, 160px"
-          />
-        ) : (
-          <div className="absolute inset-0 bg-white/5 flex items-center justify-center">
-            <span className="text-white/20 text-xs uppercase tracking-widest">No Image</span>
-          </div>
-        )}
-        {/* Corner accent */}
-        <div className="absolute top-0 left-0 w-4 h-4 border-t border-l border-primary/30 group-hover:border-primary/80 transition-colors duration-500" />
-        <div className="absolute bottom-0 right-0 w-4 h-4 border-b border-r border-primary/30 group-hover:border-primary/80 transition-colors duration-500" />
-      </div>
-    </Link>
-  )
-}
-
-// ─── ProductShowcase ──────────────────────────────────────────────────────────
-function ProductShowcase({ products, mobile = false }: { products: any[]; mobile?: boolean }) {
-  const [mounted, setMounted] = useState(false)
-  useEffect(() => setMounted(true), [])
-
-  if (!products.length || !mounted) return <div className="h-[120px] md:h-[520px] w-full" />
-
-  // Deterministic sort to avoid hydration mismatch
-  const sorted = [...products].sort((a, b) => String(a.id).localeCompare(String(b.id)))
-
-  if (mobile) {
-    // Keep mobile marquee lean: 8 products × 2 = 16 DOM nodes total
-    const slim = sorted.slice(0, 8)
-    const track = [...slim, ...slim]
+// ─── PosterMarqueeRow ─────────────────────────────────────────────────────────
+// One row of big rectangular poster cards scrolling continuously.
+function PosterMarqueeRow({
+  posters,
+  speed = 40,
+  reverse = false,
+}: {
+  posters: any[]
+  speed?: number
+  reverse?: boolean
+}) {
+  if (!posters.length) {
+    // Skeleton placeholders — portrait, same as real cards
     return (
-      <div
-        className="relative w-full overflow-hidden"
-        style={{
-          maskImage: 'linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%)',
-          WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%)',
-        }}
-      >
-        <div className="flex gap-3 animate-marquee-left py-2 w-max">
-          {track.map((p, i) => (
-            <div key={`m-${p.id}-${i}`} className="w-[110px] flex-shrink-0">
-              <ShowcaseCard product={p} index={i} />
-            </div>
-          ))}
-        </div>
+      <div className="flex gap-3 overflow-hidden">
+        {Array.from({ length: 10 }).map((_, i) => (
+          <div
+            key={i}
+            className="flex-shrink-0 bg-white/[0.05] animate-pulse"
+            style={{ width: 220, height: 310 }}
+          />
+        ))}
       </div>
     )
   }
 
-  // Desktop: 12 products per column × 2 cols × 2 tracks = 48 nodes (manageable)
-  const half = Math.ceil(sorted.length / 2)
-  const col1 = sorted.slice(0, half)
-  const col2 = sorted.slice(half).length ? sorted.slice(half) : [...sorted].reverse()
-  const track1 = [...col1, ...col1]
-  const track2 = [...col2, ...col2]
+  // Duplicate exactly 2× — the marqueeLeft/Right keyframes translate by
+  // -50%, which means the track must be 2× the content width to loop
+  // seamlessly. 3× would put the reset point mid-track and cause a jump.
+  const track = [...posters, ...posters]
 
   return (
     <div
-      className="relative w-full h-[520px] overflow-hidden"
+      className="relative w-full overflow-hidden"
       style={{
-        maskImage: 'linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%)',
-        WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%)',
+        maskImage: 'linear-gradient(to right, transparent 0%, black 6%, black 94%, transparent 100%)',
+        WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 6%, black 94%, transparent 100%)',
       }}
     >
       <div
-        className="absolute inset-0 pointer-events-none z-10"
-        style={{ background: 'radial-gradient(ellipse 70% 60% at 50% 50%, rgba(212,175,55,0.07) 0%, transparent 70%)' }}
-      />
-      <div className="flex gap-3 h-full px-1">
-        <div className="flex-1 flex flex-col gap-3 animate-marquee-up h-max">
-          {track1.map((p, i) => <ShowcaseCard key={`c1-${p.id}-${i}`} product={p} index={i} />)}
-        </div>
-        <div className="flex-1 flex flex-col gap-3 animate-marquee-down h-max">
-          {track2.map((p, i) => <ShowcaseCard key={`c2-${p.id}-${i}`} product={p} index={i + 12} />)}
-        </div>
+        className="flex gap-3"
+        style={{
+          animation: `${reverse ? 'marqueeRight' : 'marqueeLeft'} ${speed}s linear infinite`,
+          willChange: 'transform',
+          width: 'max-content',
+        }}
+      >
+        {track.map((p, i) => {
+          const img = p.images?.[0] ?? p.imageUrl ?? null
+          return (
+            <Link
+              key={`${p.id}-${i}`}
+              href={`/product/${p.slug ?? p.id}`}
+              className="group relative flex-shrink-0 overflow-hidden bg-zinc-950"
+              style={{ width: 220, height: 310 }}
+            >
+              {img ? (
+                <Image
+                  src={img}
+                  alt={p.name ?? ''}
+                  fill
+                  unoptimized
+                  priority={i < 6}
+                  loading={i < 6 ? 'eager' : 'lazy'}
+                  className="object-contain transition-transform duration-700 group-hover:scale-105"
+                  sizes="220px"
+                />
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center bg-white/5">
+                  <span className="text-white/20 text-xs uppercase tracking-widest">No Image</span>
+                </div>
+              )}
+              {/* Hover name + price */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end px-4 py-3 z-10">
+                <p className="text-white text-xs font-bold leading-snug line-clamp-1">{p.name}</p>
+                <p className="text-primary font-mono text-xs mt-0.5">₹{p.price}</p>
+              </div>
+            </Link>
+          )
+        })}
       </div>
     </div>
-  )
-}
-
-
-/**
- * wordReveal — staggered word reveal from below.
- * NOTE: filter:blur is intentionally removed — it creates GPU texture uploads
- * per-word on mobile which crashes low-end devices.
- */
-const wordReveal = {
-  hidden: { opacity: 0, y: 40 },
-  visible: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: {
-      delay: i * 0.1,
-      duration: 0.6,
-      ease: [0.16, 1, 0.3, 1] as [number, number, number, number],
-    },
-  }),
-}
-
-
-/** lineReveal — for subtitle, CTAs, and stats */
-const lineReveal = {
-  hidden: { opacity: 0, y: 24 },
-  visible: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: { delay: 0.55 + i * 0.15, duration: 0.7, ease: 'easeOut' as const },
-  }),
-}
-
-// ─── HeroHeadline ────────────────────────────────────────────────────────────
-
-function HeroHeadline() {
-  const lines = [
-    ['Collect', 'Your'],
-    ['Universe'],
-  ]
-  let wordIdx = 0
-  return (
-    <h1 className="text-[clamp(2.2rem,8vw,5rem)] font-black leading-[0.88] tracking-tight text-foreground">
-      {lines.map((line, li) => (
-        <div key={li} className="overflow-hidden">
-          <div className="flex flex-wrap gap-x-[0.18em]">
-            {line.map((word) => {
-              const idx = wordIdx++
-              return (
-                <motion.span
-                  key={`${word}-${idx}`}
-                  custom={idx}
-                  variants={wordReveal}
-                  initial="hidden"
-                  animate="visible"
-                  className="inline-block"
-                  style={{
-                    willChange: 'transform',
-                    ...(word === 'Universe'
-                      ? {
-                        background: 'linear-gradient(135deg, #d4af37 0%, #f5e27a 50%, #d4af37 100%)',
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent',
-                        backgroundClip: 'text',
-                      }
-                      : {}),
-                  }}
-                >
-                  {word}
-                </motion.span>
-              )
-            })}
-          </div>
-        </div>
-      ))}
-    </h1>
   )
 }
 
@@ -214,22 +110,45 @@ function HeroHeadline() {
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function Home() {
-  const [mounted, setMounted] = useState(false)
-  const [isMobile, setIsMobile] = useState(false)
   const { data } = useCatalog()
   const products = data?.products ?? []
-  const heroRef = useRef<HTMLElement>(null)
+
+  // ── Poster rows: one fetch, two non-overlapping halves ──────────────────
+  // Fetch up to 40 wall-posters. Split at the midpoint so the two marquee
+  // rows always show completely different products.
+  // Fallback: if the catalog is tiny (<8 items), interleave by odd/even
+  // indices to at least create visual variety without full duplication.
+  const [row1Posters, setRow1Posters] = useState<any[]>([])
+  const [row2Posters, setRow2Posters] = useState<any[]>([])
 
   useEffect(() => {
-    setMounted(true)
-    setIsMobile(window.innerWidth < 768)
-  }, [])
+    api.get<any>('/products?category=wall-posters&limit=80')
+      .then((res) => {
+        const raw: any[] = res?.data || []
+        const mapped = raw.map((p: any) => ({
+          id: String(p.id),
+          name: p.title,
+          slug: p.slug,
+          price: parseFloat(p.price),
+          imageUrl: p.imageUrl,
+          images: p.images?.length > 0
+            ? p.images.map((img: any) => img.imageUrl)
+            : [p.imageUrl],
+        }))
 
-  // Mobile: 8 products only. Desktop: 16.
-  const showcaseProducts = useMemo(() => {
-    if (!products.length) return []
-    return products.slice(0, isMobile ? 8 : 16)
-  }, [products, isMobile])
+        if (mapped.length >= 8) {
+          // Enough items: clean midpoint split — zero overlap guaranteed
+          const mid = Math.ceil(mapped.length / 2)
+          setRow1Posters(mapped.slice(0, mid))
+          setRow2Posters(mapped.slice(mid))
+        } else {
+          // Small catalog: odd/even interleave so rows look different
+          setRow1Posters(mapped.filter((_, i) => i % 2 === 0))
+          setRow2Posters(mapped.filter((_, i) => i % 2 !== 0))
+        }
+      })
+      .catch(() => { /* silently show skeleton on error */ })
+  }, [])
 
   const featuredProducts = products.filter((p) => p.featured).slice(0, 8)
 
@@ -241,163 +160,48 @@ export default function Home() {
       </div>
 
       {/* ════════════════════════════════════════════════════════════════════
-          HERO SECTION — Two-column: Text left | Product Showcase right
+          HERO — Full-bleed poster marquee (no text overlay)
           ════════════════════════════════════════════════════════════════════ */}
-      <section
-        ref={heroRef}
-        className="relative min-h-[600px] sm:min-h-[800px] w-full flex flex-col items-center justify-start pt-12 sm:pt-24 overflow-hidden"
-      >
-        {/* Rich gradient background — replaces video */}
-        <div
-          className="absolute inset-0"
-          style={{
-            background: `
-              radial-gradient(ellipse 90% 70% at 20% 50%, rgba(212,175,55,0.07) 0%, transparent 60%),
-              radial-gradient(ellipse 50% 60% at 85% 20%, rgba(212,175,55,0.04) 0%, transparent 50%),
-              radial-gradient(ellipse 40% 40% at 75% 80%, rgba(212,175,55,0.03) 0%, transparent 50%)
-            `,
-          }}
-        />
-        {/* Subtle dot-grid texture */}
-        <div
-          className="absolute inset-0 opacity-[0.04]"
-          style={{
-            backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.8) 1px, transparent 1px)',
-            backgroundSize: '32px 32px',
-          }}
-        />
-        {/* Edge vignette */}
-        <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-transparent to-background/80" />
-        <div className="absolute inset-0 bg-gradient-to-r from-background/60 via-transparent to-background/20" />
+      <section className="w-full bg-background overflow-hidden">
 
-        {/* ── Two-column content grid ── */}
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 w-full h-auto md:h-full md:flex items-center">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-16 items-center w-full">
+        {/* Tiny eyebrow heading — stays outside, above the rows */}
+        <motion.div
+          className="text-center py-6"
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
+          <p className="text-foreground/80 text-sm sm:text-base font-black tracking-[0.08em] uppercase">
+            Wall Posters That Hit Different
+          </p>
+        </motion.div>
 
-            {/* ── LEFT COLUMN: Text ── */}
-            <div className="max-w-2xl">
-              {/* Eyebrow tag */}
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6 }}
-                className="flex items-center gap-3 mb-4 sm:mb-8"
-              >
-                <div className="w-4 sm:w-8 h-px bg-primary flex-shrink-0" />
-                <span className="text-black/60 dark:text-primary/90 text-[9px] sm:text-xs font-mono tracking-[0.15em] sm:tracking-[0.25em] uppercase truncate">
-                  Curated Collectibles • Premium Aesthetic
-                </span>
-              </motion.div>
+        {/* Row 1 — first half of catalog, scrolls left */}
+        <PosterMarqueeRow posters={row1Posters} speed={80} />
 
-              {/* Staggered Headline */}
-              <HeroHeadline />
-
-              {/* Subtitle */}
-              <motion.p
-                custom={0}
-                variants={lineReveal}
-                initial="hidden"
-                animate="visible"
-                className="mt-5 text-base sm:text-lg text-black/80 dark:text-white/70 max-w-lg leading-relaxed font-light"
-              >
-                From anime figures to die-cast legends — discover premium pieces that turn any space into a personal gallery.
-              </motion.p>
-
-              {/* CTA Buttons */}
-              <motion.div
-                custom={1}
-                variants={lineReveal}
-                initial="hidden"
-                animate="visible"
-                className="flex flex-col sm:flex-row gap-4 mt-8"
-              >
-                <Link
-                  href="/shop"
-                  id="hero-shop-cta"
-                  className="group px-8 py-4 bg-primary hover:bg-primary/90 text-black font-bold rounded-none transition-colors duration-300 active:scale-95 inline-flex items-center gap-3 justify-center text-sm tracking-wider uppercase"
-                >
-                  Start Shopping
-                  <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
-                </Link>
-
-                <Link
-                  href="#categories"
-                  id="hero-categories-cta"
-                  className="px-8 py-4 bg-transparent hover:bg-foreground/5 text-foreground dark:text-white font-semibold rounded-none border border-border dark:border-white/30 hover:border-foreground/20 dark:hover:border-white/60 transition-all duration-300 active:scale-95 inline-flex items-center justify-center cursor-interactive text-sm tracking-wider uppercase"
-                >
-                  Browse Categories
-                </Link>
-              </motion.div>
-
-              {/* Mobile Showcase: horizontal marquee after CTAs */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.8 }}
-                className="md:hidden mt-10"
-              >
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="w-4 h-px bg-primary/40" />
-                  <span className="text-primary/60 text-[8px] font-mono tracking-[0.2em] uppercase">Featured</span>
-                </div>
-                <ProductShowcase products={showcaseProducts} mobile />
-              </motion.div>
-
-              {/* Floating Stats Bar */}
-              <motion.div
-                custom={2}
-                variants={lineReveal}
-                initial="hidden"
-                animate="visible"
-                className="flex flex-wrap gap-6 sm:gap-10 mt-10 sm:mt-12 pt-6 sm:pt-8 border-t border-white/10"
-              >
-                {[
-                  { value: '500+', label: 'Premium Items' },
-                  { value: '2000+', label: 'Happy Customers' },
-                  { value: '24/7', label: 'Customer Support' },
-                ].map((stat) => (
-                  <div key={stat.label} className="space-y-1">
-                    <p className="text-2xl font-black text-foreground dark:text-white font-mono">{stat.value}</p>
-                    <p className="text-xs text-muted-foreground dark:text-white/50 uppercase tracking-wider">{stat.label}</p>
-                  </div>
-                ))}
-              </motion.div>
-            </div>
-
-            {/* ── RIGHT COLUMN: Product Showcase Marquee ── */}
-            <motion.div
-              className="hidden md:block overflow-hidden"
-              initial={{ opacity: 0, x: 40 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.9, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
-            >
-              {/* Label */}
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-6 h-px bg-primary/60" />
-                <span className="text-primary/70 text-[9px] font-mono tracking-[0.25em] uppercase">Featured Collection</span>
-                <div className="flex-1 h-px bg-white/5" />
-              </div>
-              <ProductShowcase products={showcaseProducts} />
-              {/* Bottom label */}
-              <div className="flex items-center justify-end gap-3 mt-4">
-                <Link href="/shop" className="text-[9px] font-black uppercase tracking-[0.2em] text-primary/70 hover:text-primary transition-colors flex items-center gap-1 group">
-                  View All <ArrowRight size={10} className="group-hover:translate-x-0.5 transition-transform" />
-                </Link>
-              </div>
-            </motion.div>
-          </div>
+        {/* Row 2 — second half of catalog, scrolls right */}
+        <div className="mt-3">
+          <PosterMarqueeRow posters={row2Posters} speed={65} reverse />
         </div>
 
-        {/* Scroll indicator — CSS animation, no RAF loop */}
-        <button
-          className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2 animate-bounce-slow"
-          onClick={() => window.scrollTo({ top: window.innerHeight, behavior: 'smooth' })}
-          aria-label="Scroll down"
+        {/* CTA below the marquee */}
+        <motion.div
+          className="flex justify-center pt-6 pb-8"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
         >
-          <span className="text-[10px] text-muted-foreground dark:text-white/40 tracking-[0.3em] uppercase">Scroll</span>
-          <ChevronDown size={18} className="text-muted-foreground dark:text-white/40" />
-        </button>
+          <Link
+            href="/shop?category=wall-posters"
+            id="hero-shop-cta"
+            className="group inline-flex items-center gap-3 px-10 py-4 bg-primary hover:bg-primary/90 text-black font-black text-sm tracking-widest uppercase transition-all duration-300 active:scale-95"
+          >
+            Shop All Posters
+            <ArrowRight size={15} className="group-hover:translate-x-1 transition-transform" />
+          </Link>
+        </motion.div>
       </section>
+
 
       {/* ════════════════════════════════════════════════════════════════════
           DEAL OF THE DAY

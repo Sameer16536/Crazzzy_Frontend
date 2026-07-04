@@ -21,26 +21,58 @@ import { DealOfTheDay } from '@/components/deal-of-the-day'
 import { ComboDealsSection } from '@/components/combo-deals-section'
 import { PromotionTicker } from '@/components/promotion-ticker'
 
-// ─── PosterMarqueeRow ─────────────────────────────────────────────────────────
+// ─── useCardSize ──────────────────────────────────────────────────────────────
+// Returns responsive card dimensions so mobile users see 2.5–3 cards at once
+// (the "peek" effect signals there's more to scroll/explore).
+// SSR-safe: defaults to desktop size on server to avoid hydration mismatch.
+function useCardSize() {
+  const [size, setSize] = useState({ w: 220, h: 310 })
+
+  useEffect(() => {
+    function update() {
+      const vw = window.innerWidth
+      if (vw < 480) {
+        setSize({ w: 120, h: 170 })   // mobile:  ~3 cards visible at once
+      } else if (vw < 768) {
+        setSize({ w: 150, h: 210 })   // large phone / small tablet
+      } else if (vw < 1024) {
+        setSize({ w: 180, h: 255 })   // tablet
+      } else {
+        setSize({ w: 220, h: 310 })   // desktop
+      }
+    }
+    update()
+    window.addEventListener('resize', update)
+    return () => window.removeEventListener('resize', update)
+  }, [])
+
+  return size
+}
+
+
 // One row of big rectangular poster cards scrolling continuously.
 function PosterMarqueeRow({
   posters,
   speed = 40,
   reverse = false,
+  cardW = 220,
+  cardH = 310,
 }: {
   posters: any[]
   speed?: number
   reverse?: boolean
+  cardW?: number
+  cardH?: number
 }) {
   if (!posters.length) {
-    // Skeleton placeholders — portrait, same as real cards
+    // Skeleton placeholders — same dimensions as real cards
     return (
       <div className="flex gap-3 overflow-hidden">
         {Array.from({ length: 10 }).map((_, i) => (
           <div
             key={i}
             className="flex-shrink-0 bg-white/[0.05] animate-pulse"
-            style={{ width: 220, height: 310 }}
+            style={{ width: cardW, height: cardH }}
           />
         ))}
       </div>
@@ -75,7 +107,7 @@ function PosterMarqueeRow({
               key={`${p.id}-${i}`}
               href={`/product/${p.slug ?? p.id}`}
               className="group relative flex-shrink-0 overflow-hidden bg-zinc-950"
-              style={{ width: 220, height: 310 }}
+              style={{ width: cardW, height: cardH }}
             >
               {img ? (
                 <Image
@@ -86,17 +118,17 @@ function PosterMarqueeRow({
                   priority={i < 6}
                   loading={i < 6 ? 'eager' : 'lazy'}
                   className="object-contain transition-transform duration-700 group-hover:scale-105"
-                  sizes="220px"
+                  sizes={`${cardW}px`}
                 />
               ) : (
                 <div className="absolute inset-0 flex items-center justify-center bg-white/5">
                   <span className="text-white/20 text-xs uppercase tracking-widest">No Image</span>
                 </div>
               )}
-              {/* Hover name + price */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end px-4 py-3 z-10">
-                <p className="text-white text-xs font-bold leading-snug line-clamp-1">{p.name}</p>
-                <p className="text-primary font-mono text-xs mt-0.5">₹{p.price}</p>
+              {/* Hover / tap overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end px-3 py-2 z-10">
+                <p className="text-white text-[10px] font-bold leading-snug line-clamp-1">{p.name}</p>
+                <p className="text-primary font-mono text-[10px] mt-0.5">₹{p.price}</p>
               </div>
             </Link>
           )
@@ -112,6 +144,7 @@ function PosterMarqueeRow({
 export default function Home() {
   const { data } = useCatalog()
   const products = data?.products ?? []
+  const { w: cardW, h: cardH } = useCardSize()
 
   // ── Poster rows: one fetch, two non-overlapping halves ──────────────────
   // Fetch up to 40 wall-posters. Split at the midpoint so the two marquee
@@ -177,16 +210,16 @@ export default function Home() {
         </motion.div>
 
         {/* Row 1 — first half of catalog, scrolls left */}
-        <PosterMarqueeRow posters={row1Posters} speed={80} />
+        <PosterMarqueeRow posters={row1Posters} speed={80} cardW={cardW} cardH={cardH} />
 
         {/* Row 2 — second half of catalog, scrolls right */}
         <div className="mt-3">
-          <PosterMarqueeRow posters={row2Posters} speed={65} reverse />
+          <PosterMarqueeRow posters={row2Posters} speed={65} reverse cardW={cardW} cardH={cardH} />
         </div>
 
         {/* CTA below the marquee */}
         <motion.div
-          className="flex justify-center pt-6 pb-8"
+          className="flex justify-center px-4 pt-5 pb-8"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.4 }}
@@ -194,10 +227,10 @@ export default function Home() {
           <Link
             href="/shop?category=wall-posters"
             id="hero-shop-cta"
-            className="group inline-flex items-center gap-3 px-10 py-4 bg-primary hover:bg-primary/90 text-black font-black text-sm tracking-widest uppercase transition-all duration-300 active:scale-95"
+            className="group inline-flex items-center justify-center gap-2 w-full sm:w-auto px-5 py-3 sm:px-10 sm:py-4 bg-primary hover:bg-primary/90 text-black font-black text-xs sm:text-sm tracking-widest uppercase whitespace-nowrap transition-all duration-300 active:scale-95"
           >
             Shop All Posters
-            <ArrowRight size={15} className="group-hover:translate-x-1 transition-transform" />
+            <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform flex-shrink-0" />
           </Link>
         </motion.div>
       </section>

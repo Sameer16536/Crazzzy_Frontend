@@ -15,7 +15,7 @@ import { ArrowRight } from 'lucide-react'
 import { BentoGridCategories } from '@/components/bento-grid-categories'
 import { useCatalog } from '@/lib/catalog/use-catalog'
 import { motion } from 'framer-motion'
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { api } from '@/lib/api-client'
 import { DealOfTheDay } from '@/components/deal-of-the-day'
 import { ComboDealsSection } from '@/components/combo-deals-section'
@@ -146,42 +146,85 @@ export default function Home() {
   const products = data?.products ?? []
   const { w: cardW, h: cardH } = useCardSize()
 
-  // ── Poster rows: one fetch, two non-overlapping halves ──────────────────
-  // Fetch up to 40 wall-posters. Split at the midpoint so the two marquee
-  // rows always show completely different products.
-  // Fallback: if the catalog is tiny (<8 items), interleave by odd/even
-  // indices to at least create visual variety without full duplication.
+  // ── Poster marquee: per-subcategory parallel fetch + round-robin mix ──────
+  // Strategy:
+  //   1. Wait for catalog categories to load (already fetched by useCatalog).
+  //   2. Find all subcategories of 'wall-posters' using parentId.
+  //   3. Parallel-fetch ~15 products per subcategory (one request per subcat).
+  //   4. Round-robin interleave the buckets → Sports, Anime, Movies, Sports…
+  //   5. Midpoint-split into row1 / row2 so both rows have mixed categories.
+  // Fallback: if no subcategories exist, single flat fetch of wall-posters.
+  const categories = data?.categories ?? []
   const [row1Posters, setRow1Posters] = useState<any[]>([])
   const [row2Posters, setRow2Posters] = useState<any[]>([])
+  const fetchDoneRef = React.useRef(false)
+
+  // Shared product mapper (mirrors shop page mapping)
+  const mapPoster = (p: any) => ({
+    id: String(p.id),
+    name: p.title,
+    slug: p.slug,
+    price: parseFloat(p.price),
+    imageUrl: p.imageUrl,
+    images: p.images?.length > 0
+      ? p.images.map((img: any) => img.imageUrl)
+      : [p.imageUrl],
+  })
+
+  // Round-robin interleave: [A1,B1,C1, A2,B2,C2, A3,B3…]
+  function roundRobin<T>(buckets: T[][]): T[] {
+    const result: T[] = []
+    const maxLen = Math.max(0, ...buckets.map(b => b.length))
+    for (let i = 0; i < maxLen; i++) {
+      for (const bucket of buckets) {
+        if (i < bucket.length) result.push(bucket[i])
+      }
+    }
+    return result
+  }
 
   useEffect(() => {
-    api.get<any>('/products?category=wall-posters&limit=80')
-      .then((res) => {
-        const raw: any[] = res?.data || []
-        const mapped = raw.map((p: any) => ({
-          id: String(p.id),
-          name: p.title,
-          slug: p.slug,
-          price: parseFloat(p.price),
-          imageUrl: p.imageUrl,
-          images: p.images?.length > 0
-            ? p.images.map((img: any) => img.imageUrl)
-            : [p.imageUrl],
-        }))
+    // Don't re-fetch once done, and wait for categories to be available
+    if (fetchDoneRef.current || !categories.length) return
 
-        if (mapped.length >= 8) {
-          // Enough items: clean midpoint split — zero overlap guaranteed
-          const mid = Math.ceil(mapped.length / 2)
-          setRow1Posters(mapped.slice(0, mid))
-          setRow2Posters(mapped.slice(mid))
-        } else {
-          // Small catalog: odd/even interleave so rows look different
-          setRow1Posters(mapped.filter((_, i) => i % 2 === 0))
-          setRow2Posters(mapped.filter((_, i) => i % 2 !== 0))
-        }
-      })
-      .catch(() => { /* silently show skeleton on error */ })
-  }, [])
+    const wallPosterParent = categories.find(
+      (c) => c.slug === 'wall-posters' && !c.parentId
+    )
+    const subcats = wallPosterParent
+      ? categories.filter((c) => c.parentId === wallPosterParent.id)
+      : []
+
+    const fetchTargets = subcats.length > 0
+      ? subcats.map((s) => s.slug)
+      : ['wall-posters'] // flat fallback
+
+    // Per-subcategory limit: spread 80 evenly, at least 10 each
+    const perCat = Math.max(10, Math.floor(80 / fetchTargets.length))
+
+    fetchDoneRef.current = true
+
+    Promise.all(
+      fetchTargets.map((slug) =>
+        api.get<any>(`/products?category=${slug}&limit=${perCat}`)
+          .then((res) => (res?.data || []).map(mapPoster))
+          .catch(() => [] as any[])
+      )
+    ).then((buckets) => {
+      // Merge with round-robin so categories alternate in the strip
+      const interleaved = roundRobin(buckets)
+
+      if (interleaved.length >= 8) {
+        const mid = Math.ceil(interleaved.length / 2)
+        setRow1Posters(interleaved.slice(0, mid))
+        setRow2Posters(interleaved.slice(mid))
+      } else {
+        // Tiny catalog: odd/even split for at least visual difference
+        setRow1Posters(interleaved.filter((_, i) => i % 2 === 0))
+        setRow2Posters(interleaved.filter((_, i) => i % 2 !== 0))
+      }
+    })
+  }, [categories.length]) // re-run once categories have loaded
+
 
   const featuredProducts = products.filter((p) => p.featured).slice(0, 8)
 

@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
-import { X, LayoutDashboard, Package, ShoppingCart, Users, Settings, LogOut, ExternalLink, ShieldCheck, Ticket, Star, Zap, Tags, Gift, Sparkles } from 'lucide-react'
+import { X, LayoutDashboard, Package, ShoppingCart, Users, Settings, LogOut, ExternalLink, ShieldCheck, Ticket, Star, Zap, Tags, Gift, Sparkles, Clapperboard } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/lib/auth/auth-context'
 
@@ -23,6 +23,7 @@ export function AdminSidebar({ open, onOpenChange }: AdminSidebarProps) {
     { label: 'Featured', href: '/admin/featured', icon: Star },
     { label: 'Deal of the Day', href: '/admin/deal', icon: Zap },
     { label: 'Combo Deals', href: '/admin/combo-deals', icon: Gift },
+    { label: 'Spotlight', href: '/admin/spotlight', icon: Clapperboard },
     { label: 'Category Offers', href: '/admin/category-offers', icon: Ticket },
     { label: 'Product Offers', href: '/admin/product-offers', icon: Sparkles },
     { label: 'Orders', href: '/admin/orders', icon: ShoppingCart },

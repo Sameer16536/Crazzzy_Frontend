@@ -20,6 +20,7 @@ import { api } from '@/lib/api-client'
 import { DealOfTheDay } from '@/components/deal-of-the-day'
 import { ComboDealsSection } from '@/components/combo-deals-section'
 import { PromotionTicker } from '@/components/promotion-ticker'
+import { SpotlightSection } from '@/components/spotlight-section'
 
 // ─── useCardSize ──────────────────────────────────────────────────────────────
 // Returns responsive card dimensions so mobile users see 2.5–3 cards at once
@@ -272,6 +273,11 @@ export default function Home() {
           ════════════════════════════════════════════════════════════════════ */}
       <DealOfTheDay />
       <ComboDealsSection />
+
+      {/* ════════════════════════════════════════════════════════════════════
+          SPOTLIGHT — Admin-configured cinematic offer banner
+          ════════════════════════════════════════════════════════════════════ */}
+      <SpotlightSection />
 
       {/* ════════════════════════════════════════════════════════════════════
           SHOP BY CATEGORIES — Bento Grid

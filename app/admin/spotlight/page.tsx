@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect, useCallback } from 'react'
 import { AdminLayout } from '@/components/admin/layout'
@@ -389,11 +389,29 @@ export default function AdminSpotlightPage() {
                 )}
               </div>
 
-              {/* â”€â”€ End date + Status â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Bundle Price + End date + Status */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <label className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground">
-                    Offer Ends At <span className="text-muted-foreground/35 font-medium normal-case">(optional â€” adds countdown)</span>
+                    Bundle Price (&#8377;) <span className="text-muted-foreground/35 font-medium normal-case">(optional)</span>
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={form.bundlePrice}
+                    onChange={e => setForm(f => ({ ...f, bundlePrice: e.target.value }))}
+                    placeholder="e.g. 499"
+                    className="w-full bg-background border border-border px-4 py-3 text-sm font-mono font-bold outline-none rounded-lg focus:border-yellow-400/50 transition-colors text-yellow-400 placeholder:text-muted-foreground/30 placeholder:font-normal placeholder:text-sm"
+                  />
+                  {form.bundlePrice && (
+                    <p className="text-[10px] text-muted-foreground/40 px-1 font-mono">
+                      Activates deal UI + Claim Bundle button on homepage
+                    </p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground">
+                    Offer Ends At <span className="text-muted-foreground/35 font-medium normal-case">(optional)</span>
                   </label>
                   <input
                     type="datetime-local"
@@ -415,7 +433,7 @@ export default function AdminSpotlightPage() {
                   >
                     {form.isActive ? <ToggleRight size={20} /> : <ToggleLeft size={20} />}
                     <span className="text-[10px] font-black uppercase tracking-widest">
-                      {form.isActive ? 'Active â€” Visible on site' : 'Inactive â€” Hidden'}
+                      {form.isActive ? 'Active — Visible on site' : 'Inactive — Hidden'}
                     </span>
                   </button>
                 </div>
@@ -581,6 +599,12 @@ export default function AdminSpotlightPage() {
                       <div className="bg-muted/30 px-3 py-1.5 rounded border border-white/5">
                         <span className="text-[9px] text-muted-foreground/40 block mb-0.5 uppercase tracking-widest">CTA</span>
                         <span className="text-[11px] font-bold">{s.ctaText}</span>
+                      </div>
+                    )}
+                    {s.bundlePrice && (
+                      <div className="bg-muted/30 px-3 py-1.5 rounded border border-white/5">
+                        <span className="text-[9px] text-muted-foreground/40 block mb-0.5 uppercase tracking-widest">Price</span>
+                        <span className="text-[11px] font-mono font-bold text-yellow-400">&#8377;{s.bundlePrice}</span>
                       </div>
                     )}
                     {s.bundlePrice && (

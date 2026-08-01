@@ -336,7 +336,15 @@ export function SpotlightSection() {
 
         {/* ── Hero text content ────────────────────────────────────────── */}
         <div className="relative z-10 flex flex-col justify-end sm:justify-center h-full"
-          style={{ minHeight: 'clamp(480px, 78vh, 860px)', paddingLeft: 'clamp(1.5rem, 5vw, 6rem)', paddingRight: 'clamp(1.5rem, 5vw, 6rem)', paddingBottom: 'clamp(9rem, 15vw, 13rem)' }}>
+          style={{
+            minHeight: 'clamp(480px, 78vh, 860px)',
+            paddingLeft: 'clamp(1.5rem, 5vw, 6rem)',
+            paddingRight: 'clamp(1.5rem, 5vw, 6rem)',
+            // More padding when showing pricing cards + claim button so rail doesn't overlap
+            paddingBottom: current.bundlePrice
+              ? 'clamp(11rem, 18vw, 16rem)'
+              : 'clamp(9rem, 15vw, 13rem)',
+          }}>
           <AnimatePresence mode="wait">
             <motion.div
               key={current.id}
@@ -403,23 +411,36 @@ export function SpotlightSection() {
               {/* Bundle Pricing UI (if bundlePrice exists) */}
               {current.bundlePrice ? (
                 <motion.div
-                  className="space-y-4 pt-2"
+                  className="space-y-3 pt-2"
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6, delay: 0.35 }}
                 >
-                  <div className="flex gap-4 items-center">
-                    <div className="p-3 bg-white/[0.03] border border-white/5 rounded-2xl flex flex-col justify-center">
-                      <p className="text-[9px] font-mono text-white/50 uppercase tracking-[0.3em]">Total Value</p>
-                      <p className="text-lg font-black text-white/40 line-through tracking-tighter">₹{originalTotal}</p>
+                  {/* Price row */}
+                  <div className="flex items-center gap-3 flex-wrap">
+                    {/* Original total */}
+                    {originalTotal > 0 && (
+                      <div className="flex flex-col">
+                        <span className="text-[9px] font-mono text-white/40 uppercase tracking-[0.25em]">Total Value</span>
+                        <span className="text-base font-black text-white/35 line-through tracking-tighter">&#8377;{originalTotal}</span>
+                      </div>
+                    )}
+                    {originalTotal > 0 && <div className="w-px h-8 bg-white/10" />}
+                    {/* Offer price */}
+                    <div className="flex flex-col">
+                      <span className="text-[9px] font-mono text-yellow-400/70 uppercase tracking-[0.25em] font-black">Offer Price</span>
+                      <span className="text-3xl font-black text-yellow-400 tracking-tighter">&#8377;{current.bundlePrice}</span>
                     </div>
-                    <div className="p-3 bg-yellow-400/10 border border-yellow-400/20 rounded-2xl flex flex-col justify-center relative overflow-hidden">
-                      <Zap className="absolute -right-3 -bottom-3 w-12 h-12 text-yellow-400/5 -rotate-12" />
-                      <p className="text-[9px] font-mono text-yellow-400/80 uppercase tracking-[0.3em] font-black">Offer Price</p>
-                      <p className="text-2xl font-black text-yellow-400 tracking-tighter">₹{current.bundlePrice}</p>
-                    </div>
+                    {/* Savings badge */}
+                    {originalTotal > 0 && originalTotal > current.bundlePrice && (
+                      <div className="ml-1 bg-yellow-400 px-2.5 py-1.5 rotate-2 flex flex-col items-center border-2 border-black shadow-[3px_3px_0_rgba(0,0,0,0.5)]">
+                        <span className="text-[8px] font-black text-black uppercase leading-none">SAVE</span>
+                        <span className="text-sm font-black text-black tracking-tighter leading-none">&#8377;{Math.round(originalTotal - current.bundlePrice)}</span>
+                      </div>
+                    )}
                   </div>
-                  
+
+                  {/* Buttons */}
                   <div className="flex flex-col sm:flex-row gap-3">
                     <button
                       onClick={handleClaimBundle}
@@ -434,7 +455,8 @@ export function SpotlightSection() {
                         href={current.ctaUrl}
                         className="flex items-center justify-center px-6 py-3.5 sm:py-4 border border-white/10 text-white/60 font-black text-[10px] uppercase tracking-[0.25em] hover:bg-white/5 hover:text-white transition-all whitespace-nowrap"
                       >
-                        {current.ctaText || 'Learn More'}
+                        {current.ctaText || 'Browse All'}
+                        <ArrowRight size={12} className="ml-2 group-hover:translate-x-1 transition-transform" />
                       </Link>
                     )}
                   </div>

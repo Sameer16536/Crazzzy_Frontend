@@ -288,22 +288,6 @@ export function SpotlightSection() {
           }} />
         </motion.div>
 
-        {/* ── Spotlight badge ──────────────────────────────────────────── */}
-        <motion.div
-          className="absolute top-8 left-6 sm:left-12 flex items-center gap-2 z-10"
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.6 }}
-        >
-          <span className="relative flex h-2.5 w-2.5">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75" />
-            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-yellow-400" />
-          </span>
-          <span className="text-[10px] font-black uppercase tracking-[0.4em] text-yellow-400/90">
-            Spotlight
-          </span>
-          <Clapperboard size={12} className="text-yellow-400/60" />
-        </motion.div>
 
         {/* Section switcher dots + progress bar */}
         {sections.length > 1 && (
@@ -340,7 +324,7 @@ export function SpotlightSection() {
             minHeight: 'clamp(480px, 78vh, 860px)',
             paddingLeft: 'clamp(1.5rem, 5vw, 6rem)',
             paddingRight: 'clamp(1.5rem, 5vw, 6rem)',
-            // More padding when showing pricing cards + claim button so rail doesn't overlap
+            paddingTop: 'clamp(4rem, 8vw, 6rem)',
             paddingBottom: current.bundlePrice
               ? 'clamp(11rem, 18vw, 16rem)'
               : 'clamp(9rem, 15vw, 13rem)',
@@ -354,25 +338,46 @@ export function SpotlightSection() {
               exit={{ opacity: 0, y: -16 }}
               transition={{ duration: 0.55 }}
             >
-              {/* Giant headline — fluid size: 2rem mobile → 6rem desktop */}
-              <motion.h2
-                className="font-black text-white leading-[0.88] tracking-tight"
-                style={{
-                  fontSize: 'clamp(2rem, 7vw, 6rem)',
-                  textShadow: '0 0 100px rgba(0,0,0,0.9)',
-                }}
+              {/* ── Spotlight eyebrow label ─────────────────────────────── */}
+              <motion.div
+                className="flex items-center gap-2.5"
+                initial={{ opacity: 0, x: -16 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5 }}
               >
-                {current.title.split(' ').map((word, i, arr) => (
-                  <span
-                    key={i}
-                    style={{
-                      color: i % 3 === 1 ? 'rgb(250,204,21)' : 'white',
-                    }}
-                  >
-                    {word}{i < arr.length - 1 ? ' ' : ''}
-                  </span>
-                ))}
-              </motion.h2>
+                <div className="w-5 h-px bg-yellow-400" />
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-yellow-400" />
+                </span>
+                <span className="text-[9px] font-black uppercase tracking-[0.45em] text-yellow-400/80">
+                  Spotlight
+                </span>
+              </motion.div>
+
+              {/* ── Title — editorial style ──────────────────────────────── */}
+              <div>
+                {(() => {
+                  const words = current.title.split(' ')
+                  // Last word gets the gold accent; all others are white
+                  return (
+                    <motion.h2
+                      className="font-black leading-[0.88] tracking-tight"
+                      style={{ fontSize: 'clamp(2.2rem, 7vw, 6rem)', textShadow: '0 4px 40px rgba(0,0,0,0.8)' }}
+                    >
+                      {words.map((word, i) => (
+                        <span
+                          key={i}
+                          className="block"
+                          style={{ color: i === words.length - 1 ? 'rgb(250,204,21)' : 'white' }}
+                        >
+                          {word}
+                        </span>
+                      ))}
+                    </motion.h2>
+                  )
+                })()}
+              </div>
 
               {/* Subtitle */}
               {current.subtitle && (

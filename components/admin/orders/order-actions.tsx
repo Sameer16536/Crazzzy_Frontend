@@ -44,7 +44,7 @@ export function OrderActions({ orderId, onUpdate }: OrderActionsProps) {
   const handleCancelOrder = async () => {
     setIsCancelling(true)
     try {
-      await api.post(`/admin/orders/${orderId}/cancel`)
+      await api.patch(`/admin/orders/${orderId}/status`, { status: 'CANCELLED' })
       toast.success('Order cancelled and stock restored')
       setShowCancelConfirm(false)
       if (onUpdate) onUpdate()
@@ -70,6 +70,7 @@ export function OrderActions({ orderId, onUpdate }: OrderActionsProps) {
             <button
               onClick={() => {
                 setIsOpen(false)
+                setShipData({ status: 'SHIPPED', trackingNumber: '', courierName: '', estimatedDelivery: '' })
                 setShowShipModal(true)
               }}
               className="w-full flex items-center space-x-3 px-4 py-3 text-[10px] font-black uppercase tracking-widest hover:bg-primary/10 hover:text-primary transition-all text-white/60"
@@ -134,7 +135,6 @@ export function OrderActions({ orderId, onUpdate }: OrderActionsProps) {
                       className="w-full bg-black border border-white/10 px-4 py-3 text-[10px] font-black uppercase tracking-widest focus:border-primary/40 outline-none transition-all"
                     >
                       <option value="PAID">Paid</option>
-                      <option value="PROCESSING">Processing</option>
                       <option value="SHIPPED">Shipped</option>
                       <option value="DELIVERED">Delivered</option>
                       <option value="CANCELLED">Cancelled</option>

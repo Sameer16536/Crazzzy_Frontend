@@ -644,7 +644,12 @@ export default function ProductPage() {
                   Size
                 </label>
                 <div className="flex flex-wrap gap-2">
-                  {product.variants.map((v: any) => (
+                  {[...product.variants].sort((a: any, b: any) => {
+                    const isPhoneCase = (v: any) => v.variantName?.toLowerCase().includes('phone case poster');
+                    if (isPhoneCase(a) && !isPhoneCase(b)) return 1;
+                    if (!isPhoneCase(a) && isPhoneCase(b)) return -1;
+                    return a.id - b.id;
+                  }).map((v: any) => (
                     <button
                       key={v.id}
                       onClick={() => setSelectedVariant(v)}

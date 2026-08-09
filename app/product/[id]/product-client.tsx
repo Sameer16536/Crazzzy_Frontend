@@ -182,10 +182,16 @@ export default function ProductPage() {
     fetchProductDetails()
   }, [id, data])
 
-  // Automatically select the first variant if available
+  // Automatically select the first variant if available (Phone Case Poster always last)
   useEffect(() => {
     if (product?.variants && product.variants.length > 0 && !selectedVariant) {
-      setSelectedVariant(product.variants[0])
+      const sorted = [...product.variants].sort((a: any, b: any) => {
+        const isPhoneCase = (v: any) => v.variantName?.toLowerCase().includes('phone case poster')
+        if (isPhoneCase(a) && !isPhoneCase(b)) return 1
+        if (!isPhoneCase(a) && isPhoneCase(b)) return -1
+        return a.id - b.id
+      })
+      setSelectedVariant(sorted[0])
     }
   }, [product, selectedVariant])
 

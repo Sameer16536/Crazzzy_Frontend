@@ -177,9 +177,13 @@ export function SpotlightSection() {
   const fetchSections = useCallback(() => {
     api.get<SpotlightSection[]>('/settings/spotlight')
       .then(data => {
+        const now = Date.now()
         const list = Array.isArray(data) ? data : []
-        setSections(list.filter(s => s.isActive))
-        // Reset index if active sections changed
+        setSections(list.filter(s =>
+          s.isActive &&
+          // Exclude if endsAt is set and already passed
+          (s.endsAt == null || new Date(s.endsAt).getTime() > now)
+        ))
         setActiveIndex(0)
       })
       .catch(() => {})
@@ -195,6 +199,22 @@ export function SpotlightSection() {
 
   const current = sections[activeIndex]
   const countdown = useCountdown(current?.endsAt ?? null)
+
+  // Auto-remove current section the moment its countdown expires
+  useEffect(() => {
+    if (!current?.endsAt) return
+    const end = new Date(current.endsAt).getTime()
+    const msLeft = end - Date.now()
+    if (msLeft <= 0) {
+      // Already expired — remove immediately
+      setSections(prev => prev.filter(s => s.id !== current.id))
+      return
+    }
+    const timer = setTimeout(() => {
+      setSections(prev => prev.filter(s => s.id !== current.id))
+    }, msLeft)
+    return () => clearTimeout(timer)
+  }, [current?.id, current?.endsAt])
 
   // Fetch products for current section
   useEffect(() => {

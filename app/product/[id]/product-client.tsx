@@ -714,6 +714,8 @@ export default function ProductPage() {
                         quantity,
                         variantId: selectedVariant?.id,
                         variantName: selectedVariant?.variantName,
+                        categorySlug: product.categorySlug,
+                        slug: product.slug,
                       }),
                     )
                     toast.success('Added to cart')

@@ -34,6 +34,8 @@ export interface RazorpayOptions {
   }
   /** Optional: called when the user dismisses the Razorpay modal without paying */
   onDismiss?: () => void
+  /** Optional: called when a payment attempt fails or is declined */
+  onFailure?: (response: any) => void
 }
 
 export const openRazorpay = async (options: RazorpayOptions): Promise<void> => {
@@ -44,7 +46,7 @@ export const openRazorpay = async (options: RazorpayOptions): Promise<void> => {
   }
 
   return new Promise<void>((resolve) => {
-    const { onDismiss, ...rzpOptions } = options
+    const { onDismiss, onFailure, ...rzpOptions } = options
 
     const rzp = new (window as any).Razorpay({
       ...rzpOptions,
@@ -57,7 +59,7 @@ export const openRazorpay = async (options: RazorpayOptions): Promise<void> => {
     })
 
     rzp.on('payment.failed', (response: any) => {
-      // The handler above won't fire on failure; resolve so loading resets
+      onFailure?.(response)
       resolve()
     })
 

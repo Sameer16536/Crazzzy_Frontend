@@ -173,7 +173,11 @@ export default function CheckoutPage() {
         order_id: rpData.razorpay_order_id,
         onDismiss: () => {
           // User closed the modal without paying — not an error, just inform them
-          toast.info('Payment cancelled. Your cart is still saved.')
+          toast.info('Payment window closed. Your cart is still saved.')
+        },
+        onFailure: (response: any) => {
+          const desc = response?.error?.description || response?.error?.reason || 'Payment could not be processed.'
+          toast.error(`Payment failed: ${desc} If your bank has a UPI limit, please try Netbanking or Card.`)
         },
         handler: async (response: any) => {
           try {

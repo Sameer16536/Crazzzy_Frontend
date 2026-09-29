@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { Navbar } from '@/components/navbar'
@@ -24,6 +24,7 @@ export default function CheckoutPage() {
   const [showNewAddressForm, setShowNewAddressForm] = useState(false)
   const [loading, setLoading] = useState(false)
   const [fetchingAddresses, setFetchingAddresses] = useState(false)
+  const redirectingToSuccess = useRef(false)
 
   // Phone number is mandatory per backend validation
   const [phoneNumber, setPhoneNumber] = useState('')
@@ -62,7 +63,8 @@ export default function CheckoutPage() {
 
   // ── Cart guard (runs separately so it doesn't block address fetch) ──────────
   useEffect(() => {
-    if (!authLoading && user && items.length === 0) {
+    // Don't redirect if we're in the middle of navigating to the success page
+    if (!authLoading && user && items.length === 0 && !redirectingToSuccess.current) {
       router.push('/cart')
     }
   }, [authLoading, user, items, router])
@@ -180,6 +182,8 @@ export default function CheckoutPage() {
             })
             console.log('Payment verified, redirecting to success page...', orderId)
             toast.success('🎉 Payment successful! Your order is confirmed.')
+            // Set flag BEFORE clearing cart so the cart guard doesn't redirect to /cart
+            redirectingToSuccess.current = true
             dispatch(clearCart())
             
             // Using window.location for a hard redirect to ensure the new route is loaded correctly

@@ -123,7 +123,7 @@ export default function OrderSuccessPage() {
              
              <div className="space-y-1 relative z-10">
                 <p className="text-[10px] font-black uppercase tracking-widest text-primary-foreground/60">Registry Value</p>
-                <p className="text-4xl font-black font-mono text-primary-foreground">₹{parseFloat(order.totalAmount).toLocaleString('en-IN')}</p>
+                <p className="text-4xl font-black font-mono text-primary-foreground">₹{Number(order.totalAmount || 0).toLocaleString('en-IN')}</p>
              </div>
 
              <Link 

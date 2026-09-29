@@ -171,6 +171,10 @@ export default function CheckoutPage() {
         name: 'Crazzzy.in',
         description: `Order #${orderId}`,
         order_id: rpData.razorpay_order_id,
+        onDismiss: () => {
+          // User closed the modal without paying — not an error, just inform them
+          toast.info('Payment cancelled. Your cart is still saved.')
+        },
         handler: async (response: any) => {
           try {
             // 3. Verify payment
@@ -189,13 +193,30 @@ export default function CheckoutPage() {
             // Using window.location for a hard redirect to ensure the new route is loaded correctly
             window.location.href = `/checkout/success/${orderId}`
           } catch (err: any) {
-            toast.error(err.message || 'Payment verification failed. Contact support.')
+            // If session expired during payment verification, redirect to login
+            if (err?.status === 401) {
+              toast.error('Your session expired. Please log in again — your payment may still have gone through.')
+              router.push('/login?redirect=/checkout')
+              return
+            }
+            const paymentId = response?.razorpay_payment_id
+            toast.error(
+              paymentId
+                ? `Verification failed (Ref: ${paymentId}). Contact support if money was debited.`
+                : (err.message || 'Payment verification failed. Contact support.')
+            )
           }
         },
         prefill: { name: user?.name, email: user?.email, contact: phoneNumber },
         theme: { color: '#d4af37' },
       })
     } catch (err: any) {
+      // If session expired before the order was created, redirect to login
+      if (err?.status === 401) {
+        toast.error('Your session expired. Please log in again.')
+        router.push('/login?redirect=/checkout')
+        return
+      }
       toast.error(err.message || 'Checkout failed. Please try again.')
     } finally {
       setLoading(false)

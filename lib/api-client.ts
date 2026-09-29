@@ -61,21 +61,33 @@ async function request<T>(endpoint: string, options: RequestInit = {}, isMultipa
           
           // Retry original request
           return request<T>(endpoint, options, isMultipart);
+        } else {
+          // Refresh token itself is expired or invalid
+          isRefreshing = false;
+          refreshSubscribers = [];
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('refreshToken');
+          throw new ApiError(401, 'Session expired. Please log in again.');
         }
-      } catch (e) {
+      } catch (e: any) {
         isRefreshing = false;
+        refreshSubscribers = [];
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
-        // Let the AuthProvider or the page handle the redirect by throwing
+        // Re-throw ApiErrors as-is, wrap others
+        if (e instanceof ApiError) throw e;
         throw new ApiError(401, 'Session expired. Please log in again.');
       }
     } else if (isRefreshing) {
       // Wait for refresh to complete then retry
-      return new Promise<T>((resolve) => {
+      return new Promise<T>((resolve, reject) => {
         subscribeTokenRefresh((newToken) => {
           resolve(request<T>(endpoint, options, isMultipart));
         });
       });
+    } else {
+      // No refresh token at all — session is gone
+      throw new ApiError(401, 'Please log in to continue.');
     }
   }
 

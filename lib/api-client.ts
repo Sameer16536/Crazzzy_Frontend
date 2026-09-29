@@ -39,8 +39,9 @@ async function request<T>(endpoint: string, options: RequestInit = {}, isMultipa
     //   POST/PUT/PATCH/DELETE → no-store  (mutations always fresh)
   });
 
-  // Handle 401 Unauthorized (Token Expired)
-  if (response.status === 401 && typeof window !== 'undefined') {
+  // Handle 401 Unauthorized (Token Expired) - do not intercept auth endpoints like /auth/login
+  const isAuthEndpoint = endpoint.startsWith('/auth/');
+  if (response.status === 401 && typeof window !== 'undefined' && !isAuthEndpoint) {
     const refreshToken = localStorage.getItem('refreshToken');
     
     if (refreshToken && !isRefreshing) {

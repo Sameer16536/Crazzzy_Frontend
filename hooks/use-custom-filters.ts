@@ -13,7 +13,7 @@ export function useCustomFilters() {
   const fetchFilters = useCallback(async () => {
     try {
       setIsLoading(true)
-      const res = await api.get('/settings/category-filters')
+      const res = await api.get<CategoryFiltersMap>('/settings/category-filters')
       setFiltersMap(res || {})
     } catch (error) {
       console.error('Failed to fetch category filters:', error)

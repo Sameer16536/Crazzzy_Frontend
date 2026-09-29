@@ -38,7 +38,7 @@ export function useComboDeals() {
 
   const addDeal = useCallback(async (deal: Omit<ComboDeal, 'id'>) => {
     try {
-      const newDeal = await api.post('/settings/combo-deals', deal)
+      const newDeal = await api.post<ComboDeal>('/settings/combo-deals', deal)
       setDeals(prev => [newDeal, ...prev])
       return newDeal
     } catch (error: any) {
@@ -49,7 +49,7 @@ export function useComboDeals() {
 
   const updateDeal = useCallback(async (id: string | number, updates: Partial<ComboDeal>) => {
     try {
-      const updated = await api.put(`/settings/combo-deals/${id}`, updates)
+      const updated = await api.put<Partial<ComboDeal>>(`/settings/combo-deals/${id}`, updates)
       setDeals(prev => prev.map(d => String(d.id) === String(id) ? { ...d, ...updated } : d))
       return updated
     } catch (error: any) {

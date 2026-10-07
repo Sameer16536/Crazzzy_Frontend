@@ -342,32 +342,57 @@ export function ProductForm({ productId }: { productId?: string }) {
     setFormData(prev => {
       const wasDefault = prev.variants[index]?.isDefault
       const filtered = prev.variants.filter((_, i) => i !== index)
+      let newPrice = prev.price
+      let newStock = prev.stock
       if (wasDefault && filtered.length > 0) {
         filtered[0].isDefault = true
-        filtered[0].price = prev.price
-        filtered[0].stock = prev.stock
+        if (filtered[0].price) newPrice = filtered[0].price
+        if (filtered[0].stock) newStock = filtered[0].stock
+        filtered[0].price = newPrice
+        filtered[0].stock = newStock
       }
-      return { ...prev, variants: filtered }
+      return { ...prev, price: newPrice, stock: newStock, variants: filtered }
     })
   }
 
   const setDefaultVariant = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      variants: prev.variants.map((v, i) => ({
-        ...v,
-        isDefault: i === index,
-        price: i === index ? prev.price : v.price,
-        stock: i === index ? prev.stock : v.stock,
-      })),
-    }))
+    setFormData(prev => {
+      const selectedVariant = prev.variants[index]
+      if (!selectedVariant) return prev
+
+      const newPrice = selectedVariant.price !== undefined && selectedVariant.price !== ''
+        ? selectedVariant.price
+        : prev.price
+      const newStock = selectedVariant.stock !== undefined && selectedVariant.stock !== ''
+        ? selectedVariant.stock
+        : prev.stock
+
+      return {
+        ...prev,
+        price: newPrice,
+        stock: newStock,
+        variants: prev.variants.map((v, i) => ({
+          ...v,
+          isDefault: i === index,
+          price: i === index ? newPrice : v.price,
+          stock: i === index ? newStock : v.stock,
+        })),
+      }
+    })
   }
 
   const updateVariant = (index: number, field: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      variants: prev.variants.map((v, i) => (i === index ? { ...v, [field]: value } : v)),
-    }))
+    setFormData(prev => {
+      const isDef = prev.variants[index]?.isDefault
+      const updated: FormData = {
+        ...prev,
+        variants: prev.variants.map((v, i) => (i === index ? { ...v, [field]: value } : v)),
+      }
+      if (isDef && (field === 'price' || field === 'stock')) {
+        updated[field] = value
+      }
+      return updated
+    })
   }
 
   // Images staged for deletion don't count toward the product (for validation purposes)
@@ -554,7 +579,7 @@ export function ProductForm({ productId }: { productId?: string }) {
                         className="w-3.5 h-3.5 accent-primary cursor-pointer"
                       />
                       <label htmlFor={`default-variant-${index}`} className="text-[10px] font-black uppercase tracking-[0.2em] text-primary cursor-pointer flex items-center gap-1">
-                        Use Pricing & Inventory values as Default
+                        Default Variant (Syncs with Pricing & Inventory)
                         {variant.isDefault && <span className="text-[8px] bg-primary/20 text-primary border border-primary/30 px-1.5 py-0.5 rounded font-black tracking-widest uppercase ml-2">Active Default</span>}
                       </label>
                     </div>
@@ -575,13 +600,8 @@ export function ProductForm({ productId }: { productId?: string }) {
                         type="number"
                         value={variant.isDefault ? formData.price : variant.price}
                         onChange={(e) => updateVariant(index, 'price', e.target.value)}
-                        disabled={variant.isDefault}
                         placeholder={formData.price || '0'}
-                        className={`w-full border px-4 py-2 text-xs font-mono font-bold focus:border-primary/40 outline-none rounded ${
-                          variant.isDefault 
-                            ? 'bg-muted/40 text-muted-foreground border-border/40 cursor-not-allowed' 
-                            : 'bg-background border-border text-foreground'
-                        }`}
+                        className="w-full bg-background border border-border px-4 py-2 text-xs font-mono font-bold focus:border-primary/40 outline-none text-foreground rounded"
                       />
                     </div>
                     <div className="space-y-2">
@@ -590,13 +610,8 @@ export function ProductForm({ productId }: { productId?: string }) {
                         type="number"
                         value={variant.isDefault ? formData.stock : variant.stock}
                         onChange={(e) => updateVariant(index, 'stock', e.target.value)}
-                        disabled={variant.isDefault}
                         placeholder={formData.stock || '100'}
-                        className={`w-full border px-4 py-2 text-xs font-mono font-bold focus:border-primary/40 outline-none rounded ${
-                          variant.isDefault 
-                            ? 'bg-muted/40 text-muted-foreground border-border/40 cursor-not-allowed' 
-                            : 'bg-background border-border text-foreground'
-                        }`}
+                        className="w-full bg-background border border-border px-4 py-2 text-xs font-mono font-bold focus:border-primary/40 outline-none text-foreground rounded"
                       />
                     </div>
                     <button

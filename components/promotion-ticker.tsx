@@ -7,7 +7,7 @@ const PROMOTIONS = [
   { text: "Poster: buy 2 get 1 free", icon: <Star size={14} className="fill-blue-600 text-blue-600" /> },
   { text: "Silicone Keychain: @ ₹99", icon: <CoffeeIcon size={14} className="fill-red-600 text-red-600" /> },
   { text: "Keychain: buy 1 get 1 free", icon: <Sparkles size={14} className="fill-purple-600 text-purple-600" /> },
-  { text: "Buy 5 posters at 500", icon: <Zap size={14} className="fill-orange-600 text-orange-600" /> },
+  // { text: "Buy 5 posters at 500", icon: <Zap size={14} className="fill-orange-600 text-orange-600" /> },
 ]
 
 export function PromotionTicker() {

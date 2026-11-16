@@ -44,7 +44,7 @@ export default function CartPage() {
   const totalPromoSavings = comboOffer.totalSavings + productOfferResult.totalSavings
   const subtotal = regularSubtotal + bundlesTotal
   const discountedSubtotal = subtotal - totalPromoSavings
-  const shipping = discountedSubtotal >= 999 ? 0 : items.length > 0 ? 99 : 0
+  const shipping = discountedSubtotal >= 399 ? 0 : items.length > 0 ? 99 : 0
   const total = discountedSubtotal + shipping
 
   return (
@@ -299,7 +299,7 @@ export default function CartPage() {
               </div>
 
               <p className="text-[10px] text-muted-foreground/40 mt-6 leading-relaxed font-light italic">
-                * Free shipping on orders above ₹999. Automatic discounts apply based on active product/category promotions.
+                * Free shipping on orders above ₹399. Automatic discounts apply based on active product/category promotions.
               </p>
             </div>
           </div>

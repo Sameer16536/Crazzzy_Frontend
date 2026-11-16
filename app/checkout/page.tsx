@@ -284,7 +284,7 @@ export default function CheckoutPage() {
 
   const discountAmount = appliedCoupon ? appliedCoupon.discountAmount : 0
   const finalSubtotal = Math.max(0, subtotal - promoDiscount - discountAmount)
-  const shipping = finalSubtotal >= 999 ? 0 : 99
+  const shipping = finalSubtotal >= 399 ? 0 : 99
   const total = finalSubtotal + shipping
 
   const isReadyToPay = !!selectedAddressId && !!phoneNumber && !phoneError
@@ -598,7 +598,7 @@ export default function CheckoutPage() {
                   </span>
                 </div>
                 {shipping > 0 && (
-                  <p className="text-[10px] text-muted-foreground/40 uppercase tracking-wider">Free shipping on orders ₹999+</p>
+                  <p className="text-[10px] text-muted-foreground/40 uppercase tracking-wider">Free shipping on orders ₹399+</p>
                 )}
                 <div className="flex justify-between text-xl font-black border-t border-border/50 pt-6">
                   <span className="uppercase tracking-normal text-foreground">Total</span>

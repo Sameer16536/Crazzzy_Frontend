@@ -42,7 +42,7 @@ export default function ShippingPage() {
           <section className="space-y-4">
             <h2 className="text-xl font-bold text-foreground underline decoration-primary decoration-2 underline-offset-4 tracking-tight uppercase">Shipping Charges</h2>
             <p>
-              We offer <strong>Free Shipping</strong> on all orders above <strong>₹999</strong> across India. For orders below this value, a standard shipping fee will be calculated at checkout.
+              We offer <strong>Free Shipping</strong> on all orders above <strong>₹399</strong> across India. For orders below this value, a standard shipping fee will be calculated at checkout.
             </p>
           </section>
 

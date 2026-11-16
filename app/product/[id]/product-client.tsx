@@ -748,7 +748,7 @@ export default function ProductPage() {
               </div>
               <div className="flex flex-col gap-2 items-center text-center border-t pt-8 sm:pt-0 sm:border-t-0 sm:border-l sm:border-border sm:pl-4">
                 <Truck className="text-primary shrink-0" size={20} />
-                <p className="text-[9px] font-black uppercase tracking-widest leading-tight">Free Shipping<br />Above ₹999</p>
+                <p className="text-[9px] font-black uppercase tracking-widest leading-tight">Free Shipping<br />Above ₹399</p>
               </div>
             </div>
           </div>
